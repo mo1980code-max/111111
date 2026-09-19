@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clock.livewallpaper.R;
+import com.google.android.gms.ads.MediaContent;
 import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
@@ -165,7 +166,7 @@ public final class NativePlacement {
         icon.setVisibility(iconShown ? View.VISIBLE : View.GONE);
         view.setIconView(iconShown ? icon : null);
 
-        NativeAd.MediaContent content = nativeAd.getMediaContent();
+        MediaContent content = nativeAd.getMediaContent();
         if (content != null) {
             media.setVisibility(View.VISIBLE);
             media.setMediaContent(content);
@@ -174,7 +175,8 @@ public final class NativePlacement {
             media.setVisibility(View.GONE);
         }
 
-        setText(attribution, nativeAd.getAttribution());
+        NativeAd.AdChoicesInfo adChoices = nativeAd.getAdChoicesInfo();
+        setText(attribution, adChoices != null ? adChoices.getText() : null);
         view.setHeadlineView(headline);
         view.setBodyView(body);
         view.setAdvertiserView(advertiser);
@@ -182,7 +184,7 @@ public final class NativePlacement {
         view.setNativeAd(nativeAd);
     }
 
-    private void setText(@Nullable TextView view, @Nullable String value) {
+    private void setText(@Nullable TextView view, @Nullable CharSequence value) {
         if (view == null) {
             return;
         }
