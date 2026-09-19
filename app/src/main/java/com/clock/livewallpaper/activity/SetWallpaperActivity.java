@@ -21,11 +21,6 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.bumptech.glide.Glide;
 import com.clock.livewallpaper.R;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 import com.clock.livewallpaper.CustomWallpaper;
 import com.clock.livewallpaper.utils.TinyDB;
@@ -90,8 +85,16 @@ public class SetWallpaperActivity extends AppCompatActivity {
         this.cardShare = (CardView) findViewById(R.id.cardShare);
         this.ivShare = (AppCompatImageButton) findViewById(R.id.ivShare);
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
-        final File file = new File(getIntent().getStringExtra("imageFile"));
-        final File file2 = new File(getExternalCacheDir() + File.separator + file.getName());
+        final String resourceName = getIntent().getStringExtra("imageFile");
+        final int resourceId = getResources().getIdentifier(resourceName, "drawable", getPackageName());
+        final File file2 = new File(getExternalCacheDir() + File.separator + resourceName + ".png");
+        final File file = file2;
+        if (!file2.exists() && resourceId != 0) {
+            try (java.io.InputStream input = getResources().openRawResource(resourceId); java.io.OutputStream output = new java.io.FileOutputStream(file2)) {
+                byte[] buffer = new byte[8192]; int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            } catch (java.io.IOException ignored) { }
+        }
         if (file2.exists()) {
             this.setWallpaper.setText("Set Wallpaper");
             Glide.with((FragmentActivity) this).load(file2).into(this.imageMain);
@@ -114,41 +117,7 @@ public class SetWallpaperActivity extends AppCompatActivity {
 
                     return;
                 }
-                new DownloadTask.Builder(SetWallpaperActivity.this.getIntent().getStringExtra("imageFile"), SetWallpaperActivity.this.getExternalCacheDir()).setFilename(file.getName()).setMinIntervalMillisCallbackProcess(10).setPassIfAlreadyCompleted(false).build().enqueue(new DownloadListener1() {
-                    @Override
-
-                    public void retry(DownloadTask downloadTask, ResumeFailedCause resumeFailedCause) {
-                    }
-
-                    @Override
-
-                    public void taskStart(DownloadTask downloadTask, Listener1Assist.Listener1Model listener1Model) {
-                        SetWallpaperActivity.this.progressBar.setVisibility(View.GONE);
-                    }
-
-                    @Override
-
-                    public void connected(DownloadTask downloadTask, int i, long j, long j2) {
-                        SetWallpaperActivity.this.progressBar.setVisibility(View.GONE);
-                    }
-
-                    @Override
-
-                    public void progress(DownloadTask downloadTask, long j, long j2) {
-                        Log.e("TAG", "progress: " + j);
-                        TextView textView = SetWallpaperActivity.this.setWallpaper;
-                        textView.setText("Downloading " + ((j * 100) / j2) + "%");
-                    }
-
-                    @Override
-
-                    public void taskEnd(DownloadTask downloadTask, EndCause endCause, Exception exc, Listener1Assist.Listener1Model listener1Model) {
-                        SetWallpaperActivity.this.setWallpaper.setText("Set Wallpaper");
-                        SetWallpaperActivity.this.progressBar.setVisibility(View.GONE);
-                        SetWallpaperActivity.this.cardShare.setVisibility(View.VISIBLE);
-                        Glide.with((FragmentActivity) SetWallpaperActivity.this).load(downloadTask.getFile()).into(SetWallpaperActivity.this.imageMain);
-                    }
-                });
+                return;
             }
         });
         this.ivShare.setOnClickListener(new View.OnClickListener() {

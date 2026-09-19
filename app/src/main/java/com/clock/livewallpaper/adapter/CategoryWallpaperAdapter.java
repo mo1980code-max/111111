@@ -60,7 +60,8 @@ public class CategoryWallpaperAdapter extends RecyclerView.Adapter<CategoryWallp
     }
 
     public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        Glide.with(viewHolder.viewStub.getContext()).load(this.imagesItems.get(i).getImageUrls().get(0).getImageUrl()).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
+        int resourceId = viewHolder.viewStub.getContext().getResources().getIdentifier(this.imagesItems.get(i).getImageUrls().get(0).getImageUrl(), "drawable", viewHolder.viewStub.getContext().getPackageName());
+        Glide.with(viewHolder.viewStub.getContext()).load(resourceId).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
         viewHolder.textName.setText(this.imagesItems.get(i).getCategoryName());
         viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
