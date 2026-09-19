@@ -67,6 +67,8 @@ startActivity(intent);
 
 The reader is registered in `AndroidManifest.xml` with a native no-action-bar theme and `exported="false"`. Your existing launcher and navigation are unchanged; connect the Intent to your preferred Quran entry point. No storage permission is needed: the database lives in app-private storage. Existing Internet permissions used by other app features are untouched; this reader does not use them.
 
+This app's built-in entry point is the home screen (`MainActivity` → `activity_select_function.xml`): a `#2D7D46` pill button with the `res/drawable/ic_quran.xml` icon that launches `QuranActivity` (Surah 1, ayah 1) via an `OnClickListener` + `Intent`.
+
 ## Included files
 
 | File | Purpose |
