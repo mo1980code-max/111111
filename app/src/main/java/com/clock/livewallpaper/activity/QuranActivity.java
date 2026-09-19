@@ -6,8 +6,6 @@ import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -28,6 +26,7 @@ import com.clock.livewallpaper.quran.QuranApiClient;
 import com.clock.livewallpaper.quran.QuranMetadata;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,8 +38,18 @@ public final class QuranActivity extends Activity {
     private static final String STATE_AYAH = "selected_ayah";
     private static final String STATE_SCROLL = "scroll_y";
 
+    // Hardcoded fallback String array with ONLY the 7 verses of Surah Al-Fatiha
+    private static final String[] FATIHA_FALLBACK_VERSES = {
+        "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+        "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+        "ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+        "مَٰلِكِ يَوْمِ ٱلدِّينِ",
+        "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+        "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ",
+        "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"
+    };
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean destroyed;
     private int surah;
     private int selectedAyah;
@@ -103,18 +112,20 @@ public final class QuranActivity extends Activity {
     }
 
     private void loadSurahData() {
-        progress.setVisibility(View.VISIBLE);
-        statusView.setVisibility(View.VISIBLE);
-        statusView.setText(R.string.quran_loading);
-        if (retryBtn != null) retryBtn.setVisibility(View.GONE);
-        scrollView.setVisibility(View.GONE);
+        runOnUiThread(() -> {
+            progress.setVisibility(View.VISIBLE);
+            statusView.setVisibility(View.VISIBLE);
+            statusView.setText(R.string.quran_loading);
+            if (retryBtn != null) retryBtn.setVisibility(View.GONE);
+            scrollView.setVisibility(View.GONE);
+        });
 
         final int requestedSurah = surah;
         executor.execute(() -> {
             try {
                 QuranApiClient.SurahData surahData = QuranApiClient.getSurah(getApplicationContext(), requestedSurah);
                 if (destroyed) return;
-                mainHandler.post(() -> {
+                runOnUiThread(() -> {
                     if (destroyed || isFinishing()) return;
                     currentVerses = surahData.ayahs;
                     displayVerses(surahData.ayahs);
@@ -136,11 +147,48 @@ public final class QuranActivity extends Activity {
             } catch (IOException | RuntimeException error) {
                 Log.e("QuranActivity", "Unable to fetch Surah data from online API", error);
                 if (destroyed) return;
-                mainHandler.post(() -> {
-                    if (!destroyed && !isFinishing()) {
+                runOnUiThread(() -> {
+                    if (destroyed || isFinishing()) return;
+                    if (requestedSurah == 1) {
+                        loadFallbackFatiha();
+                    } else {
                         showError(R.string.quran_load_error);
                     }
                 });
+            }
+        });
+    }
+
+    /**
+     * Loads the 7-verse offline fallback array for Surah Al-Fatiha when the network fails or throws an IOException.
+     */
+    private void loadFallbackFatiha() {
+        List<QuranApiClient.Ayah> fallbackAyahs = new ArrayList<>(FATIHA_FALLBACK_VERSES.length);
+        for (int i = 0; i < FATIHA_FALLBACK_VERSES.length; i++) {
+            int ayahNumber = i + 1;
+            fallbackAyahs.add(new QuranApiClient.Ayah(
+                    1,
+                    ayahNumber,
+                    ayahNumber,
+                    FATIHA_FALLBACK_VERSES[i],
+                    QuranMetadata.juzFor(1, ayahNumber),
+                    QuranMetadata.pageFor(1, ayahNumber)
+            ));
+        }
+        currentVerses = fallbackAyahs;
+        displayVerses(fallbackAyahs);
+        progress.setVisibility(View.GONE);
+        statusView.setVisibility(View.GONE);
+        if (retryBtn != null) retryBtn.setVisibility(View.GONE);
+        scrollView.setVisibility(View.VISIBLE);
+        scrollView.post(() -> {
+            if (destroyed || isFinishing()) return;
+            if (restoredScroll >= 0) {
+                scrollView.scrollTo(0, restoredScroll);
+            } else if (versesView.getLayout() != null && verseStarts != null && selectedAyah <= verseStarts.length) {
+                int line = versesView.getLayout().getLineForOffset(
+                        verseStarts[selectedAyah - 1]);
+                scrollView.scrollTo(0, versesView.getLayout().getLineTop(line));
             }
         });
     }
@@ -241,11 +289,13 @@ public final class QuranActivity extends Activity {
     }
 
     private void showError(int messageRes) {
-        progress.setVisibility(View.GONE);
-        scrollView.setVisibility(View.GONE);
-        statusView.setVisibility(View.VISIBLE);
-        statusView.setText(messageRes);
-        if (retryBtn != null) retryBtn.setVisibility(View.VISIBLE);
+        runOnUiThread(() -> {
+            progress.setVisibility(View.GONE);
+            scrollView.setVisibility(View.GONE);
+            statusView.setVisibility(View.VISIBLE);
+            statusView.setText(messageRes);
+            if (retryBtn != null) retryBtn.setVisibility(View.VISIBLE);
+        });
     }
 
     @Override
@@ -259,7 +309,6 @@ public final class QuranActivity extends Activity {
     protected void onDestroy() {
         destroyed = true;
         executor.shutdownNow();
-        mainHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 }

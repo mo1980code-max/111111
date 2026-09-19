@@ -33,10 +33,40 @@ public final class QuranApiClient {
     private static final int CONNECT_TIMEOUT_MS = 15000;
     private static final int READ_TIMEOUT_MS = 15000;
 
+    // Hardcoded fallback String array with ONLY the 7 verses of Surah Al-Fatiha
+    public static final String[] FATIHA_FALLBACK_VERSES = {
+        "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+        "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+        "ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+        "مَٰلِكِ يَوْمِ ٱلدِّينِ",
+        "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+        "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ",
+        "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"
+    };
+
     // In-memory cache for fast subsequent lookups
     private static final Map<Integer, SurahData> MEMORY_CACHE = new ConcurrentHashMap<>();
 
     private QuranApiClient() { }
+
+    /**
+     * Builds fallback SurahData for Surah Al-Fatiha containing ONLY its 7 verses.
+     */
+    public static SurahData getFatihaFallback() {
+        List<Ayah> ayahs = new ArrayList<>(FATIHA_FALLBACK_VERSES.length);
+        for (int i = 0; i < FATIHA_FALLBACK_VERSES.length; i++) {
+            int ayahNumber = i + 1;
+            ayahs.add(new Ayah(
+                    1,
+                    ayahNumber,
+                    ayahNumber,
+                    FATIHA_FALLBACK_VERSES[i],
+                    QuranMetadata.juzFor(1, ayahNumber),
+                    QuranMetadata.pageFor(1, ayahNumber)
+            ));
+        }
+        return new SurahData(1, "الفَاتِحَةِ", "Al-Fatiha", ayahs);
+    }
 
     /**
      * Retrieves Surah data, checking in-memory cache, disk cache, or fetching dynamically from API.
