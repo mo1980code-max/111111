@@ -4,8 +4,25 @@ A fully offline, fully navigable Quran reader inside the existing `com.clock.liv
 All 114 surahs are browsable from an index and readable from a single reader screen that pages
 between surahs in place. **No network access, no runtime downloads, no API keys.**
 
-Native Android APIs only, `minSdk 23`, `targetSdk`/`compileSdk` 36, Java 17. No new Gradle
-dependencies were added.
+Native Android APIs only, `minSdk 23`, `targetSdk`/`compileSdk` 36, Java 17. The v2 upgrade added
+one dependency: `androidx.viewpager2:viewpager2:1.0.0` for swipe navigation.
+
+---
+
+## v2 upgrade at a glance
+
+The five standard reader features layered on top of the offline core:
+
+| Feature | Where | Persistence |
+| --- | --- | --- |
+| Swipe navigation — `ViewPager2` + `FragmentStateAdapter`, one `QuranFragment` per surah; Next/Previous buttons removed | `QuranActivity`, `QuranFragment`, `activity_quran.xml`, `fragment_quran_page.xml` | — |
+| Bookmark — toolbar icon saves `last_read_surah_id` + `scrollY`; **Continue Reading** button on the index jumps back | `QuranSettings`, `QuranActivity`, `SurahListActivity` | `SharedPreferences("quran_prefs")` |
+| Search — `QuranDatabaseHelper.searchQuran(String)` (SQL `LIKE` on `text`, escaped wildcards, capped at 200); `SearchView` filters surah names while typing and full-text-searches on submit | `QuranDatabaseHelper`, `SurahListActivity`, `AyahSearchAdapter`, `item_search_result.xml` | — |
+| Adjustable font size — `+`/`−` toolbar icons, 16–44 sp in 1 sp steps | `QuranActivity`, `QuranFragment`, `QuranSettings` | `SharedPreferences` float |
+| Dark mode — moon/sun toggle on both screens; light Madani `#FBF9F0`/`#1A1A1A`, dark `#121212`/`#E0E0E0` with `#A0A0A0` chrome, switched programmatically by `QuranThemeColors` | `QuranThemeColors`, `QuranSettings`, both activities, list adapters | `SharedPreferences` boolean |
+
+The two Quran activities now extend `AppCompatActivity` (a `FragmentStateAdapter` requires a
+`FragmentActivity` host), and `QuranTheme` was moved to a `Theme.AppCompat` parent accordingly.
 
 ---
 
@@ -27,14 +44,17 @@ airplane mode.
 ```
 MainActivity (home)
    └── Quran tile  ──►  SurahListActivity          RecyclerView, 114 rows, offline, instant
-                            │  tap a row
-                            │  Intent extras: surah_id (int), surah_name (String)
+                            │  · SearchView: filters names while typing,
+                            │    full-text search on submit (tap a result → that ayah)
+                            │  · Continue Reading: jumps to the saved bookmark
+                            │  tap a row / result
+                            │  Intent extras: surah_id, surah_name, [ayah | scroll_y]
                             ▼
-                         QuranActivity             header + scrollable Arabic body + footer
+                         QuranActivity             ViewPager2, one QuranFragment per surah
                             ▲  │
-                            └──┘  "Previous Surah" / "Next Surah"
-                                  re-query and rebind in place — no new Activity,
-                                  no back-stack growth
+                            └──┘  swipe left/right between surahs — no new Activity,
+                                  no back-stack growth; toolbar carries font +/-,
+                                  bookmark and the moon/sun theme toggle
 ```
 
 `SurahListActivity` also pre-warms the database on a worker thread, so the first surah a user opens
@@ -109,7 +129,7 @@ Copying the file and opening it read-only keeps the bytes on disk identical to t
 
 A process-wide lock stops two activities installing at once. A structurally invalid installed copy is
 recovered from the packaged asset. Validation is memoised per process, because re-reading 6236 rows on
-every Next/Previous tap would be the most expensive part of navigation. `getDatabasePath()` is used,
+every swipe between surahs would be the most expensive part of navigation. `getDatabasePath()` is used,
 never a hard-coded `/data/data` path. No storage permission is needed.
 
 ---
@@ -130,11 +150,18 @@ List<QuranDatabaseHelper.Ayah> ayahs = db.getVersesBySurah(2);
 String basmallah = db.getBasmallah();             // read from 1:1, never hard-coded
 QuranDatabaseHelper.ayahMarker(255);              // "﴿٢٥٥﴾"
 QuranDatabaseHelper.clearCache();                 // after replacing the database
+
+// v2: full-text search, worker thread only
+List<QuranDatabaseHelper.Ayah> hits = db.searchQuran("ٱلرحيم");  // SQL LIKE, Mushaf order, ≤200 rows
 ```
 
 `getSurahText(int)` returns one string: every ayah terminated by its number in ornate parentheses
 with non-breaking-space padding so a number never wraps away from its ayah. Results are held in an
-8-entry `LruCache`, which is what makes Next/Previous feel instant.
+8-entry `LruCache`, which is what makes swiping between neighbouring surahs feel instant.
+
+`searchQuran(String)` matches with `text LIKE ?` using a bound pattern; `%` and `_` in user input
+are escaped with an `ESCAPE '\'` clause so they match literally, and results are capped at 200 rows
+in Mushaf order (surah ascending, then ayah ascending).
 
 **Basmallah handling.** The Tanzil text keeps the basmallah out of the numbered ayahs of every surah
 except 1, and surah 9 has none. A mushaf prints it above surahs 2-8 and 10-114, so it is emitted as an
@@ -167,11 +194,14 @@ disagree.
 Intent intent = new Intent(this, QuranActivity.class);
 intent.putExtra(QuranActivity.EXTRA_SURAH_ID, 2);            // "surah_id", 1-114, defaults to 1
 intent.putExtra(QuranActivity.EXTRA_SURAH_NAME, "البقرة");    // "surah_name"
-intent.putExtra(QuranActivity.EXTRA_AYAH, 255);              // optional scroll target
+intent.putExtra(QuranActivity.EXTRA_AYAH, 255);              // optional one-shot ayah target
+intent.putExtra(QuranActivity.EXTRA_SCROLL_Y, 4321);         // optional one-shot px offset
 startActivity(intent);
 ```
 
-`surah_id` is the single source of truth: it drives the query, the header and the navigation.
+`scroll_y` wins over `ayah` when both are passed, and both are consumed once by the target page —
+`SurahListActivity` uses `EXTRA_SCROLL_Y` for **Continue Reading** and `EXTRA_AYAH` for search
+results. `surah_id` is the single source of truth: it selects the starting page and drives the header.
 `surah_name` sets the window title; the on-screen header is rendered from `SurahIndex` instead,
 because it has to stay correct after the user pages to a surah no caller passed in. A mismatch is
 logged, not displayed. The legacy `quran.surah` / `quran.ayah` keys are still accepted.
@@ -188,28 +218,37 @@ logged, not displayed. The legacy `quran.surah` / `quran.ayah` keys are still ac
 | Header | `colors.xml` → `quran_header` | `#7A7A7A` |
 | Buttons | `colors.xml` → `quran_button` | `#2D7D46` |
 
-`colors.xml` is the single definition of the palette; `res/values/quran.xml` holds only strings and
-the theme. Supporting shades (`quran_button_pressed`, `quran_on_button`, `quran_divider`,
-`quran_badge`, `quran_error`) are derived from those five.
+`colors.xml` is the single definition of the **light** palette; `res/values/quran.xml` holds only
+strings and the theme. Supporting shades (`quran_button_pressed`, `quran_on_button`,
+`quran_divider`, `quran_badge`, `quran_error`) are derived from those five. The **dark** palette
+lives in `QuranThemeColors` (background `#121212`, text `#E0E0E0`, chrome `#A0A0A0`, derived
+divider/badge/highlight shades) and is applied programmatically because the user toggles it at
+runtime; the XML colours are the light-mode defaults.
 
-**Reader** (`activity_quran.xml`), top to bottom:
+**Reader** (`activity_quran.xml` + `fragment_quran_page.xml`), top to bottom:
 
-1. Navigation bar — back arrow (left), `2 of 114` (right).
-2. Header — **Surah Name left**, **Juz Number right**, both `#7A7A7A`. A surah spanning several juz
-   shows a range (`الجزء ١–٣`).
-3. Body — one `ScrollView` → `TextView`, centred, explicitly RTL, `quran_font.ttf` applied from Java
-   (an asset path cannot be referenced from XML), selectable so an ayah can be copied.
-4. Footer — **Previous Surah** (left) · **Page Number** (centre) · **Next Surah** (right), both
-   buttons `#2D7D46` via `bg_quran_nav_button.xml`. Multi-page surahs show a page range.
+1. Toolbar — back arrow, `2 of 114`, then the four reading controls: **font −**, **font +**
+   (16–44 sp in 1 sp steps, persisted), **bookmark** (saves `last_read_surah_id` + the page's live
+   `scrollY`) and the **moon/sun theme toggle**.
+2. Header — **Surah Name left**, **Juz Number right**, both in the chrome colour. A surah spanning
+   several juz shows a range (`الجزء ١–٣`).
+3. Body — a `ViewPager2` pinned LTR; each of the 114 pages is a `QuranFragment` with one
+   `ScrollView` → `TextView`, centred, explicitly RTL, `quran_font.ttf` applied from Java (an asset
+   path cannot be referenced from XML), selectable so an ayah can be copied. Swiping left/right
+   changes surahs; `FragmentStateAdapter` keeps memory flat by destroying distant pages.
+4. Footer — **Page Number** centred. Multi-page surahs show a page range.
 
-Header and footer rows pin `android:layoutDirection="ltr"` so "left" and "right" stay physical in
-every device locale, while the Arabic body pins RTL independently. Both nav buttons are disabled at
-the ends of the mushaf — surah 1 has no previous, surah 114 has no next — and are frozen while a load
-is in flight so rapid taps cannot queue stale surahs.
+Header, toolbar and footer rows pin `android:layoutDirection="ltr"` so "left" and "right" stay
+physical in every device locale, while the Arabic body pins RTL independently. The pinned header and
+footer follow the selected page through `onPageSelected`, so swiping never leaves stale labels.
 
-**Index** (`activity_surah_list.xml` + `item_surah.xml`) — number badge, transliteration, English
-meaning, `286 Ayahs · Madinah · Juz 1`, and the Arabic name on the right. Whole row is the click
-target (`clickable` + `focusable`) for TalkBack and d-pad. Attribution line at the foot.
+**Index** (`activity_surah_list.xml` + `item_surah.xml` + `item_search_result.xml`) — number badge,
+transliteration, English meaning, `286 Ayahs · Madinah · Juz 1`, and the Arabic name on the right.
+Whole row is the click target (`clickable` + `focusable`) for TalkBack and d-pad. Above the list:
+the **SearchView** (filters surah names while typing; submitting runs `searchQuran` and swaps the
+list to matching ayahs — tapping a result opens the reader at that ayah) and the theme toggle.
+Floating over the list's bottom corner: the green **Continue Reading** button, visible only while a
+bookmark exists. Attribution line at the foot.
 
 Language policy: mushaf labels are Arabic, navigation chrome is English. Both live in
 `res/values/quran.xml` and can be flipped without touching a layout.
@@ -218,11 +257,15 @@ Language policy: mushaf labels are Arabic, navigation chrome is English. Both li
 
 ## 7. Threading, state and error handling
 
-* The first-run copy and every query run on a single worker thread; `prepareDatabase()` must never be
-  called on the main thread.
-* Results posted to a destroyed or finishing activity are dropped, so rotating mid-load cannot crash.
-* `onSaveInstanceState` keeps the current surah and the exact scroll offset across rotation.
-* Body views set `android:saveEnabled="false"` so the activity's explicit scroll restoration is the
+* The first-run copy runs on a worker thread; `prepareDatabase()` must never be called on the main
+  thread. Each `QuranFragment` owns a single-thread executor for its surah read, so neighbouring
+  pages load in parallel; the index screen's full-text search runs on its own worker.
+* Results posted to a destroyed/detached fragment or finishing activity are dropped, so rotating or
+  swiping away mid-load cannot crash.
+* Rotation: `ViewPager2` restores its selected page and each `QuranFragment` restores its exact
+  scroll offset through `onSaveInstanceState`. One-shot targets (bookmark `scroll_y`, search
+  `ayah`) are consumed after the first render so they never re-jump.
+* Body views set `android:saveEnabled="false"` so the fragment's explicit scroll restoration is the
   only authority (a selectable `TextView` otherwise restores its own state and fights it).
 * Both screens handle Android 15/16 enforced edge-to-edge through `utils/EdgeToEdgeInsets`, which
   applies system-bar, cutout and IME insets on top of each root's design padding and keeps the bar
@@ -256,7 +299,7 @@ The surah names are now the Tanzil names (CC-BY-3.0), no longer the GPL-adapted 
 python3 -m unittest discover -s tests -v
 ```
 
-47 SDK-independent checks across two files:
+54 SDK-independent checks across two files:
 
 * `tests/test_offline_quran.py` — metadata completeness and monotonicity, known page/juz boundaries,
   the 114-entry Java arrays, the conventional 28-Madinan classification, the real bundled database
@@ -286,16 +329,23 @@ bash gradlew :app:assembleDebug :app:lintDebug
 
 1. Fresh install in airplane mode: open surahs 1, 2, 9, 55 and 114; check ayah counts, the basmallah
    header (present for 2, absent for 1 and 9) and glyph rendering against a trusted mushaf.
-2. Tap Next from 1 to 114 and Previous back; confirm the header, juz, page and position update and
-   that no new activity is stacked (Back exits the reader in one press).
-3. Confirm Previous is disabled on surah 1 and Next on surah 114.
-4. Rotate while loading and while deep-scrolled in surah 2; confirm the surah and scroll offset survive.
-5. Kill the process mid first-run copy; relaunch and confirm the `.installing` temp file is discarded
+2. Swipe from surah 1 towards 114 and back; confirm the header, juz, page and position follow the
+   selected page and that no new activity is stacked (Back exits the reader in one press).
+3. Tap the bookmark icon deep inside surah 2, return to the index and tap **Continue Reading**;
+   confirm the reader reopens surah 2 at the saved scroll offset. Kill and relaunch the app first —
+   the bookmark must survive.
+4. Font: tap +/− and confirm the size changes live on the current page and survives relaunch.
+   Theme: toggle the moon/sun icon on both screens; confirm both palettes (`#FBF9F0`/`#1A1A1A` vs
+   `#121212`/`#E0E0E0` with `#A0A0A0` chrome) and that the choice survives relaunch.
+5. Search: type "kaw" and confirm the surah list filters; submit a Quranic word and confirm ayah
+   results appear with `Surah 2:255`-style references; tap one and confirm the reader opens there.
+6. Rotate while loading and while deep-scrolled in surah 2; confirm the surah and scroll offset survive.
+7. Kill the process mid first-run copy; relaunch and confirm the `.installing` temp file is discarded
    and the copy completes.
-6. On a debug build, corrupt the installed `.db` and confirm it is recovered from the asset.
-7. Check TalkBack on both screens, large system font sizes, and RTL/physical left-right placement with
+8. On a debug build, corrupt the installed `.db` and confirm it is recovered from the asset.
+9. Check TalkBack on both screens, large system font sizes, and RTL/physical left-right placement with
    the device language set to Arabic.
-8. On API 36, check portrait/landscape, gesture and three-button navigation, cutouts and large-screen
+10. On API 36, check portrait/landscape, gesture and three-button navigation, cutouts and large-screen
    resizing — header and footer must never slide under a system bar.
 
 ---
@@ -304,22 +354,27 @@ bash gradlew :app:assembleDebug :app:lintDebug
 
 | File | Role |
 | --- | --- |
-| `quran/QuranDatabaseHelper.java` | asset copy + validation, `getSurahText(int)`, caching |
+| `quran/QuranDatabaseHelper.java` | asset copy + validation, `getSurahText(int)`, `searchQuran(String)`, caching |
 | `quran/SurahIndex.java` | 114 surahs in Java: names, meanings, counts, juz/page, Makkah/Madinah |
 | `quran/QuranMetadata.java` | ayah counts and the 604-page / 30-juz mapping |
-| `activity/SurahListActivity.java` | index screen, `RecyclerView`, launches the reader |
-| `adapter/SurahListAdapter.java` | row binding and the click callback |
-| `activity/QuranActivity.java` | reader: load, header/body/footer, in-place navigation |
+| `quran/QuranSettings.java` | `SharedPreferences` wrapper: font size, dark mode, bookmark (`last_read_surah_id` + `scrollY`) |
+| `quran/QuranThemeColors.java` | light/dark palettes applied programmatically on every Quran view |
+| `activity/SurahListActivity.java` | index screen: list, SearchView, full-text results, Continue Reading, theme toggle |
+| `adapter/SurahListAdapter.java` | row binding, name filtering, theme-aware colours |
+| `adapter/AyahSearchAdapter.java` | full-text search result rows |
+| `activity/QuranActivity.java` | reader: `ViewPager2` host, pinned header/footer, font/bookmark/theme toolbar |
+| `activity/QuranFragment.java` | one surah page: load, scroll, font size, theme |
 | `utils/EdgeToEdgeInsets.java` | shared target-36 edge-to-edge inset handling |
 | `AppClass.java` | background first-run install at app launch |
 | `activity/MainActivity.java` | home Quran tile now opens the index |
-| `res/layout/activity_surah_list.xml`, `item_surah.xml`, `activity_quran.xml` | layouts |
-| `res/values/colors.xml`, `quran.xml` | palette, strings, `QuranTheme` |
+| `res/layout/activity_surah_list.xml`, `item_surah.xml`, `item_search_result.xml`, `activity_quran.xml`, `fragment_quran_page.xml` | layouts |
+| `res/values/colors.xml`, `quran.xml` | light palette, strings, `QuranTheme` |
 | `res/drawable/bg_quran_nav_button.xml`, `bg_surah_row.xml`, `bg_surah_badge.xml`, `bg_quran_button.xml` | backgrounds |
+| `res/drawable/ic_bookmark.xml`, `ic_font_increase.xml`, `ic_font_decrease.xml`, `ic_moon.xml`, `ic_sun.xml`, `ic_search.xml` | toolbar icons |
 | `res/color/quran_nav_button_text.xml` | button text colour state list |
 | `tools/build_quran_db.py` | regenerates the database asset from the Tanzil source |
 
-To reuse in another app, copy the `quran/` package, both activities, the adapter, `EdgeToEdgeInsets`,
+To reuse in another app, copy the `quran/` package, both activities, the fragment, the adapters, `EdgeToEdgeInsets`,
 the layouts, the Quran colour/string/theme resources and the two assets; register both activities with
 `@style/QuranTheme`; and merge (not replace) the `prepareDatabase()` startup hook into your own
 `Application.onCreate()`.

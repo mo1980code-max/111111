@@ -58,6 +58,15 @@ public final class QuranDatabaseHelper {
             "SELECT text FROM " + TABLE + " WHERE sura = ? AND ayah = ? LIMIT 1";
     private static final String QUERY_SURAH_COUNTS =
             "SELECT sura, COUNT(*) FROM " + TABLE + " GROUP BY sura";
+    /**
+     * Full-text search contract. LIKE with a bound pattern cannot be injected into, and the ESCAPE
+     * clause lets {@link #searchQuran(String)} quote the wildcards so a typed {@code %} or {@code _}
+     * is matched literally. Results are capped so a one-letter query cannot bind the UI.
+     */
+    private static final String QUERY_SEARCH =
+            "SELECT sura, ayah, text FROM " + TABLE
+                    + " WHERE text LIKE ? ESCAPE '\\' ORDER BY sura ASC, ayah ASC LIMIT ";
+    private static final int SEARCH_LIMIT = 200;
     private static final String TEMP_SUFFIX = ".installing";
     private static final int COPY_BUFFER_BYTES = 8 * 1024;
 
@@ -74,12 +83,12 @@ public final class QuranDatabaseHelper {
 
     /**
      * Set once the installed file has passed full validation in this process. Validation reads the
-     * whole {@code arabic_text} table, so repeating it on every Next/Previous tap would be the most
+     * whole {@code arabic_text} table, so repeating it on every swipe between surahs would be the most
      * expensive part of navigation. Cleared by {@link #clearCache()}.
      */
     private static volatile boolean installVerified;
 
-    /** Formatted surahs are expensive to rebuild, and Next/Previous re-reads neighbours constantly. */
+    /** Formatted surahs are expensive to rebuild, and swiping re-reads neighbours constantly. */
     private static final LruCache<Integer, String> SURAH_TEXT_CACHE = new LruCache<>(8);
 
     /**
@@ -303,7 +312,7 @@ public final class QuranDatabaseHelper {
      * number in ornate parentheses, for example {@code …ٱلرَّحِيمِ ﴿١﴾ ٱلْحَمْدُ… ﴿٢﴾}.
      *
      * <p>Runs the query on the calling thread, so <b>call it from a background thread</b>. Results
-     * are cached, which is what makes the Next/Previous Surah buttons feel instant.
+     * are cached, which is what makes swiping between neighbouring surahs feel instant.
      *
      * @param surahId 1-based surah number, 1 to 114
      * @return the formatted surah text, never {@code null} and never empty
@@ -401,6 +410,63 @@ public final class QuranDatabaseHelper {
         } catch (RuntimeException error) {
             throw new IOException("Could not read the basmallah from " + DATABASE_NAME, error);
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Searching
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Searches the whole Mushaf for ayahs whose {@code text} contains {@code query}, using SQL
+     * {@code LIKE} against the {@code text} column.
+     *
+     * <p>Runs on the calling thread, so <b>call it from a background thread</b>. The query is bound
+     * as a parameter and the {@code %} / {@code _} wildcards it contains are escaped, so user input
+     * can never alter the statement or match as a pattern. Matches come back in Mushaf order
+     * (surah ascending, then ayah ascending) and are capped at 200 rows.
+     *
+     * @param query the word or phrase to look for, in the database's own Uthmani orthography
+     * @return an unmodifiable list of matching ayahs, possibly empty, never {@code null}
+     * @throws IOException if the database is not installed or the query fails
+     */
+    public List<Ayah> searchQuran(String query) throws IOException {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        prepareDatabase();
+        File file = databaseFile();
+        if (!file.exists()) {
+            throw new IOException(DATABASE_NAME + " is not installed");
+        }
+
+        String pattern = "%" + escapeLikePattern(query.trim()) + "%";
+        List<Ayah> matches = new ArrayList<>();
+        try (SQLiteDatabase database = openReadOnly(file);
+             Cursor cursor = database.rawQuery(QUERY_SEARCH + SEARCH_LIMIT, new String[]{pattern})) {
+            int surahColumn = cursor.getColumnIndexOrThrow("sura");
+            int ayahColumn = cursor.getColumnIndexOrThrow("ayah");
+            int textColumn = cursor.getColumnIndexOrThrow("text");
+            while (cursor.moveToNext()) {
+                String text = cursor.getString(textColumn);
+                if (text == null || text.trim().isEmpty()) {
+                    continue; // A blank row can never satisfy a search; skip instead of failing.
+                }
+                matches.add(new Ayah(cursor.getInt(surahColumn), cursor.getInt(ayahColumn),
+                        text.trim()));
+            }
+        } catch (RuntimeException error) {
+            throw new IOException("Could not search " + DATABASE_NAME
+                    + ". Check that arabic_text(sura, ayah, text) exists.", error);
+        }
+        return Collections.unmodifiableList(matches);
+    }
+
+    /**
+     * Quotes LIKE wildcards in user input so they match literally, using the {@code \} escape
+     * character declared in {@link #QUERY_SEARCH}.
+     */
+    private static String escapeLikePattern(String raw) {
+        return raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private List<Ayah> queryAyahs(int surahId) throws IOException {

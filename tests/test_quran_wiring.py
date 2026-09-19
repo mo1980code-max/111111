@@ -24,9 +24,13 @@ QURAN_JAVA = [
     JAVA / "quran/QuranDatabaseHelper.java",
     JAVA / "quran/QuranMetadata.java",
     JAVA / "quran/SurahIndex.java",
+    JAVA / "quran/QuranSettings.java",
+    JAVA / "quran/QuranThemeColors.java",
     JAVA / "activity/QuranActivity.java",
+    JAVA / "activity/QuranFragment.java",
     JAVA / "activity/SurahListActivity.java",
     JAVA / "adapter/SurahListAdapter.java",
+    JAVA / "adapter/AyahSearchAdapter.java",
     JAVA / "utils/EdgeToEdgeInsets.java",
     JAVA / "AppClass.java",
 ]
@@ -34,7 +38,9 @@ QURAN_XML = [
     MAIN / "AndroidManifest.xml",
     RES / "layout/activity_quran.xml",
     RES / "layout/activity_surah_list.xml",
+    RES / "layout/fragment_quran_page.xml",
     RES / "layout/item_surah.xml",
+    RES / "layout/item_search_result.xml",
     RES / "values/quran.xml",
     RES / "values/colors.xml",
     RES / "color/quran_nav_button_text.xml",
@@ -42,6 +48,12 @@ QURAN_XML = [
     RES / "drawable/bg_quran_nav_button.xml",
     RES / "drawable/bg_surah_badge.xml",
     RES / "drawable/bg_surah_row.xml",
+    RES / "drawable/ic_bookmark.xml",
+    RES / "drawable/ic_font_increase.xml",
+    RES / "drawable/ic_font_decrease.xml",
+    RES / "drawable/ic_moon.xml",
+    RES / "drawable/ic_sun.xml",
+    RES / "drawable/ic_search.xml",
 ]
 
 VALUE_TYPES = {"color", "string", "string-array", "style", "dimen", "integer", "bool", "plurals",
@@ -222,8 +234,10 @@ class ResourceWiringTests(unittest.TestCase):
         """findViewById ids must exist in the layout each activity actually inflates."""
         pairs = {
             "activity/QuranActivity.java": "layout/activity_quran.xml",
+            "activity/QuranFragment.java": "layout/fragment_quran_page.xml",
             "activity/SurahListActivity.java": "layout/activity_surah_list.xml",
             "adapter/SurahListAdapter.java": "layout/item_surah.xml",
+            "adapter/AyahSearchAdapter.java": "layout/item_search_result.xml",
         }
         for java, layout in pairs.items():
             source = (JAVA / java).read_text(encoding="utf-8")

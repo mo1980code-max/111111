@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Surah Index screen: all 114 surahs in a RecyclerView.
+  Surah Index screen: all 114 surahs in a RecyclerView, with the feature's advanced entry points.
+
+  Regions, top to bottom:
+    1. Header  - back arrow, title/subtitle, moon/sun theme toggle
+    2. Search  - SearchView filtering surah names while typing; submitting runs a full-text search
+                 inside the Mushaf (QuranDatabaseHelper.searchQuran) and swaps the list to results
+    3. List    - RecyclerView with the Continue Reading button floating over its bottom corner
+    4. Footer  - CC-BY-3.0 attribution
 
   The list is built from Java arrays in SurahIndex, not from the database, so this screen paints
   instantly on a cold start while QuranDatabaseHelper is still copying the asset on a worker thread.
 
-  android:id/quran_root style inset handling: the root carries the padding that QuranListActivity
-  grows by the system-bar and cutout insets, because targetSdk 36 draws edge to edge.
+  android:id/surah_list_root style inset handling: the root carries the padding that
+  SurahListActivity grows by the system-bar and cutout insets, because targetSdk 36 draws edge to
+  edge. Colours are the LIGHT defaults; the activity reapplies them from QuranThemeColors.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/surah_list_root"
     android:layout_width="match_parent"
@@ -17,7 +26,7 @@
     android:orientation="vertical"
     tools:context=".activity.SurahListActivity">
 
-    <!-- Screen header: back affordance plus the index title. -->
+    <!-- 1. Screen header: back affordance, title block, theme toggle. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,7 +34,7 @@
         android:minHeight="64dp"
         android:orientation="horizontal"
         android:paddingStart="8dp"
-        android:paddingEnd="20dp">
+        android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/surah_list_back"
@@ -46,6 +55,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/surah_list_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/quran_index_title"
@@ -54,6 +64,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/surah_list_subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/quran_index_subtitle"
@@ -61,33 +72,111 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:contentDescription="@string/quran_title"
-            android:src="@drawable/ic_quran" />
+        <ImageButton
+            android:id="@+id/surah_list_theme_toggle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/quran_cd_switch_to_dark"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_moon"
+            android:tint="@color/quran_header" />
+    </LinearLayout>
+
+    <!-- 2. Search row: filters surah names on every keystroke, searches the text on submit. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="8dp">
+
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/surah_list_search"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:iconifiedByDefault="false"
+            android:imeOptions="actionSearch"
+            app:searchIcon="@drawable/ic_search" />
+
+        <TextView
+            android:id="@+id/surah_list_result_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/quran_header"
+            android:textSize="13sp"
+            android:visibility="gone"
+            tools:text="42 matches"
+            tools:visibility="visible" />
     </LinearLayout>
 
     <View
+        android:id="@+id/surah_list_divider_top"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/quran_divider" />
 
-    <!-- clipToPadding=false keeps the first row clear of the divider and the last row clear of the
-         attribution footer while both still scroll under them. -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/surah_recycler"
+    <!-- 3. List with the floating Continue Reading shortcut over the bottom corner.
+         clipToPadding=false keeps the first row clear of the divider and the last row clear of the
+         attribution footer while both still scroll under them; the extra bottom padding keeps the
+         last row clear of the Continue Reading button. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp"
-        android:scrollbars="vertical"
-        tools:itemCount="6"
-        tools:listitem="@layout/item_surah" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/surah_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="88dp"
+            android:scrollbars="vertical"
+            tools:itemCount="6"
+            tools:listitem="@layout/item_surah" />
+
+        <TextView
+            android:id="@+id/surah_list_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:text="@string/quran_loading"
+            android:textColor="@color/quran_header"
+            android:textSize="15sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/surah_list_continue_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_quran_button"
+            android:contentDescription="@string/quran_cd_continue_reading"
+            android:elevation="6dp"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:text="@string/quran_continue_reading"
+            android:textAllCaps="false"
+            android:textColor="@color/quran_on_button"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </FrameLayout>
 
     <View
+        android:id="@+id/surah_list_divider_bottom"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/quran_divider" />
