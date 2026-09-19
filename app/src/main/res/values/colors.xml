@@ -20,4 +20,33 @@
     <color name="themeColor">#eeeeee</color>
     <color name="themeDarkColor">#dedede</color>
     <color name="transparent">#00000000</color>
+
+    <!--
+      Quran reader palette. Single source of truth for the Surah Index and the reader screens;
+      used by res/values/quran.xml, res/layout/activity_surah_list.xml, item_surah.xml and
+      activity_quran.xml. Do not redefine these values elsewhere.
+    -->
+
+    <!-- Background: paper colour behind the whole reader and the index screen. -->
+    <color name="quran_background">#FBF9F0</color>
+    <!-- Text: Arabic verse ink and primary list text. -->
+    <color name="quran_text">#1A1A1A</color>
+    <!-- Highlight: selection / pressed tint, e.g. a tapped surah row. -->
+    <color name="quran_highlight">#D0ECE4</color>
+    <!-- Header: surah name, Juz and page labels (muted secondary text). -->
+    <color name="quran_header">#7A7A7A</color>
+    <!-- Buttons: Next Surah / Previous Surah and the home-screen Quran pill. -->
+    <color name="quran_button">#2D7D46</color>
+
+    <!-- Supporting shades derived from the five colours above. -->
+    <!-- Pressed state for quran_button, so taps give feedback without a new hue. -->
+    <color name="quran_button_pressed">#246438</color>
+    <!-- Foreground for text drawn on top of quran_button. -->
+    <color name="quran_on_button">#FBF9F0</color>
+    <!-- Hairline separators on quran_background, darker than the highlight. -->
+    <color name="quran_divider">#E8E4D5</color>
+    <!-- Surah number badge fill: the highlight tint, kept away from pure white. -->
+    <color name="quran_badge">#EFEADA</color>
+    <!-- Load/permission errors on quran_background. -->
+    <color name="quran_error">#C62828</color>
 </resources>

@@ -1,26 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="quran_green">#2D7D46</color>
-    <color name="quran_paper">#FBF9F0</color>
-    <color name="quran_muted">#7A7A7A</color>
-    <color name="quran_selected">#D0ECE4</color>
-    <color name="quran_ink">#1A1A1A</color>
-    <color name="quran_error">#C62828</color>
+<!--
+  Quran feature strings and theme.
 
+  Colours live in res/values/colors.xml (quran_background, quran_text, quran_highlight,
+  quran_header, quran_button) so there is exactly one definition of the palette.
+
+  Language policy: Mushaf labels (surah name, Juz, page) are Arabic because they are part of the
+  scripture presentation; navigation chrome ("Next Surah", "Previous Surah") is English to match the
+  rest of the app. Flip either group here without touching the layouts.
+-->
+<resources>
+
+    <!-- Titles -->
     <string name="quran_title">Quran</string>
-    <string name="quran_loading">Loading Surah…</string>
-    <string name="quran_retry">Retry</string>
-    <string name="quran_invalid_surah">Please open a Surah between 1 and 114.</string>
-    <string name="quran_invalid_ayah">This ayah number is not valid for the selected Surah.</string>
-    <string name="quran_load_error">Unable to load Surah. Please check your network connection and tap Retry.</string>
+    <string name="quran_index_title">Surah Index</string>
+    <string name="quran_index_subtitle">114 Surahs &#183; 6236 Ayahs &#183; Works offline</string>
+
+    <!-- Reader labels (Arabic, Mushaf convention) -->
     <string name="quran_surah_label" translatable="false">سورة %1$s</string>
     <string name="quran_juz_label" translatable="false">الجزء %1$s</string>
+    <string name="quran_juz_range_label" translatable="false">الجزء %1$s&#8211;%2$s</string>
     <string name="quran_page_label" translatable="false">صفحة %1$s</string>
+    <string name="quran_pages_label" translatable="false">صفحة %1$s&#8211;%2$s</string>
 
-    <!-- Native theme; this Activity does not depend on AppCompat or offline database files. -->
+    <!-- Navigation chrome -->
+    <string name="quran_next_surah">Next Surah</string>
+    <string name="quran_previous_surah">Previous Surah</string>
+    <string name="quran_retry">Retry</string>
+    <string name="quran_loading">Loading Surah&#8230;</string>
+    <string name="quran_surah_position">%1$d of %2$d</string>
+    <!-- %1$d ayahs, %2$s Makkah/Madinah, %3$d starting Juz -->
+    <string name="quran_row_meta">%1$d Ayahs &#183; %2$s &#183; Juz %3$d</string>
+    <string name="quran_makkah">Makkah</string>
+    <string name="quran_madinah">Madinah</string>
+    <!-- %1$d number, %2$s English name, %3$s Arabic name, %4$d ayahs, %5$s Makkah/Madinah -->
+    <string name="quran_row_a11y">Surah %1$d, %2$s, %3$s, %4$d ayahs, revealed in %5$s</string>
+
+    <!-- Errors: always actionable, never a blank screen -->
+    <string name="quran_invalid_surah">Please open a Surah between 1 and 114.</string>
+    <string name="quran_load_error">Unable to open this Surah. The offline Quran database is missing or damaged.</string>
+    <string name="quran_font_error">Unable to load the Quran font. Check that assets/fonts/quran_font.ttf is packaged.</string>
+    <string name="quran_attribution">Quran text: Tanzil Project (tanzil.net) &#183; Font: Amiri Quran (OFL)</string>
+
+    <!-- Accessibility -->
+    <string name="quran_cd_surah_number">Surah %1$s</string>
+    <string name="quran_cd_next_surah">Load the next Surah</string>
+    <string name="quran_cd_previous_surah">Load the previous Surah</string>
+    <string name="quran_cd_back">Back to the Surah index</string>
+
+    <!--
+      Native theme: neither Quran screen depends on AppCompat, which keeps the reader off the
+      library stack the Clock/Wallpaper screens still pin to old versions of.
+    -->
     <style name="QuranTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:windowBackground">@color/quran_paper</item>
+        <item name="android:windowBackground">@color/quran_background</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">@color/quran_button</item>
     </style>
 </resources>

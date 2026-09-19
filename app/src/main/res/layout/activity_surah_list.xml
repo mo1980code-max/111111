@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Surah Index screen: all 114 surahs in a RecyclerView.
+
+  The list is built from Java arrays in SurahIndex, not from the database, so this screen paints
+  instantly on a cold start while QuranDatabaseHelper is still copying the asset on a worker thread.
+
+  android:id/quran_root style inset handling: the root carries the padding that QuranListActivity
+  grows by the system-bar and cutout insets, because targetSdk 36 draws edge to edge.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/surah_list_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/quran_background"
+    android:orientation="vertical"
+    tools:context=".activity.SurahListActivity">
+
+    <!-- Screen header: back affordance plus the index title. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="20dp">
+
+        <ImageButton
+            android:id="@+id/surah_list_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/quran_cd_back"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_back"
+            android:tint="@color/quran_text" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/quran_index_title"
+                android:textColor="@color/quran_text"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/quran_index_subtitle"
+                android:textColor="@color/quran_header"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@string/quran_title"
+            android:src="@drawable/ic_quran" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/quran_divider" />
+
+    <!-- clipToPadding=false keeps the first row clear of the divider and the last row clear of the
+         attribution footer while both still scroll under them. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/surah_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:scrollbars="vertical"
+        tools:itemCount="6"
+        tools:listitem="@layout/item_surah" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/quran_divider" />
+
+    <!-- CC-BY-3.0 attribution travels with the shipped text, not only with the source tree. -->
+    <TextView
+        android:id="@+id/surah_list_attribution"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:minHeight="40dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:text="@string/quran_attribution"
+        android:textColor="@color/quran_header"
+        android:textSize="11sp" />
+</LinearLayout>
