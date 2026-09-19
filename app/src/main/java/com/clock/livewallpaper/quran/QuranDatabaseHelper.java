@@ -5,10 +5,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +26,7 @@ import java.util.List;
 public final class QuranDatabaseHelper {
     public static final String DATABASE_NAME = "quran.ar.uthmani.db";
     private static final String ASSET_PATH = "databases/" + DATABASE_NAME;
+    private static final String FALLBACK_ASSET_PATH = "quran_fallback.json";
     private static final Object COPY_LOCK = new Object();
     private final Context context;
 
@@ -60,6 +67,50 @@ public final class QuranDatabaseHelper {
             throw new IOException("Incomplete Surah " + surah + " in " + DATABASE_NAME);
         }
         return verses;
+    }
+
+    /**
+     * Reads the tiny checked-in emergency dataset. It intentionally contains Al-Fatiha only,
+     * so the screen can still be used in airplane mode if the full database is damaged or an
+     * older APK was installed without the database asset.
+     */
+    public List<Ayah> getBundledFallbackVerses() throws IOException {
+        try (InputStream input = context.getAssets().open(FALLBACK_ASSET_PATH)) {
+            String json = readUtf8(input);
+            try {
+                JSONObject root = new JSONObject(json);
+                if (root.getInt("surah") != 1) {
+                    throw new IOException("The Quran fallback must contain Surah 1.");
+                }
+                JSONArray items = root.getJSONArray("verses");
+                if (items.length() != QuranMetadata.ayahCount(1)) {
+                    throw new IOException("The Quran fallback is incomplete.");
+                }
+                List<Ayah> verses = new ArrayList<>(items.length());
+                for (int index = 0; index < items.length(); index++) {
+                    JSONObject item = items.getJSONObject(index);
+                    int number = item.getInt("ayah");
+                    String text = item.getString("text");
+                    if (number != index + 1 || text.trim().isEmpty()) {
+                        throw new IOException("The Quran fallback contains an invalid ayah.");
+                    }
+                    verses.add(new Ayah(1, number, text));
+                }
+                return verses;
+            } catch (JSONException error) {
+                throw new IOException("The Quran fallback is not valid JSON.", error);
+            }
+        }
+    }
+
+    private static String readUtf8(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+            output.write(buffer, 0, count);
+        }
+        return output.toString(StandardCharsets.UTF_8.name());
     }
 
     private File installIfNeeded() throws IOException {

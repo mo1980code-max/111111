@@ -8,9 +8,13 @@
 
     <string name="quran_title">Quran</string>
     <string name="quran_loading">Loading the offline Quran…</string>
+    <string name="quran_loading_fallback">Opening the offline Al-Fatiha fallback…</string>
     <string name="quran_invalid_surah">Please open a Surah between 1 and 114.</string>
     <string name="quran_invalid_ayah">This ayah number is not valid for the selected Surah.</string>
-    <string name="quran_load_error">The offline Quran could not be loaded. Make sure this app bundles a valid databases/quran.ar.uthmani.db and fonts/quran_font.ttf, then reopen this screen.</string>
+    <string name="quran_load_error">The full offline Quran is unavailable. Check databases/quran.ar.uthmani.db and fonts/quran_font.ttf, then tap Retry or read the bundled Al-Fatiha fallback while offline.</string>
+    <string name="quran_fallback_error">The offline fallback could not be opened. Tap Retry to try the bundled assets again.</string>
+    <string name="quran_retry">Retry</string>
+    <string name="quran_use_fallback">Read Al-Fatiha offline</string>
     <string name="quran_surah_label" translatable="false">سورة %1$s</string>
     <string name="quran_juz_label" translatable="false">الجزء %1$s</string>
     <string name="quran_page_label" translatable="false">صفحة %1$s</string>

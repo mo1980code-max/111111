@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -39,22 +40,29 @@ public final class QuranActivity extends Activity {
     public static final String EXTRA_AYAH = "quran.ayah";
     private static final String STATE_AYAH = "selected_ayah";
     private static final String STATE_SCROLL = "scroll_y";
+    private static final String TAG = "QuranActivity";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean destroyed;
+    private int loadGeneration;
     private int surah;
     private int selectedAyah;
+    private int restoredScroll = -1;
     private TextView versesView;
     private TextView juzView;
     private TextView pageView;
     private TextView statusView;
     private ScrollView scrollView;
     private View progress;
+    private Button retryButton;
+    private Button fallbackButton;
     private Spannable renderedText;
     private BackgroundColorSpan selection;
     private int[] verseStarts;
     private int[] verseEnds;
+    private QuranDatabaseHelper database;
+    private AssetManager assets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +75,16 @@ public final class QuranActivity extends Activity {
         statusView = findViewById(R.id.quran_status);
         scrollView = findViewById(R.id.quran_scroll);
         progress = findViewById(R.id.quran_progress);
+        retryButton = findViewById(R.id.quran_retry);
+        fallbackButton = findViewById(R.id.quran_fallback);
+        database = new QuranDatabaseHelper(getApplicationContext());
+        assets = getAssets();
+
+        retryButton.setOnClickListener(view -> {
+            restoredScroll = -1;
+            loadContent();
+        });
+        fallbackButton.setOnClickListener(view -> loadFallback());
 
         surah = getIntent().getIntExtra(EXTRA_SURAH, 1);
         if (surah < 1 || surah > 114) {
@@ -80,47 +98,128 @@ public final class QuranActivity extends Activity {
             showError(R.string.quran_invalid_ayah);
             return;
         }
+        restoredScroll = savedInstanceState == null
+                ? -1 : savedInstanceState.getInt(STATE_SCROLL, 0);
+        updateSurahHeader();
+        versesView.setMovementMethod(LinkMovementMethod.getInstance());
+        loadContent();
+    }
+
+    private void updateSurahHeader() {
         TextView surahView = findViewById(R.id.quran_surah_name);
         String name = getResources().getStringArray(R.array.quran_surah_names)[surah - 1];
         surahView.setText(getString(R.string.quran_surah_label, name));
         setTitle(surahView.getText());
-        versesView.setMovementMethod(LinkMovementMethod.getInstance());
+    }
 
-        QuranDatabaseHelper database = new QuranDatabaseHelper(getApplicationContext());
-        AssetManager assets = getAssets();
-        int requestedSurah = surah;
-        int restoredScroll = savedInstanceState == null
-                ? -1 : savedInstanceState.getInt(STATE_SCROLL, 0);
+    /** Loads the complete packaged database without blocking the Activity's first frame. */
+    private void loadContent() {
+        final int generation = ++loadGeneration;
+        final int requestedSurah = surah;
+        final int requestedAyah = selectedAyah;
+        final int requestedScroll = restoredScroll;
+        showLoading(R.string.quran_loading);
         executor.execute(() -> {
+            Typeface font = loadQuranTypeface();
             try {
-                // Do not silently replace a missing Quran font with a system fallback.
-                Typeface font = Typeface.createFromAsset(assets, "fonts/quran_font.ttf");
                 List<Ayah> verses = database.getVersesBySurah(requestedSurah);
-                if (destroyed) return;
                 mainHandler.post(() -> {
-                    if (destroyed || isFinishing()) return;
-                    versesView.setTypeface(font);
-                    displayVerses(verses);
-                    progress.setVisibility(View.GONE);
-                    statusView.setVisibility(View.GONE);
-                    scrollView.setVisibility(View.VISIBLE);
-                    scrollView.post(() -> {
-                        if (destroyed || isFinishing()) return;
-                        if (restoredScroll >= 0) {
-                            scrollView.scrollTo(0, restoredScroll);
-                        } else if (versesView.getLayout() != null) {
-                            int line = versesView.getLayout().getLineForOffset(
-                                    verseStarts[selectedAyah - 1]);
-                            scrollView.scrollTo(0, versesView.getLayout().getLineTop(line));
-                        }
-                    });
+                    if (!isCurrent(generation)) return;
+                    showVerses(verses, font, requestedScroll, false,
+                            requestedSurah, requestedAyah);
                 });
-            } catch (IOException | RuntimeException error) {
-                Log.e("QuranActivity", "Unable to open the bundled Quran assets", error);
-                if (destroyed) return;
+            } catch (Exception error) {
+                Log.e(TAG, "Unable to open the bundled Quran database", error);
+                // The default screen can always remain useful in airplane mode. Do not make
+                // the user retry an asset that is known to be unavailable before showing Fatiha.
+                if (requestedSurah == 1) {
+                    try {
+                        List<Ayah> fallback = database.getBundledFallbackVerses();
+                        mainHandler.post(() -> {
+                            if (!isCurrent(generation)) return;
+                            showVerses(fallback, font, -1, true, 1, requestedAyah);
+                        });
+                        return;
+                    } catch (IOException | RuntimeException fallbackError) {
+                        Log.e(TAG, "The bundled Quran fallback is also unavailable",
+                                fallbackError);
+                    }
+                }
                 mainHandler.post(() -> {
-                    if (!destroyed && !isFinishing()) showError(R.string.quran_load_error);
+                    if (isCurrent(generation)) showError(R.string.quran_load_error);
                 });
+            }
+        });
+    }
+
+    /** Loads only the checked-in Al-Fatiha dataset after a failed full-data attempt. */
+    private void loadFallback() {
+        final int generation = ++loadGeneration;
+        showLoading(R.string.quran_loading_fallback);
+        executor.execute(() -> {
+            Typeface font = loadQuranTypeface();
+            try {
+                List<Ayah> fallback = database.getBundledFallbackVerses();
+                mainHandler.post(() -> {
+                    if (!isCurrent(generation)) return;
+                    showVerses(fallback, font, -1, true, 1, 1);
+                });
+            } catch (Exception error) {
+                Log.e(TAG, "Unable to open the bundled Quran fallback", error);
+                mainHandler.post(() -> {
+                    if (isCurrent(generation)) showError(R.string.quran_fallback_error);
+                });
+            }
+        });
+    }
+
+    /** A missing font must not turn readable local text into a broken screen. */
+    private Typeface loadQuranTypeface() {
+        try {
+            return Typeface.createFromAsset(assets, "fonts/quran_font.ttf");
+        } catch (RuntimeException error) {
+            Log.w(TAG, "quran_font.ttf is missing or invalid; using the system Arabic font",
+                    error);
+            return Typeface.DEFAULT;
+        }
+    }
+
+    private boolean isCurrent(int generation) {
+        return !destroyed && generation == loadGeneration && !isFinishing();
+    }
+
+    private void showLoading(int message) {
+        progress.setVisibility(View.VISIBLE);
+        statusView.setVisibility(View.VISIBLE);
+        statusView.setText(message);
+        scrollView.setVisibility(View.GONE);
+        retryButton.setVisibility(View.GONE);
+        fallbackButton.setVisibility(View.GONE);
+    }
+
+    private void showVerses(List<Ayah> verses, Typeface font, int scroll,
+                            boolean usedFallback, int contentSurah, int requestedAyah) {
+        surah = contentSurah;
+        selectedAyah = Math.max(1, Math.min(requestedAyah, verses.size()));
+        updateSurahHeader();
+        versesView.setTypeface(font);
+        displayVerses(verses);
+        progress.setVisibility(View.GONE);
+        statusView.setVisibility(View.GONE);
+        scrollView.setVisibility(View.VISIBLE);
+        retryButton.setVisibility(View.GONE);
+        fallbackButton.setVisibility(View.GONE);
+        if (usedFallback) {
+            Log.w(TAG, "Showing the bundled Al-Fatiha fallback instead of the full Quran");
+        }
+        scrollView.post(() -> {
+            if (destroyed || isFinishing()) return;
+            if (scroll >= 0) {
+                scrollView.scrollTo(0, scroll);
+            } else if (versesView.getLayout() != null) {
+                int line = versesView.getLayout().getLineForOffset(
+                        verseStarts[selectedAyah - 1]);
+                scrollView.scrollTo(0, versesView.getLayout().getLineTop(line));
             }
         });
     }
@@ -216,6 +315,8 @@ public final class QuranActivity extends Activity {
         scrollView.setVisibility(View.GONE);
         statusView.setVisibility(View.VISIBLE);
         statusView.setText(message);
+        retryButton.setVisibility(View.VISIBLE);
+        fallbackButton.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -228,6 +329,7 @@ public final class QuranActivity extends Activity {
     @Override
     protected void onDestroy() {
         destroyed = true;
+        loadGeneration++;
         executor.shutdownNow();
         mainHandler.removeCallbacksAndMessages(null);
         super.onDestroy();

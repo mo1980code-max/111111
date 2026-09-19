@@ -21,19 +21,28 @@ Existing Clock/Wallpaper dependencies are retained (one duplicate Glide declarat
 
 **Scope:** the Quran reader handles Android 15/16 enforced edge-to-edge with native window insets and readable system-bar icons. This is not a full target-36 migration audit of the Clock/Wallpaper screens or their old third-party libraries. Test their permissions, media/storage access, back navigation, system-bar insets, and dependency/R8 compatibility separately before releasing the entire app.
 
-## 1. Supply the two real assets before building
+## 1. Bundled assets and offline fallback
+
+The required assets are checked into the app at these exact, case-sensitive paths:
 
 ```text
 app/src/main/assets/
 ├── databases/
 │   └── quran.ar.uthmani.db
-└── fonts/
-    └── quran_font.ttf
+├── fonts/
+│   └── quran_font.ttf
+└── quran_fallback.json
 ```
 
-**Neither binary was supplied in this repository.** Obtain a verified, licensed copy of the Uthmani database and its compatible Quran font, then place them at these exact, case-sensitive paths. Do not substitute generated Quran text or an empty database. No download occurs at runtime. A missing/unreadable font or database produces an error message, not a silent font substitution or blank reader.
+The database is a standalone SQLite file containing all 6,236 Hafs-numbered ayahs in
+`arabic_text(sura, ayah, text)`, and the font is the bundled Arabic Quran typeface. The
+small JSON file is deliberately an emergency fallback containing the seven ayahs of
+Al-Fatiha. It lets the screen render useful offline content even when an old install,
+partial APK update, or corrupt database prevents the full reader from opening. No
+runtime download or network connection is required.
 
-The database must be an uncompressed, standalone SQLite file (not a ZIP or a database that depends on a separate WAL file). Required schema contract:
+The database must remain an uncompressed, standalone SQLite file (not a ZIP or a database
+that depends on a separate WAL file). Required schema contract:
 
 ```sql
 -- Describes the required columns; do not create an empty database with this SQL.
@@ -78,6 +87,7 @@ This app's built-in entry point is the home screen (`MainActivity` → `activity
 | `app/src/main/java/com/clock/livewallpaper/quran/QuranMetadata.java` | Ayah counts and official 604-page Madani page/Juz mapping |
 | `app/src/main/res/layout/activity_quran.xml` | Paper-colored, RTL, centered, scrollable reader |
 | `app/src/main/res/values/quran.xml` | Colors, labels, error messages and native theme |
+| `app/src/main/assets/quran_fallback.json` | Validated seven-ayah Al-Fatiha fallback for damaged or missing full-data assets |
 | `app/src/main/res/values/quran_surah_names.xml` | All 114 Arabic Surah names, in default resources so the existing English-only resource configuration retains them |
 
 To reuse this in a different application, copy all six files, change package declarations and the `R` import, and register `QuranActivity` with `@style/QuranTheme` in that application's manifest. Also merge the background `prepareDatabase()` startup hook from `app/src/main/java/com/clock/livewallpaper/AppClass.java` into your existing `Application.onCreate()`; do not replace unrelated application initialization. Apply the build configuration listed above.
@@ -94,7 +104,7 @@ To reuse this in a different application, copy all six files, change package dec
 
 ## Database lifecycle
 
-`AppClass.onCreate()` calls `prepareDatabase()` on a worker thread at initial app launch (and validates/reuses the installed copy on later starts). A failure is logged without crashing unrelated Clock/Wallpaper features. `QuranActivity` also prepares the database when querying, so it safely waits for an in-progress install or retries a failed startup install.
+`AppClass.onCreate()` calls `prepareDatabase()` on a worker thread at initial app launch (and validates/reuses the installed copy on later starts). A failure is logged without crashing unrelated Clock/Wallpaper features. `QuranActivity` also prepares the database when querying, so it safely waits for an in-progress install or retries a failed startup install. If that retry still fails, the Activity first opens `quran_fallback.json` for Surah Al-Fatiha, and otherwise exposes both a Retry action and the same fallback action instead of leaving a blank reader.
 
 The helper uses `context.getDatabasePath("quran.ar.uthmani.db")`, not a hard-coded `/data/data` path. On first use, it copies to a temporary file in the same private database directory, syncs and validates it, then renames it into place. A partial first-run copy is never opened under the final database name. A process-wide lock prevents competing Activity instances from installing simultaneously.
 

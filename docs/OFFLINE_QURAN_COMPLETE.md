@@ -6,9 +6,9 @@ This document contains the full implementation inline, so no source-file links a
 
 - JDK 17 for both the Gradle runtime and compiler.
 - Android Gradle Plugin 8.13.2, Gradle 8.13, compileSdk/targetSdk 36, minSdk 23.
-- Supply the verified database at `app/src/main/assets/databases/quran.ar.uthmani.db`.
-- Supply the compatible Uthmani font at `app/src/main/assets/fonts/quran_font.ttf`.
-- Neither binary is currently supplied. The reader makes no runtime network requests.
+- The verified database is bundled at `app/src/main/assets/databases/quran.ar.uthmani.db`.
+- The compatible Uthmani font is bundled at `app/src/main/assets/fonts/quran_font.ttf`.
+- `app/src/main/assets/quran_fallback.json` contains an offline Al-Fatiha fallback for damaged or missing full-data assets. The reader makes no runtime network requests.
 - All supporting Java and resource files below are required. For another app, adapt package names and the R import, and merge—not replace—existing application initialization and manifest configuration.
 
 ## Manifest registration
