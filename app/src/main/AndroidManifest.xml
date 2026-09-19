@@ -21,6 +21,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <activity
+            android:name="com.clock.livewallpaper.activity.QuranActivity"
+            android:exported="false"
+            android:label="@string/quran_title"
+            android:theme="@style/QuranTheme" />
+
         <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
         <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
