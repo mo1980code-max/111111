@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for the ad / unlock layer (see docs/ADS.md).
+
+  Language policy: the wording the user has to act on is Arabic (the "watch an ad to unlock" choice,
+  the ad label, the hints under each section title), because that is the wording specified for this
+  app. Everything a translator would otherwise own stays here so there is exactly one place to edit.
+
+  Hard requirements encoded in these strings:
+    * the ad label says "إعلان" so a native ad can never look like content;
+    * the rewarded dialog is a *choice* ("مشاهدة إعلان لفتح هذه الساعة") with a decline button;
+    * the failure texts always reassure that free content and already-unlocked content still work.
+-->
+<resources>
+
+    <!-- Ad badge shown on every in-feed native ad card. -->
+    <string name="ad_label">إعلان</string>
+    <string name="ad_content_description">إعلان</string>
+
+    <!-- Rewarded unlock dialog (the only place a rewarded ad can come from). -->
+    <string name="unlock_clock_title">ساعة مقفلة</string>
+    <string name="unlock_clock_message">هذه الساعة ليست ضمن الساعات المجانية. يمكنك فتحها مرة واحدة بمشاهدة إعلان قصير، وستبقى مفتوحة دائمًا على جهازك.</string>
+    <string name="unlock_clock_cta">مشاهدة إعلان لفتح هذه الساعة</string>
+    <string name="unlock_wallpaper_title">خلفية مقفلة</string>
+    <string name="unlock_wallpaper_message">هذه الخلفية ليست ضمن الصور المجانية. يمكنك فتحها مرة واحدة بمشاهدة إعلان قصير، وستبقى مفتوحة دائمًا على جهازك.</string>
+    <string name="unlock_wallpaper_cta">مشاهدة إعلان لفتح هذه الخلفية</string>
+    <string name="unlock_later">لاحقًا</string>
+
+    <!-- Outcomes. Each one states what keeps working, so the user is never left guessing. -->
+    <string name="ad_preparing">جارٍ تجهيز الإعلان…</string>
+    <string name="ad_unlocked">تم الفتح — أصبحت متاحة دائمًا على هذا الجهاز.</string>
+    <string name="ad_offline_message">لا يوجد اتصال بالإنترنت. الساعات والخلفيات المجانية، والتي سبق فتحها، تعمل كالمعتاد.</string>
+    <string name="ad_unavailable_message">لم يتوفّر إعلان الآن. جرّب مرة أخرى لاحقًا.</string>
+    <string name="ad_busy_message">يوجد إعلان معروض حاليًا. حاول بعد قليل.</string>
+
+    <!-- Card badges. -->
+    <string name="content_locked">مقفلة</string>
+    <string name="content_unlock_cta">افتحها بالإعلان</string>
+
+    <!-- Clock sections. The three types are the whole structure of the clock area. -->
+    <string name="clock_analog_title">Analog Clock</string>
+    <string name="clock_digital_title">Digital Clock</string>
+    <string name="clock_smart_title">Smart Clock</string>
+    <string name="clock_section_hint">٩ ساعات مجانية · كل ساعة إضافية تُفتح بإعلان واحد وتبقى مفتوحة</string>
+    <string name="clock_choose_analog">ساعات تناظرية</string>
+    <string name="clock_choose_digital">ساعات رقمية</string>
+    <string name="clock_choose_smart">ساعات ذكية</string>
+
+    <!-- Wallpaper sections and their hint. Titles mirror assets/wallpapers/index.json. -->
+    <string name="wallpaper_title">الخلفيات</string>
+    <string name="wallpaper_all_title">كل الخلفيات</string>
+    <string name="wallpaper_section_hint">٣ صور مجانية في كل قسم · الصور الإضافية تُفتح بالإعلان</string>
+    <string name="wallpaper_section_count">%1$d صور · %2$d مجانية</string>
+    <string name="wallpaper_set">Set Wallpaper</string>
+    <string name="wallpaper_saved_locally">الصورة محفوظة على جهازك — لا حاجة للإنترنت</string>
+    <string name="wallpaper_missing">تعذّر تجهيز صورة الخلفية من داخل التطبيق. أعد المحاولة.</string>
+    <string name="share">مشاركة</string>
+
+</resources>

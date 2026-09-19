@@ -18,6 +18,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.ads.AdPolicy;
 import com.clock.livewallpaper.quran.QuranMetadata;
 import com.clock.livewallpaper.quran.QuranSettings;
 import com.clock.livewallpaper.quran.QuranThemeColors;
@@ -106,6 +107,11 @@ public final class QuranActivity extends AppCompatActivity implements QuranFragm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quran);
+
+        // Requirement 12: the whole Quran section is ad free. The flag is raised here rather than in
+        // each call site so a later screen cannot forget to check it: while it is up, the ad layer
+        // refuses every format at the source, including the app open ad on a foreground return.
+        AdPolicy.enterQuranScreen();
 
         settings = QuranSettings.get(this);
         root = findViewById(R.id.quran_root);
@@ -232,6 +238,14 @@ public final class QuranActivity extends AppCompatActivity implements QuranFragm
         Fragment fragment = getSupportFragmentManager()
                 .findFragmentByTag("f" + adapter.getItemId(position));
         return fragment instanceof QuranFragment ? (QuranFragment) fragment : null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Drops the flag only when the last Quran screen of the task is gone, and the policy records the
+        // moment so no ad is shown on the very next frame after leaving the section.
+        AdPolicy.exitQuranScreen();
+        super.onDestroy();
     }
 
     // ---------------------------------------------------------------------------------------------

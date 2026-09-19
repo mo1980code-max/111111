@@ -82,4 +82,28 @@
     <color name="azkar_divider">#E6E0CE</color>
     <!-- Progress track behind the emerald progress fill. -->
     <color name="azkar_track">#E9E4D2</color>
+
+    <!--
+      Ad and unlock layer palette (see values/ads.xml, docs/ADS.md). One definition for every ad
+      surface so a native ad card can never take a content card's colours by accident.
+    -->
+    <!-- In-feed native ad card: warm paper, deliberately unlike the dark content tiles. -->
+    <color name="ad_surface">#FFFDF6</color>
+    <color name="ad_stroke">#D9D2BE</color>
+    <color name="ad_badge_bg">#1F2937</color>
+    <color name="ad_badge_text">#FFFFFF</color>
+    <color name="ad_headline">#1A1A1A</color>
+    <color name="ad_body">#5B5648</color>
+    <color name="ad_cta">#0E7C5B</color>
+    <color name="ad_cta_text">#FFFFFF</color>
+    <color name="ad_divider">#EAE4D2</color>
+    <!-- Locked tile: dim the art, keep the lock badge legible. -->
+    <color name="lock_scrim">#A6101416</color>
+    <color name="lock_badge_bg">#F2FFFFFF</color>
+    <color name="lock_badge_text">#1A1A1A</color>
+    <color name="lock_accent">#C9A227</color>
+    <!-- Section subtitle under the header bar. -->
+    <color name="section_hint">#7C7666</color>
+    <!-- Same caption, drawn on the dark header image instead of a white background. -->
+    <color name="section_hint_on_dark">#D9FFFFFF</color>
 </resources>

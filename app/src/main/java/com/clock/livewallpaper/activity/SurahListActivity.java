@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.ads.AdPolicy;
 import com.clock.livewallpaper.adapter.AyahSearchAdapter;
 import com.clock.livewallpaper.adapter.SurahListAdapter;
 import com.clock.livewallpaper.quran.QuranDatabaseHelper;
@@ -94,6 +95,12 @@ public final class SurahListActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_surah_list);
+
+        // Requirement 12: the whole Quran section is ad free. The flag is raised here rather than in
+        // each call site so a later screen cannot forget to check it: while it is up, the ad layer
+        // refuses every format at the source, including the app open ad on a foreground return.
+        AdPolicy.enterQuranScreen();
+
         setTitle(R.string.quran_index_title);
 
         settings = QuranSettings.get(this);
@@ -406,6 +413,7 @@ public final class SurahListActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        AdPolicy.exitQuranScreen();
         // Cancels a copy or search that is still running; a later launch simply restarts the work.
         installer.shutdownNow();
         searcher.shutdownNow();

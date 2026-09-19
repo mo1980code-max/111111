@@ -19,12 +19,12 @@ import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.InputDeviceCompat;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.ads.AdPolicy;
+import com.clock.livewallpaper.image.LocalImage;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.OnColorSelectedListener;
 import com.flask.colorpicker.builder.ColorPickerClickListener;
@@ -257,6 +257,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 EditorActivity.this.layoutColor.setVisibility(View.VISIBLE);
                 EditorActivity.this.saveUserSettings();
                 EditorActivity.isDone = true;
+                // Going to the system wallpaper picker must not be answered with an ad on the way back.
+                AdPolicy.markSystemHandoff();
                 Intent intent = new Intent("android.service.wallpaper.CHANGE_LIVE_WALLPAPER");
                 intent.putExtra("android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT", new ComponentName(EditorActivity.this, LiveClockWallpaper.class));
                 EditorActivity.this.startActivity(intent);
@@ -383,7 +385,9 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         }
         this.mIvMainScreen.setScaleType(ImageView.ScaleType.CENTER_CROP);
         if (this.tinyDB.getBoolean("isImage")) {
-            Glide.with((FragmentActivity) this).load(new File(this.tinyDB.getString("ImageString"))).into(this.mIvMainScreen);
+            // The picked file is on the device already: decode it here, no image loader and no network.
+            LocalImage.fromFile(this.mIvMainScreen, new File(this.tinyDB.getString("ImageString")),
+                    getResources().getDisplayMetrics().heightPixels);
         } else if (this.tinyDB.getBoolean("isCustomBg")) {
             this.mIvMainScreen.setImageResource(this.tinyDB.getInt("customBg"));
         } else {
@@ -419,6 +423,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.setAction("android.intent.action.GET_CONTENT");
+            AdPolicy.markSystemHandoff();
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
         }
     }

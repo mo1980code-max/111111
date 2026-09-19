@@ -58,18 +58,12 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
-    implementation 'com.github.bumptech.glide:glide:4.9.0'
-    implementation 'com.android.volley:volley:1.2.1'
+    // The clock and wallpaper browsers read their artwork from assets/ through
+    // com.clock.livewallpaper.image.LocalImage, so the image loading stack the old build carried
+    // (Glide, Picasso, Volley, okdownload, FileDownloader, OkHttp) and the remote wallpaper APIs are
+    // gone on purpose: nothing in this app can fetch a picture over the network any more.
     implementation 'com.github.QuadFlask:colorpicker:0.0.14'
-    implementation 'com.github.ybq:Android-SpinKit:1.2.0'
     implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
-    implementation 'com.liulishuo.filedownloader:library:1.7.7'
-    implementation 'com.ogaclejapan.smarttablayout:utils-v4:2.0.0'
-    implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    implementation 'com.squareup.okio:okio:2.10.0'
-    implementation 'cn.dreamtobe.filedownloader:filedownloader-okhttp3-connection:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     // Swipe navigation between surahs: one QuranFragment per surah inside a FragmentStateAdapter.
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
