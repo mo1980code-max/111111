@@ -184,6 +184,40 @@
         </LinearLayout>
     </FrameLayout>
 
+    <!-- Azkar: standalone entry point, styled exactly like the Quran button above. -->
+    <FrameLayout
+        android:id="@+id/frameAzkar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="35dp"
+        android:layout_marginRight="35dp"
+        android:layout_marginTop="14dp"
+        android:foreground="?attr/selectableItemBackground">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_azkar_button"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_azkar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:fontFamily="@font/myfont"
+                android:text="@string/azkar_title"
+                android:textColor="@color/azkar_on_primary"
+                android:textSize="18sp" />
+        </LinearLayout>
+    </FrameLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

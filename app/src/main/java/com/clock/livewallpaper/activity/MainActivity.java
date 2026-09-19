@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
     private FrameLayout frameQuran;
+    private FrameLayout frameAzkar;
 
 
     ImageView rate, share;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
         this.frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
+        this.frameAzkar = (FrameLayout) findViewById(R.id.frameAzkar);
         rate = findViewById(R.id.rateus);
         share = findViewById(R.id.share);
         rate.setOnClickListener(new View.OnClickListener() {
@@ -89,6 +91,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 MainActivity.this.startActivity(new Intent(MainActivity.this, SurahListActivity.class));
+
+            }
+        });
+
+        // Azkar icon: standalone entry point, independent of the Quran section.
+        this.frameAzkar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                MainActivity.this.startActivity(new Intent(MainActivity.this, AzkarHomeActivity.class));
 
             }
         });
