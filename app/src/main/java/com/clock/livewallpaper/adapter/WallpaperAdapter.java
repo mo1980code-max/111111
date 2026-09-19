@@ -57,7 +57,8 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
     }
 
     public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        Glide.with(viewHolder.viewStub.getContext()).load(this.imagesItems.get(i).getImageUrl()).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
+        int resourceId = viewHolder.viewStub.getContext().getResources().getIdentifier(this.imagesItems.get(i).getImageUrl(), "drawable", viewHolder.viewStub.getContext().getPackageName());
+        Glide.with(viewHolder.viewStub.getContext()).load(resourceId).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
         viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (WallpaperAdapter.this.clickListener != null) {
