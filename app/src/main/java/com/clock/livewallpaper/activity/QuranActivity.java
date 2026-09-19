@@ -1,56 +1,66 @@
 package com.clock.livewallpaper.activity;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.view.WindowInsetsController;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.clock.livewallpaper.R;
-import com.clock.livewallpaper.quran.QuranDatabaseHelper;
 import com.clock.livewallpaper.quran.QuranMetadata;
+import com.clock.livewallpaper.quran.QuranSettings;
+import com.clock.livewallpaper.quran.QuranThemeColors;
 import com.clock.livewallpaper.quran.SurahIndex;
 import com.clock.livewallpaper.utils.EdgeToEdgeInsets;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Quran reading screen: one whole surah at a time, read entirely offline from the bundled
- * {@code quran.ar.uthmani.db}.
+ * Quran reading screen: a horizontal {@link ViewPager2} with one {@link QuranFragment} per surah,
+ * read entirely offline from the bundled {@code quran.ar.uthmani.db}.
  *
  * <h2>Entry contract</h2>
  * <pre>
  * Intent intent = new Intent(this, QuranActivity.class);
- * intent.putExtra(QuranActivity.EXTRA_SURAH_ID, 2);        // 1-114, defaults to 1
+ * intent.putExtra(QuranActivity.EXTRA_SURAH_ID, 2);         // 1-114, defaults to 1
  * intent.putExtra(QuranActivity.EXTRA_SURAH_NAME, "البقرة"); // optional, see below
- * intent.putExtra(QuranActivity.EXTRA_AYAH, 255);          // optional scroll target
+ * intent.putExtra(QuranActivity.EXTRA_AYAH, 255);           // optional one-shot ayah target
+ * intent.putExtra(QuranActivity.EXTRA_SCROLL_Y, 4321);      // optional one-shot px offset
  * startActivity(intent);
  * </pre>
- * {@code surah_id} is the single source of truth: it drives the database query, the header and the
- * Next/Previous navigation. {@code surah_name} is used for the window title; the on-screen header is
- * rendered from {@link SurahIndex} instead, because the name has to stay correct after the user
- * navigates to a surah no caller ever passed in. A mismatch between the two is logged, not displayed.
+ * {@code surah_id} is the single source of truth: it selects the starting page and drives the
+ * header. A {@code scroll_y} target wins over an {@code ayah} target; both are consumed once by the
+ * target page. {@code surah_name} is only used to validate the caller: the header is always
+ * rendered from {@link SurahIndex}, because swiping reaches surahs no caller ever passed in.
  *
  * <h2>Navigation</h2>
- * "Next Surah" and "Previous Surah" re-run the query and rebind the same views. No second activity,
- * no intent, no back-stack growth: pressing Back leaves the reader entirely rather than walking back
- * through 100 surahs. Formatted surahs are cached in {@link QuranDatabaseHelper}, so paging between
- * neighbours is effectively free. Both buttons are disabled at the ends of the Mushaf.
+ * The Next/Previous buttons of the earlier reader are gone: swiping left/right moves between
+ * surahs, and {@code FragmentStateAdapter} destroys pages far from the current one, so memory stays
+ * flat across the 114-page Mushaf. The pinned header and footer follow the selected page.
  *
- * <h2>Threading</h2>
- * The first-run asset copy and every query run on a single worker thread. Results posted to a
- * destroyed activity are dropped, so rotating mid-load cannot crash.
+ * <h2>Toolbar</h2>
+ * Font +/- (persisted size), a bookmark icon that saves {@code last_read_surah_id} plus the page's
+ * current {@code scrollY} to {@link QuranSettings}, and a moon/sun icon that flips the palette
+ * applied by {@link QuranThemeColors}. Every preference survives process death.
+ *
+ * <h2>Why AppCompatActivity</h2>
+ * {@code FragmentStateAdapter} hosts AndroidX fragments, which require a {@code FragmentActivity}
+ * host — the framework {@code android.app.Activity} used by the earlier reader cannot hold them.
+ * The theme in {@code res/values/quran.xml} was moved to an AppCompat parent accordingly.
  */
-public final class QuranActivity extends Activity {
+public final class QuranActivity extends AppCompatActivity implements QuranFragment.Listener {
 
     /** 1-based surah number to open, 1 to 114. */
     public static final String EXTRA_SURAH_ID = "surah_id";
@@ -58,116 +68,104 @@ public final class QuranActivity extends Activity {
     public static final String EXTRA_SURAH_NAME = "surah_name";
     /** Optional 1-based ayah to scroll to once the surah has loaded. */
     public static final String EXTRA_AYAH = "ayah";
+    /** Optional vertical scroll offset in px to restore once the surah has loaded. */
+    public static final String EXTRA_SCROLL_Y = "scroll_y";
 
     /** Accepted for callers written against the earlier reader; prefer {@link #EXTRA_SURAH_ID}. */
     private static final String LEGACY_EXTRA_SURAH = "quran.surah";
     /** Accepted for callers written against the earlier reader; prefer {@link #EXTRA_AYAH}. */
     private static final String LEGACY_EXTRA_AYAH = "quran.ayah";
 
-    /** Uthmani script face shipped at {@code assets/fonts/quran_font.ttf} (Amiri Quran, OFL 1.1). */
-    private static final String FONT_ASSET_PATH = "fonts/quran_font.ttf";
-
     private static final String TAG = "QuranActivity";
-    private static final String STATE_SURAH = "current_surah";
-    private static final String STATE_SCROLL = "scroll_y";
     private static final int DEFAULT_SURAH = 1;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private volatile boolean destroyed;
+    private QuranSettings settings;
 
-    private QuranDatabaseHelper database;
-    private Typeface quranTypeface;
-
-    /** Surah currently on screen, or being loaded. */
-    private int currentSurah = DEFAULT_SURAH;
-    /** Ayah to scroll to after the next successful load; 1 means "top of the surah". */
-    private int scrollTargetAyah = 1;
-    /** Exact scroll offset to restore after a configuration change, or -1 for "use the ayah target". */
-    private int restoredScroll = -1;
+    private View root;
+    private ViewPager2 pager;
+    private SurahPagerAdapter adapter;
 
     private TextView surahNameView;
     private TextView juzView;
     private TextView positionView;
     private TextView pageView;
-    private TextView textView;
-    private TextView statusView;
-    private ScrollView scrollView;
-    private View loadingContainer;
-    private ProgressBar progressBar;
-    private Button retryButton;
-    private Button previousButton;
-    private Button nextButton;
+    private View dividerTop;
+    private View dividerBottom;
+    private ImageButton themeToggleButton;
+
+    /** Pages currently attached to the FragmentManager; targets of live font/theme updates. */
+    private final List<QuranFragment> attachedPages = new ArrayList<>();
+
+    /** One-shot targets for the starting page, consumed by the adapter when it creates the page. */
+    private int pendingScrollSurah = -1;
+    private int pendingScrollY;
+    private int pendingAyahSurah = -1;
+    private int pendingAyah;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quran);
 
+        settings = QuranSettings.get(this);
+        root = findViewById(R.id.quran_root);
+        EdgeToEdgeInsets.apply(this, root, QuranThemeColors.background(this));
+
         bindViews();
-        EdgeToEdgeInsets.apply(this, findViewById(R.id.quran_root), getColor(R.color.quran_background));
-
-        database = new QuranDatabaseHelper(this);
-
-        if (!loadQuranFont()) {
-            return; // Error is already on screen; nothing else can render correctly without the face.
-        }
+        applyThemeToChrome();
 
         Intent intent = getIntent();
         int requestedSurah = readRequestedSurah(intent);
-        if (savedInstanceState != null) {
-            // Returning to a recreated activity: same surah, same scroll offset, no ayah jump.
-            requestedSurah = savedInstanceState.getInt(STATE_SURAH, requestedSurah);
-            restoredScroll = savedInstanceState.getInt(STATE_SCROLL, 0);
-            scrollTargetAyah = 1;
-        } else {
-            restoredScroll = -1;
-            int requestedAyah = intent.getIntExtra(EXTRA_AYAH,
-                    intent.getIntExtra(LEGACY_EXTRA_AYAH, 1));
-            scrollTargetAyah = clampAyah(requestedAyah, requestedSurah);
-        }
-
         if (!SurahIndex.isValid(requestedSurah)) {
-            showError(getString(R.string.quran_invalid_surah), false);
+            // A pager cannot display "no such page"; report and leave instead.
+            Toast.makeText(this, R.string.quran_invalid_surah, Toast.LENGTH_LONG).show();
+            finish();
             return;
         }
-        currentSurah = requestedSurah;
         applyWindowTitle(requestedSurah, intent.getStringExtra(EXTRA_SURAH_NAME));
 
-        previousButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                navigate(-1);
+        if (savedInstanceState == null) {
+            // Fresh launch: hand the one-shot targets to the starting page. ViewPager2 restores
+            // its own selected page across configuration changes, so this branch only runs once.
+            int requestedScroll = Math.max(0, intent.getIntExtra(EXTRA_SCROLL_Y, 0));
+            int requestedAyah = clampAyah(intent.getIntExtra(EXTRA_AYAH,
+                    intent.getIntExtra(LEGACY_EXTRA_AYAH, 1)), requestedSurah);
+            if (requestedScroll > 0) {
+                pendingScrollSurah = requestedSurah;
+                pendingScrollY = requestedScroll;
+            } else if (requestedAyah > 1) {
+                pendingAyahSurah = requestedSurah;
+                pendingAyah = requestedAyah;
             }
-        });
-        nextButton.setOnClickListener(new View.OnClickListener() {
+        }
+
+        adapter = new SurahPagerAdapter(this);
+        pager.setAdapter(adapter);
+        pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
-            public void onClick(View view) {
-                navigate(+1);
-            }
-        });
-        retryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loadSurah(currentSurah);
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                describeSurah(position + 1);
             }
         });
 
-        loadSurah(currentSurah);
+        if (savedInstanceState == null) {
+            // setCurrentItem does not animate the initial placement.
+            pager.setCurrentItem(requestedSurah - 1, false);
+        }
+        // Immediate paint: onPageSelected also fires on first layout, this only avoids a blank
+        // header for one frame.
+        describeSurah(savedInstanceState == null ? requestedSurah : pager.getCurrentItem() + 1);
     }
 
     private void bindViews() {
+        pager = findViewById(R.id.quran_pager);
         surahNameView = findViewById(R.id.quran_surah_name);
         juzView = findViewById(R.id.quran_juz);
         positionView = findViewById(R.id.quran_position);
         pageView = findViewById(R.id.quran_page);
-        textView = findViewById(R.id.quran_text);
-        statusView = findViewById(R.id.quran_status);
-        scrollView = findViewById(R.id.quran_scroll);
-        loadingContainer = findViewById(R.id.quran_loading_container);
-        progressBar = findViewById(R.id.quran_progress);
-        retryButton = findViewById(R.id.quran_retry_btn);
-        previousButton = findViewById(R.id.quran_prev_btn);
-        nextButton = findViewById(R.id.quran_next_btn);
+        dividerTop = findViewById(R.id.quran_divider_top);
+        dividerBottom = findViewById(R.id.quran_divider_bottom);
 
         ImageButton back = findViewById(R.id.quran_back);
         back.setOnClickListener(new View.OnClickListener() {
@@ -176,36 +174,105 @@ public final class QuranActivity extends Activity {
                 finish();
             }
         });
+
+        ImageButton fontDecrease = findViewById(R.id.quran_font_decrease);
+        fontDecrease.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeFontSize(-QuranSettings.FONT_SIZE_STEP);
+            }
+        });
+
+        ImageButton fontIncrease = findViewById(R.id.quran_font_increase);
+        fontIncrease.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeFontSize(QuranSettings.FONT_SIZE_STEP);
+            }
+        });
+
+        ImageButton bookmark = findViewById(R.id.quran_bookmark);
+        bookmark.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveBookmark();
+            }
+        });
+
+        themeToggleButton = findViewById(R.id.quran_theme_toggle);
+        themeToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleTheme();
+            }
+        });
     }
 
-    /**
-     * Loads the bundled Uthmani face from assets and applies it to every Arabic view.
-     *
-     * <p>Applied to the body and to the Arabic header labels (surah name, Juz, page). The bundled
-     * Amiri Quran face covers all 114 surah names, the Arabic-Indic digits and both ornate
-     * parentheses, which {@code tests/test_offline_quran.py} asserts -- so the header cannot turn to
-     * tofu. Latin chrome ("2 of 114", the nav buttons) keeps the system face.
-     *
-     * @return {@code true} when the font is applied. A missing or corrupt face is reported on screen
-     *     rather than silently falling back to a system font that cannot shape Uthmani marks.
-     */
-    private boolean loadQuranFont() {
-        try {
-            quranTypeface = Typeface.createFromAsset(getAssets(), FONT_ASSET_PATH);
-            if (quranTypeface == null) {
-                throw new IllegalStateException("Typeface.createFromAsset returned null");
-            }
-            textView.setTypeface(quranTypeface);
-            surahNameView.setTypeface(quranTypeface);
-            juzView.setTypeface(quranTypeface);
-            pageView.setTypeface(quranTypeface);
-            return true;
-        } catch (RuntimeException error) {
-            Log.e(TAG, "Could not load " + FONT_ASSET_PATH, error);
-            showError(getString(R.string.quran_font_error), false);
-            return false;
+    // ---------------------------------------------------------------------------------------------
+    // QuranFragment.Listener: live registry of attached pages
+    // ---------------------------------------------------------------------------------------------
+
+    @Override
+    public void onPageFragmentAttached(@NonNull QuranFragment fragment) {
+        if (!attachedPages.contains(fragment)) {
+            attachedPages.add(fragment);
         }
     }
+
+    @Override
+    public void onPageFragmentDetached(@NonNull QuranFragment fragment) {
+        attachedPages.remove(fragment);
+    }
+
+    /** @return the page at a pager position when it is currently instantiated, else {@code null}. */
+    private QuranFragment pageAt(int position) {
+        if (adapter == null) {
+            return null;
+        }
+        Fragment fragment = getSupportFragmentManager()
+                .findFragmentByTag("f" + adapter.getItemId(position));
+        return fragment instanceof QuranFragment ? (QuranFragment) fragment : null;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Pager adapter: one QuranFragment per surah
+    // ---------------------------------------------------------------------------------------------
+
+    /** Maps pager positions 0..113 onto surahs 1..114 and hands out one-shot scroll targets. */
+    private final class SurahPagerAdapter extends FragmentStateAdapter {
+
+        SurahPagerAdapter(@NonNull FragmentActivity activity) {
+            super(activity);
+        }
+
+        @Override
+        public int getItemCount() {
+            return SurahIndex.TOTAL_SURAHS;
+        }
+
+        @NonNull
+        @Override
+        public Fragment createFragment(int position) {
+            int surahId = position + 1;
+            int scrollY = 0;
+            int targetAyah = 1;
+            if (surahId == pendingScrollSurah) {
+                scrollY = pendingScrollY;
+                pendingScrollSurah = -1; // one-shot: never reapply after the page is recycled
+                pendingScrollY = 0;
+            }
+            if (surahId == pendingAyahSurah) {
+                targetAyah = pendingAyah;
+                pendingAyahSurah = -1;
+                pendingAyah = 1;
+            }
+            return QuranFragment.newInstance(surahId, scrollY, targetAyah);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Header / footer
+    // ---------------------------------------------------------------------------------------------
 
     /** Reads the requested surah from the intent, tolerating the legacy extra key. */
     private int readRequestedSurah(Intent intent) {
@@ -223,7 +290,7 @@ public final class QuranActivity extends Activity {
 
     /**
      * Uses the caller's {@code surah_name} for the window title, but logs a mismatch instead of
-     * trusting it for the header -- the header must survive navigation to surahs nobody passed in.
+     * trusting it for the header — the header must survive swiping to surahs nobody passed in.
      */
     private void applyWindowTitle(int surahId, String passedName) {
         String arabicName = SurahIndex.arabicName(surahId);
@@ -231,88 +298,15 @@ public final class QuranActivity extends Activity {
             Log.w(TAG, "surah_name extra \"" + passedName + "\" does not match surah " + surahId
                     + " (\"" + arabicName + "\"); using the index value");
         }
-        String title = passedName == null || passedName.trim().isEmpty()
-                ? arabicName : passedName.trim();
-        setTitle(getString(R.string.quran_surah_label, title));
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Loading
-    // ---------------------------------------------------------------------------------------------
-
-    /**
-     * Moves to a neighbouring surah without starting another activity.
-     *
-     * @param delta -1 for the previous surah, +1 for the next
-     */
-    private void navigate(int delta) {
-        int target = currentSurah + delta;
-        if (!SurahIndex.isValid(target)) {
-            return; // Buttons are disabled at the ends of the Mushaf; this is the second line of defence.
-        }
-        scrollTargetAyah = 1;
-        restoredScroll = -1;
-        loadSurah(target);
-    }
-
-    /**
-     * Queries {@code arabic_text} for one surah on a worker thread and rebinds every view on success.
-     *
-     * @param surahId 1-based surah number
-     */
-    private void loadSurah(final int surahId) {
+    /** Binds the pinned header and footer to the surah currently selected in the pager. */
+    private void describeSurah(int surahId) {
         if (!SurahIndex.isValid(surahId)) {
-            showError(getString(R.string.quran_invalid_surah), false);
             return;
         }
-        // Optimistically claim the surah so a rapid double tap cannot queue two conflicting loads.
-        currentSurah = surahId;
-        showLoading();
-
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Installs the asset on first use, then returns the cached, formatted surah.
-                    final String surahText = database.getSurahText(surahId);
-                    if (destroyed) {
-                        return;
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (destroyed || isFinishing()) {
-                                return;
-                            }
-                            showSurah(surahId, surahText);
-                        }
-                    });
-                } catch (IOException | RuntimeException error) {
-                    Log.e(TAG, "Could not read surah " + surahId + " from the offline database", error);
-                    if (destroyed) {
-                        return;
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (destroyed || isFinishing()) {
-                                return;
-                            }
-                            showError(getString(R.string.quran_load_error), true);
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    /** Binds a loaded surah: body text, header, footer, navigation state and scroll position. */
-    private void showSurah(int surahId, String surahText) {
         SurahIndex.Surah surah = SurahIndex.get(surahId);
 
-        textView.setText(surahText);
-
-        // Header: surah name on the left, Juz on the right, both in quran_header (#7A7A7A).
         surahNameView.setText(getString(R.string.quran_surah_label, surah.arabicName));
         juzView.setText(surah.spansMultipleJuz()
                 ? getString(R.string.quran_juz_range_label,
@@ -320,7 +314,6 @@ public final class QuranActivity extends Activity {
                 QuranMetadata.arabicNumber(surah.lastJuz))
                 : getString(R.string.quran_juz_label, QuranMetadata.arabicNumber(surah.firstJuz)));
 
-        // Footer: page number between the two navigation buttons.
         pageView.setText(surah.spansMultiplePages()
                 ? getString(R.string.quran_pages_label,
                 QuranMetadata.arabicNumber(surah.firstPage),
@@ -329,124 +322,107 @@ public final class QuranActivity extends Activity {
 
         positionView.setText(getString(R.string.quran_surah_position, surahId, SurahIndex.TOTAL_SURAHS));
         setTitle(getString(R.string.quran_surah_label, surah.arabicName));
+    }
 
-        previousButton.setEnabled(surahId > 1);
-        nextButton.setEnabled(surahId < SurahIndex.TOTAL_SURAHS);
+    // ---------------------------------------------------------------------------------------------
+    // Font size
+    // ---------------------------------------------------------------------------------------------
 
-        loadingContainer.setVisibility(View.GONE);
-        scrollView.setVisibility(View.VISIBLE);
-        restoreScrollPosition(surahId);
+    /** Moves the persisted body size by one step and repaints every attached page. */
+    private void changeFontSize(float deltaSp) {
+        float updated = settings.adjustFontSize(deltaSp);
+        for (int i = 0; i < attachedPages.size(); i++) {
+            attachedPages.get(i).applyFontSize(updated);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Bookmark
+    // ---------------------------------------------------------------------------------------------
+
+    /** Saves the selected surah plus its live scroll offset as the last-read position. */
+    private void saveBookmark() {
+        int surahId = pager.getCurrentItem() + 1;
+        if (!SurahIndex.isValid(surahId)) {
+            return;
+        }
+        QuranFragment page = pageAt(pager.getCurrentItem());
+        int scrollY = page == null ? 0 : page.getCurrentScrollY();
+        settings.saveBookmark(surahId, scrollY);
+        Toast.makeText(this, R.string.quran_bookmark_saved, Toast.LENGTH_SHORT).show();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Theme
+    // ---------------------------------------------------------------------------------------------
+
+    /** Flips the palette, persists it, and repaints the chrome plus every attached page. */
+    private void toggleTheme() {
+        boolean dark = settings.toggleDarkMode();
+        applyThemeToChrome();
+        for (int i = 0; i < attachedPages.size(); i++) {
+            attachedPages.get(i).applyThemeColors();
+        }
+    }
+
+    /** Paints everything the activity owns (root, toolbar, header, footer) with the active palette. */
+    private void applyThemeToChrome() {
+        boolean dark = settings.isDarkMode();
+
+        root.setBackgroundColor(QuranThemeColors.background(this));
+        dividerTop.setBackgroundColor(QuranThemeColors.divider(this));
+        dividerBottom.setBackgroundColor(QuranThemeColors.divider(this));
+
+        int chrome = QuranThemeColors.header(this);
+        surahNameView.setTextColor(chrome);
+        juzView.setTextColor(chrome);
+        positionView.setTextColor(chrome);
+        pageView.setTextColor(chrome);
+
+        ImageButton back = findViewById(R.id.quran_back);
+        ImageButton fontDecrease = findViewById(R.id.quran_font_decrease);
+        ImageButton fontIncrease = findViewById(R.id.quran_font_increase);
+        ImageButton bookmark = findViewById(R.id.quran_bookmark);
+        back.setColorFilter(chrome);
+        fontDecrease.setColorFilter(chrome);
+        fontIncrease.setColorFilter(chrome);
+        bookmark.setColorFilter(chrome);
+
+        // Show the destination of the next toggle: moon means "tap to go dark".
+        themeToggleButton.setImageResource(dark ? R.drawable.ic_sun : R.drawable.ic_moon);
+        themeToggleButton.setColorFilter(chrome);
+        themeToggleButton.setContentDescription(getString(dark
+                ? R.string.quran_cd_switch_to_light
+                : R.string.quran_cd_switch_to_dark));
+
+        applySystemBarAppearance(dark);
     }
 
     /**
-     * Scrolls to the restored offset, the requested ayah, or the top of the surah.
-     *
-     * <p>Runs in a {@code View#post(Runnable)} so it wins over the layout and focus passes, including
-     * the auto-scroll a selectable {@code TextView} can trigger.
+     * Keeps the status/navigation bar icons legible against the new background: dark icons on the
+     * Madani paper, light icons on the dark palette. Mirrors what {@link EdgeToEdgeInsets} sets up
+     * for light mode at launch.
      */
-    private void restoreScrollPosition(final int surahId) {
-        final int offsetToRestore = restoredScroll;
-        final int ayahToReach = scrollTargetAyah;
-        // Consume both: they describe one transition only.
-        restoredScroll = -1;
-        scrollTargetAyah = 1;
-
-        scrollView.post(new Runnable() {
-            @Override
-            public void run() {
-                if (destroyed || isFinishing() || currentSurah != surahId) {
-                    return; // A newer surah is already on screen; do not yank the scroll back.
-                }
-                if (offsetToRestore > 0) {
-                    scrollView.scrollTo(0, offsetToRestore);
-                    return;
-                }
-                int offset = ayahToReach > 1 ? findAyahOffset(ayahToReach) : 0;
-                if (offset <= 0) {
-                    scrollView.scrollTo(0, 0);
-                    return;
-                }
-                Layout layout = textView.getLayout();
-                if (layout == null || offset > layout.getText().length()) {
-                    scrollView.scrollTo(0, 0);
-                    return;
-                }
-                int line = layout.getLineForOffset(offset);
-                scrollView.scrollTo(0, Math.max(0, layout.getLineTop(line)));
+    @SuppressWarnings("deprecation")
+    private void applySystemBarAppearance(boolean dark) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                int lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                controller.setSystemBarsAppearance(dark ? 0 : lightBars, lightBars);
             }
-        });
-    }
-
-    /**
-     * Locates an ayah inside the rendered surah by its ornate marker, e.g. {@code ﴿٢٥٥﴾}.
-     *
-     * @return the character offset where the ayah's text begins, or -1 when it cannot be located
-     */
-    private int findAyahOffset(int ayahNumber) {
-        if (ayahNumber <= 1) {
-            // Ayah 1 means "top of the surah", which must keep any basmallah header on screen.
-            return 0;
+            return;
         }
-        CharSequence rendered = textView.getText();
-        if (rendered == null || rendered.length() == 0) {
-            return -1;
+        int flags = getWindow().getDecorView().getSystemUiVisibility();
+        int lightFlags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            lightFlags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            getWindow().setNavigationBarColor(QuranThemeColors.background(this));
         }
-        String body = rendered.toString();
-        String marker = QuranDatabaseHelper.ayahMarker(ayahNumber);
-        int markerIndex = body.indexOf(marker);
-        if (markerIndex < 0) {
-            return -1;
-        }
-
-        // An ayah begins immediately after the previous ayah's marker. Markers are unique within a
-        // surah, so scanning backwards from this one cannot land on the wrong ayah.
-        String previousMarker = QuranDatabaseHelper.ayahMarker(ayahNumber - 1);
-        int previousIndex = body.lastIndexOf(previousMarker, markerIndex);
-        if (previousIndex < 0) {
-            // Fall back to the marker itself: still scrolls the requested ayah into view.
-            return markerIndex;
-        }
-        return previousIndex + previousMarker.length();
-    }
-
-    private void showLoading() {
-        scrollView.setVisibility(View.GONE);
-        loadingContainer.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
-        retryButton.setVisibility(View.GONE);
-        statusView.setTextColor(getColor(R.color.quran_header));
-        statusView.setText(R.string.quran_loading);
-        // Freeze navigation while a load is in flight so the buttons cannot queue stale surahs.
-        previousButton.setEnabled(false);
-        nextButton.setEnabled(false);
-    }
-
-    /**
-     * @param message      user-facing, actionable explanation
-     * @param allowRetry   whether the Retry button is shown
-     */
-    private void showError(String message, boolean allowRetry) {
-        scrollView.setVisibility(View.GONE);
-        loadingContainer.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.GONE);
-        statusView.setTextColor(getColor(R.color.quran_error));
-        statusView.setText(message);
-        retryButton.setVisibility(allowRetry ? View.VISIBLE : View.GONE);
-        previousButton.setEnabled(false);
-        nextButton.setEnabled(false);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_SURAH, currentSurah);
-        outState.putInt(STATE_SCROLL, scrollView != null ? scrollView.getScrollY() : 0);
-    }
-
-    @Override
-    protected void onDestroy() {
-        destroyed = true;
-        executor.shutdownNow();
-        super.onDestroy();
+        getWindow().setStatusBarColor(QuranThemeColors.background(this));
+        getWindow().getDecorView().setSystemUiVisibility(dark
+                ? flags & ~lightFlags
+                : flags | lightFlags);
     }
 }

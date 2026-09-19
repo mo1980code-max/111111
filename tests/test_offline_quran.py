@@ -348,20 +348,26 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(root.get(ANDROID + "id"), "@+id/quran_root")
         self.assertEqual(root.get(ANDROID + "background"), "@color/quran_background")
 
-        for required in ("@+id/quran_surah_name", "@+id/quran_juz", "@+id/quran_text",
-                         "@+id/quran_scroll", "@+id/quran_page", "@+id/quran_prev_btn",
-                         "@+id/quran_next_btn", "@+id/quran_retry_btn", "@+id/quran_status"):
+        # Swipe navigation replaced the Next/Previous buttons: the body is a ViewPager2, one
+        # QuranFragment per surah, and the old buttons must stay gone.
+        pager = root.find(".//androidx.viewpager2.widget.ViewPager2")
+        self.assertIsNotNone(pager, "activity_quran.xml must host a ViewPager2")
+        self.assertEqual(pager.get(ANDROID + "id"), "@+id/quran_pager")
+        self.assertEqual(pager.get(ANDROID + "layout_height"), "0dp")
+        self.assertEqual(pager.get(ANDROID + "layout_weight"), "1")
+        self.assertEqual(pager.get(ANDROID + "layoutDirection"), "ltr",
+                         "a left swipe must always mean 'next surah'")
+        for removed in ("@+id/quran_prev_btn", "@+id/quran_next_btn"):
+            self.assertIsNone(self.find_by_id(root, removed),
+                              f"{removed} must be gone: swiping replaces the buttons")
+
+        # Toolbar controls: font size, bookmark (last read position) and the theme toggle.
+        for required in ("@+id/quran_back", "@+id/quran_position", "@+id/quran_font_decrease",
+                         "@+id/quran_font_increase", "@+id/quran_bookmark",
+                         "@+id/quran_theme_toggle", "@+id/quran_surah_name", "@+id/quran_juz",
+                         "@+id/quran_page"):
             self.assertIsNotNone(self.find_by_id(root, required),
                                  f"{required} missing from activity_quran.xml")
-
-        scroll = root.find(".//ScrollView")
-        self.assertIsNotNone(scroll)
-        self.assertEqual(len(scroll), 1)
-        body = scroll[0]
-        self.assertEqual(body.tag, "TextView", "the body must be one TextView inside a ScrollView")
-        self.assertEqual(body.get(ANDROID + "textDirection"), "rtl")
-        self.assertEqual(body.get(ANDROID + "gravity"), "center")
-        self.assertEqual(body.get(ANDROID + "textColor"), "@color/quran_text")
 
         # Rows that pin a direction must pin it to ltr, so left/right stay physical.
         for row in root.findall("LinearLayout"):
@@ -376,13 +382,32 @@ class LayoutTests(unittest.TestCase):
         for view in header:
             self.assertEqual(view.get(ANDROID + "textColor"), "@color/quran_header",
                              "header labels use the #7A7A7A header colour")
-
-        for button_id in ("@+id/quran_prev_btn", "@+id/quran_next_btn"):
-            button = self.find_by_id(root, button_id)
-            self.assertEqual(button.tag, "Button")
-            self.assertEqual(button.get(ANDROID + "background"), "@drawable/bg_quran_nav_button")
-            self.assertEqual(button.get(ANDROID + "textColor"), "@color/quran_nav_button_text")
         self.assertIsNotNone(self.find_by_id(root, "@+id/quran_page"))
+
+    def test_reader_page_fragment_layout(self):
+        root = self.parse("res/layout/fragment_quran_page.xml").getroot()
+        self.assertEqual(root.get(ANDROID + "id"), "@+id/quran_page_root")
+        self.assertEqual(root.get(ANDROID + "background"), "@color/quran_background")
+
+        for required in ("@+id/quran_page_scroll", "@+id/quran_page_text",
+                         "@+id/quran_page_progress", "@+id/quran_page_status",
+                         "@+id/quran_page_retry"):
+            self.assertIsNotNone(self.find_by_id(root, required),
+                                 f"{required} missing from fragment_quran_page.xml")
+
+        scroll = root.find(".//ScrollView")
+        self.assertIsNotNone(scroll)
+        self.assertEqual(len(scroll), 1)
+        body = scroll[0]
+        self.assertEqual(body.tag, "TextView", "the body must be one TextView inside a ScrollView")
+        self.assertEqual(body.get(ANDROID + "textDirection"), "rtl")
+        self.assertEqual(body.get(ANDROID + "gravity"), "center")
+        self.assertEqual(body.get(ANDROID + "textColor"), "@color/quran_text")
+
+        retry = self.find_by_id(root, "@+id/quran_page_retry")
+        self.assertEqual(retry.tag, "Button")
+        self.assertEqual(retry.get(ANDROID + "background"), "@drawable/bg_quran_nav_button")
+        self.assertEqual(retry.get(ANDROID + "textColor"), "@color/quran_nav_button_text")
 
     @staticmethod
     def header_row(root):
@@ -399,11 +424,43 @@ class LayoutTests(unittest.TestCase):
         recycler = root.find(".//androidx.recyclerview.widget.RecyclerView")
         self.assertIsNotNone(recycler, "activity_surah_list.xml must host a RecyclerView")
         self.assertEqual(recycler.get(ANDROID + "id"), "@+id/surah_recycler")
-        # weight=1 with height=0dp so the list, not the header, absorbs the remaining space.
-        self.assertEqual(recycler.get(ANDROID + "layout_height"), "0dp")
-        self.assertEqual(recycler.get(ANDROID + "layout_weight"), "1")
+        # The list container (a FrameLayout hosting the list plus the floating shortcut) carries
+        # weight=1 with height=0dp, so the list region, not the header, absorbs remaining space.
+        container = root.find(".//FrameLayout")
+        self.assertIsNotNone(container, "the list must sit in a FrameLayout overlay container")
+        self.assertEqual(container.get(ANDROID + "layout_height"), "0dp")
+        self.assertEqual(container.get(ANDROID + "layout_weight"), "1")
         self.assertEqual(recycler.get(TOOLS + "listitem"), "@layout/item_surah")
         self.assertIsNotNone(LayoutTests.find_by_id(root, "@+id/surah_list_back"))
+
+        # Search: a SearchView filters surah names while typing and searches the text on submit.
+        search = root.find(".//androidx.appcompat.widget.SearchView")
+        self.assertIsNotNone(search, "activity_surah_list.xml must host a SearchView")
+        self.assertEqual(search.get(ANDROID + "id"), "@+id/surah_list_search")
+
+        # Continue Reading: the bookmark shortcut floats over the list, hidden until a bookmark
+        # exists (the activity decides visibility at runtime).
+        continue_reading = LayoutTests.find_by_id(root, "@+id/surah_list_continue_btn")
+        self.assertIsNotNone(continue_reading,
+                             "the Continue Reading bookmark shortcut is missing")
+        self.assertEqual(continue_reading.tag, "Button")
+        self.assertEqual(continue_reading.get(ANDROID + "text"), "@string/quran_continue_reading")
+        self.assertEqual(continue_reading.get(ANDROID + "visibility"), "gone")
+
+        # Theme toggle shares the reader's moon/sun affordance.
+        self.assertIsNotNone(LayoutTests.find_by_id(root, "@+id/surah_list_theme_toggle"))
+        self.assertIsNotNone(LayoutTests.find_by_id(root, "@+id/surah_list_empty"))
+
+    def test_search_result_row_layout(self):
+        root = self.parse("res/layout/item_search_result.xml").getroot()
+        for required in ("@+id/search_result_ref", "@+id/search_result_text"):
+            self.assertIsNotNone(LayoutTests.find_by_id(root, required),
+                                 f"{required} missing from item_search_result.xml")
+        self.assertEqual(root.get(ANDROID + "clickable"), "true")
+        self.assertEqual(root.get(ANDROID + "focusable"), "true")
+        excerpt = LayoutTests.find_by_id(root, "@+id/search_result_text")
+        self.assertEqual(excerpt.get(ANDROID + "textDirection"), "rtl")
+        self.assertEqual(excerpt.get(ANDROID + "textColor"), "@color/quran_text")
 
     def test_row_layout_exposes_every_bound_view(self):
         root = self.parse("res/layout/item_surah.xml").getroot()
@@ -443,9 +500,13 @@ class OfflineGuaranteeTests(unittest.TestCase):
         "quran/QuranDatabaseHelper.java",
         "quran/SurahIndex.java",
         "quran/QuranMetadata.java",
+        "quran/QuranSettings.java",
+        "quran/QuranThemeColors.java",
         "activity/QuranActivity.java",
+        "activity/QuranFragment.java",
         "activity/SurahListActivity.java",
         "adapter/SurahListAdapter.java",
+        "adapter/AyahSearchAdapter.java",
     )
 
     @staticmethod
@@ -490,22 +551,73 @@ class OfflineGuaranteeTests(unittest.TestCase):
         self.assertIn("getIntExtra(EXTRA_SURAH_ID", source)
         self.assertIn("getStringExtra(EXTRA_SURAH_NAME)", source)
 
-    def test_navigation_updates_in_place_without_a_new_activity(self):
+    def test_swipe_navigation_uses_viewpager2(self):
         source = (JAVA / "activity/QuranActivity.java").read_text(encoding="utf-8")
-        self.assertIn("private void navigate(int delta)", source)
-        start = source.index("private void navigate(int delta)")
-        end = source.index("private void loadSurah", start)
-        navigate_body = source[start:end]
-        self.assertIn("navigate(-1)", source)
-        self.assertIn("navigate(+1)", source)
-        self.assertNotIn("startActivity", navigate_body,
-                         "Next/Previous must rebind views, not launch another activity")
+        # Comments are stripped so the javadoc entry-contract example (which shows a caller using
+        # startActivity) cannot be mistaken for live navigation code.
+        code = re.sub(r"/\*.*?\*/", "", source, flags=re.S)
+        code = re.sub(r"//[^\n]*", "", code)
+        self.assertIn("ViewPager2", source, "the reader must host a ViewPager2")
+        self.assertIn("FragmentStateAdapter", source,
+                      "each surah must be a fragment page in a FragmentStateAdapter")
+        self.assertIn("extends FragmentStateAdapter", source)
+        self.assertIn("SurahIndex.TOTAL_SURAHS", source,
+                      "the adapter must expose all 114 surahs as pages")
+        self.assertIn("createFragment", source)
+        self.assertNotIn("startActivity", code,
+                         "the reader must never launch another activity to change surahs")
+        fragment = (JAVA / "activity/QuranFragment.java").read_text(encoding="utf-8")
+        self.assertIn("extends Fragment", fragment,
+                      "each page must be an AndroidX fragment")
+        self.assertIn("newInstance", fragment)
 
     def test_font_is_loaded_from_assets(self):
-        source = (JAVA / "activity/QuranActivity.java").read_text(encoding="utf-8")
+        source = (JAVA / "activity/QuranFragment.java").read_text(encoding="utf-8")
         self.assertIn('"fonts/quran_font.ttf"', source)
         self.assertIn("Typeface.createFromAsset", source)
         self.assertIn("setTypeface", source)
+
+    def test_bookmark_contract_uses_shared_preferences(self):
+        source = (JAVA / "quran/QuranSettings.java").read_text(encoding="utf-8")
+        self.assertIn("getSharedPreferences", source)
+        self.assertIn('"last_read_surah_id"', source,
+                      "the bookmark must persist the surah under last_read_surah_id")
+        self.assertIn("scrollY", source.replace("scroll_y", "scrollY"),
+                      "the bookmark must persist the scroll position")
+        self.assertIn("saveBookmark", source)
+        reader = (JAVA / "activity/QuranActivity.java").read_text(encoding="utf-8")
+        self.assertIn("saveBookmark", reader, "the toolbar bookmark icon must save the position")
+        index = (JAVA / "activity/SurahListActivity.java").read_text(encoding="utf-8")
+        self.assertIn("getBookmarkSurah", index)
+        self.assertIn("EXTRA_SCROLL_Y", reader,
+                      "the reader must accept a one-shot scroll offset for Continue Reading")
+
+    def test_search_contract_uses_sql_like(self):
+        source = DB_HELPER.read_text(encoding="utf-8")
+        self.assertIn("public List<Ayah> searchQuran(String query)", source)
+        self.assertIn("LIKE ?", source, "search must use the SQL LIKE operator")
+        self.assertIn("ESCAPE", source, "wildcards in user input must be escaped")
+        self.assertIn("text LIKE", source.replace("text LIKE ?", "text LIKE"),
+                      "LIKE must match against the text column")
+        index = (JAVA / "activity/SurahListActivity.java").read_text(encoding="utf-8")
+        self.assertIn("searchQuran", index, "the index screen must call the helper's search")
+        self.assertIn("SearchView", index, "the index screen must host a SearchView")
+
+    def test_font_size_and_theme_are_persisted(self):
+        settings = (JAVA / "quran/QuranSettings.java").read_text(encoding="utf-8")
+        self.assertIn("putFloat", settings, "the font size must persist as a float")
+        self.assertIn("getFontSize", settings)
+        self.assertIn("adjustFontSize", settings)
+        self.assertIn("toggleDarkMode", settings)
+        reader = (JAVA / "activity/QuranActivity.java").read_text(encoding="utf-8")
+        self.assertIn("adjustFontSize", reader, "the +/- icons must change the persisted size")
+        self.assertIn("toggleDarkMode", reader, "the moon/sun icon must flip the persisted theme")
+
+    def test_dark_palette_matches_the_spec(self):
+        source = (JAVA / "quran/QuranThemeColors.java").read_text(encoding="utf-8")
+        for spec in ("0xFF121212", "0xFFE0E0E0", "0xFFA0A0A0",  # dark bg / text / header+footer
+                     "0xFFFBF9F0", "0xFF1A1A1A"):                 # light Madani bg / text
+            self.assertIn(spec, source, f"palette constant {spec} missing from QuranThemeColors")
 
     def test_home_screen_opens_the_index(self):
         source = (JAVA / "activity/MainActivity.java").read_text(encoding="utf-8")
@@ -549,6 +661,11 @@ class BuildConfigurationTests(unittest.TestCase):
     def test_recyclerview_dependency_is_declared(self):
         self.assertIn("androidx.recyclerview:recyclerview",
                       (ROOT / "app/build.gradle").read_text(encoding="utf-8"))
+
+    def test_viewpager2_dependency_is_declared(self):
+        self.assertIn("androidx.viewpager2:viewpager2",
+                      (ROOT / "app/build.gradle").read_text(encoding="utf-8"),
+                      "swipe navigation needs the ViewPager2 artifact")
 
 
 @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK not installed")
