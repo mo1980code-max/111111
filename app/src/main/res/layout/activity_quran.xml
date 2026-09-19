@@ -75,10 +75,12 @@
         </ScrollView>
 
         <LinearLayout
+            android:id="@+id/quran_loading_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
+            android:padding="16dp"
             android:orientation="vertical">
 
             <ProgressBar
@@ -97,6 +99,20 @@
                 android:text="@string/quran_loading"
                 android:textColor="@color/quran_muted"
                 android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/quran_retry_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_quran_button"
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp"
+                android:text="@string/quran_retry"
+                android:textAllCaps="false"
+                android:textColor="@color/quran_paper"
+                android:textSize="15sp"
+                android:visibility="gone" />
         </LinearLayout>
     </FrameLayout>
 
