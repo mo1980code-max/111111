@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="quran_paper">#FBF9F0</color>
+    <color name="quran_muted">#7A7A7A</color>
+    <color name="quran_selected">#D0ECE4</color>
+    <color name="quran_ink">#1A1A1A</color>
+
+    <string name="quran_title">Quran</string>
+    <string name="quran_loading">Loading the offline Quran…</string>
+    <string name="quran_invalid_surah">Please open a Surah between 1 and 114.</string>
+    <string name="quran_invalid_ayah">This ayah number is not valid for the selected Surah.</string>
+    <string name="quran_load_error">The offline Quran could not be loaded. Make sure this app bundles a valid databases/quran.ar.uthmani.db and fonts/quran_font.ttf, then reopen this screen.</string>
+    <string name="quran_surah_label" translatable="false">سورة %1$s</string>
+    <string name="quran_juz_label" translatable="false">الجزء %1$s</string>
+    <string name="quran_page_label" translatable="false">صفحة %1$s</string>
+
+    <!-- Native theme; this Activity does not depend on AppCompat or network libraries. -->
+    <style name="QuranTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowBackground">@color/quran_paper</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>
