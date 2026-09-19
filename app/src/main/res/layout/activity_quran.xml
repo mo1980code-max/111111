@@ -97,6 +97,22 @@
                 android:text="@string/quran_loading"
                 android:textColor="@color/quran_muted"
                 android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/quran_retry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/quran_retry"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/quran_fallback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/quran_use_fallback"
+                android:visibility="gone" />
         </LinearLayout>
     </FrameLayout>
 
