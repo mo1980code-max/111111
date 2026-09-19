@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout adContainer;
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
+    private FrameLayout frameQuran;
 
 
     ImageView rate, share;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         this.frameClock = (FrameLayout) findViewById(R.id.frameClock);
         this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
+        this.frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
         rate = findViewById(R.id.rateus);
         share = findViewById(R.id.share);
         rate.setOnClickListener(new View.OnClickListener() {
@@ -77,6 +79,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 MainActivity.this.startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
+
+            }
+        });
+
+        // Quran icon: launch the offline Surah reader.
+        this.frameQuran.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                MainActivity.this.startActivity(new Intent(MainActivity.this, QuranActivity.class));
 
             }
         });

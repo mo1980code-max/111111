@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="quran_green">#2D7D46</color>
     <color name="quran_paper">#FBF9F0</color>
     <color name="quran_muted">#7A7A7A</color>
     <color name="quran_selected">#D0ECE4</color>
