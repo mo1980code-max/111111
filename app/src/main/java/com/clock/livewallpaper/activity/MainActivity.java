@@ -7,109 +7,143 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.ads.AdPolicy;
+import com.clock.livewallpaper.ads.AdsManager;
+import com.clock.livewallpaper.ads.NativePlacement;
 
-
+/**
+ * Home screen: the four section buttons (Clocks, Wallpapers, Quran, Azkar) plus share / rate.
+ *
+ * <p>The bottom banner that used to live here is gone. The single ad allowed on this screen is one
+ * in-feed native card below the buttons, clearly separated from them by margins and by its own paper
+ * card with an "إعلان" badge; when no ad is available the container is empty and collapses, so the
+ * screen looks exactly like an ad-free one.
+ */
 public class MainActivity extends AppCompatActivity {
-    private RelativeLayout adContainer;
-    private FrameLayout frameClock;
-    private FrameLayout frameWallpaper;
-    private FrameLayout frameQuran;
-    private FrameLayout frameAzkar;
 
+    /**
+     * Kept between configuration changes so a rotation does not burn a second ad request (the SDK
+     * refuses another one for a minute anyway, which would leave the slot empty for no reason).
+     */
+    private static NativePlacement sHomePlacement;
 
-    ImageView rate, share;
+    private NativePlacement homeAd;
+    private FrameLayout homeAdSlot;
+    private ImageView rate;
+    private ImageView share;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_select_function);
         initView();
-
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-
+        setupHomeAd();
+        AdsManager.get().initialize(this);
     }
 
     private void initView() {
-        this.frameClock = (FrameLayout) findViewById(R.id.frameClock);
-        this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
-        this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
-        this.frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
-        this.frameAzkar = (FrameLayout) findViewById(R.id.frameAzkar);
-        rate = findViewById(R.id.rateus);
-        share = findViewById(R.id.share);
-        rate.setOnClickListener(new View.OnClickListener() {
+        FrameLayout frameClock = (FrameLayout) findViewById(R.id.frameClock);
+        FrameLayout frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
+        FrameLayout frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
+        FrameLayout frameAzkar = (FrameLayout) findViewById(R.id.frameAzkar);
+        this.rate = findViewById(R.id.rateus);
+        this.share = findViewById(R.id.share);
+
+        this.rate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=" + getPackageName())));
+                    AdPolicy.markSystemHandoff();
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("market://details?id=" + getPackageName())));
                 } catch (ActivityNotFoundException unused) {
-                    Toast.makeText(MainActivity.this, " unable to find market app", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, " unable to find market app",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
-        share.setOnClickListener(new View.OnClickListener() {
+        this.share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String string = getString(R.string.app_name);
-                Intent intent2 = new Intent("android.intent.action.SEND");
-                intent2.setType("text/plain");
-                intent2.putExtra("android.intent.extra.TEXT", string + "\n\nOpen this Link on Play Store\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName());
-                startActivity(Intent.createChooser(intent2, "Share Application"));
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.app_name)
+                        + "\n\nOpen this Link on Play Store\n\nhttps://play.google.com/store/apps/details?id="
+                        + getPackageName());
+                AdPolicy.markSystemHandoff();
+                startActivity(Intent.createChooser(intent, getString(R.string.share)));
             }
         });
 
-        this.frameClock.setOnClickListener(new View.OnClickListener() {
+        frameClock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                MainActivity.this.startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
-
+                startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
             }
         });
-        this.frameWallpaper.setOnClickListener(new View.OnClickListener() {
+        frameWallpaper.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                MainActivity.this.startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
-
+                startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
             }
         });
-
         // Quran icon: open the offline Surah index, which launches QuranActivity with a surah_id.
-        this.frameQuran.setOnClickListener(new View.OnClickListener() {
+        frameQuran.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                MainActivity.this.startActivity(new Intent(MainActivity.this, SurahListActivity.class));
-
+                startActivity(new Intent(MainActivity.this, SurahListActivity.class));
             }
         });
-
         // Azkar icon: standalone entry point, independent of the Quran section.
-        this.frameAzkar.setOnClickListener(new View.OnClickListener() {
+        frameAzkar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                MainActivity.this.startActivity(new Intent(MainActivity.this, AzkarHomeActivity.class));
-
+                startActivity(new Intent(MainActivity.this, AzkarHomeActivity.class));
             }
         });
+    }
+
+    /** Renders the one home ad slot, or leaves it empty. Requests are throttled inside the placement. */
+    private void setupHomeAd() {
+        this.homeAdSlot = (FrameLayout) findViewById(R.id.homeNativeAd);
+        if (sHomePlacement == null) {
+            sHomePlacement = new NativePlacement();
+        }
+        this.homeAd = sHomePlacement;
+        this.homeAd.setDatasetChangedListener(new Runnable() {
+            @Override
+            public void run() {
+                MainActivity.this.homeAdSlot.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivity.this.homeAd.renderInto(MainActivity.this.homeAdSlot);
+                    }
+                });
+            }
+        });
+        this.homeAd.renderInto(this.homeAdSlot);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (this.homeAd != null) {
+            this.homeAd.setDatasetChangedListener(null);
+            this.homeAd.release(this.homeAdSlot);
+            if (isFinishing()) {
+                this.homeAd.destroy();
+                sHomePlacement = null;
+            }
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
-
-        MainActivity.this.finish();
-
+        finish();
     }
 }

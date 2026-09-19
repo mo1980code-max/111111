@@ -4,8 +4,9 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
@@ -13,18 +14,23 @@ import com.clock.livewallpaper.model.Clocks;
 import com.clock.livewallpaper.viewUtils.AnalogClock;
 import com.clock.livewallpaper.viewUtils.SquareRelativeLayout;
 
-import java.util.ArrayList;
+import java.util.List;
 
-
-
-
+/**
+ * Analog clock tiles.
+ *
+ * <p>Free and already-unlocked tiles render the live {@link AnalogClock}. A locked tile renders the
+ * preview image bundled in {@code assets/previews/clock/analog/} under a scrim instead, and the live
+ * view is switched off, so a locked clock cannot tick behind its lock. Nothing is fetched from the
+ * network: the artwork for both states ships with the app.
+ *
+ * <p>Clicks are reported to the Activity, which is the only place allowed to decide between "open the
+ * clock" and "offer a rewarded unlock".
+ */
 public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder> {
-    static int height;
-    static int width;
+
+    private final List<Clocks> localDataSet;
     private ClickListener clickListener;
-    private ArrayList<Clocks> localDataSet;
-
-
 
     public interface ClickListener {
         void setClick(Clocks clocks);
@@ -38,54 +44,87 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         this.clickListener = clickListener;
     }
 
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        SquareRelativeLayout layout;
-        private final AnalogClock textView;
+        final SquareRelativeLayout layout;
+        final AnalogClock clock;
+        final ImageView preview;
 
         public ViewHolder(View view) {
             super(view);
             this.layout = (SquareRelativeLayout) view.findViewById(R.id.layoutBackground);
-            this.textView = (AnalogClock) view.findViewById(R.id.iv_clock);
+            this.clock = (AnalogClock) view.findViewById(R.id.iv_clock);
+            this.preview = (ImageView) view.findViewById(R.id.previewImage);
         }
 
         public AnalogClock getTextView() {
-            return this.textView;
+            return this.clock;
         }
     }
 
-    public CustomAdapter(ArrayList<Clocks> arrayList) {
-        this.localDataSet = arrayList;
+    public CustomAdapter(@NonNull List<Clocks> dataSet) {
+        this.localDataSet = dataSet;
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_clocks, viewGroup, false));
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        return new ViewHolder(LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.item_clocks, viewGroup, false));
     }
 
-    public void onBindViewHolder(final ViewHolder viewHolder, final int i) {
-        viewHolder.layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            public void onGlobalLayout() {
-                CustomAdapter.width = viewHolder.layout.getMeasuredWidth();
-                CustomAdapter.height = viewHolder.layout.getMeasuredHeight();
-                viewHolder.getTextView().setClock((Clocks) CustomAdapter.this.localDataSet.get(i));
-                viewHolder.getTextView().setClockSize(((float) CustomAdapter.width) / 1.8f);
-                viewHolder.getTextView().setPosition(((float) CustomAdapter.width) / 2.18f, ((float) CustomAdapter.height) / 2.18f);
-                viewHolder.layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+    @Override
+    public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
+        final Clocks clock = this.localDataSet.get(position);
+        final boolean available = LockOverlay.isAvailable(holder.itemView.getContext(), clock);
+
+        LockOverlay.apply(holder.itemView, holder.clock, !available);
+        holder.preview.setVisibility(available ? View.GONE : View.VISIBLE);
+        if (!available) {
+            // Locked: static artwork only, no live rendering and no ad on the way in.
+            holder.clock.setAutoUpdate(false);
+            LockOverlay.loadPreview(holder.preview, clock.getPreviewAsset(),
+                    holder.itemView.getContext());
+        } else {
+            try {
+                holder.layout.setCardBackgroundColor(Color.parseColor(clock.getBgColor()));
+            } catch (IllegalArgumentException ignored) {
+                // A bad colour string must not break the list; the card keeps its default background.
             }
-        });
-        viewHolder.layout.setCardBackgroundColor(Color.parseColor(this.localDataSet.get(i).getBgColor()));
-        viewHolder.getTextView().setClock(this.localDataSet.get(i));
-        viewHolder.getTextView().setClockSize(((float) width) / 1.8f);
-        viewHolder.getTextView().setPosition(((float) width) / 2.18f, ((float) height) / 2.18f);
-        viewHolder.getTextView().setAutoUpdate(true);
-        viewHolder.getTextView().setOnClickListener(new View.OnClickListener() {
+            holder.clock.setClock(clock);
+            sizeClock(holder);
+            holder.clock.setAutoUpdate(true);
+        }
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View view) {
                 if (CustomAdapter.this.clickListener != null) {
-                    CustomAdapter.this.clickListener.setClick((Clocks) CustomAdapter.this.localDataSet.get(i));
+                    CustomAdapter.this.clickListener.setClick(clock);
                 }
             }
         });
+    }
+
+    /** The clock is drawn at a fraction of the card, which is only known after the first layout. */
+    private void sizeClock(@NonNull final ViewHolder holder) {
+        holder.layout.post(new Runnable() {
+            @Override
+            public void run() {
+                float width = holder.layout.getMeasuredWidth();
+                float height = holder.layout.getMeasuredHeight();
+                if (width <= 0f || height <= 0f) {
+                    return;
+                }
+                holder.clock.setClockSize(width / 1.8f);
+                holder.clock.setPosition(width / 2.18f, height / 2.18f);
+            }
+        });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        // Stop the ticking runnable of a detached face: a scrolled-off tile must not keep a callback.
+        holder.clock.setAutoUpdate(false);
+        super.onViewRecycled(holder);
     }
 
     @Override

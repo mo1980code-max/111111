@@ -1,155 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  The three clock sections: Analog / Digital / Smart. Deliberately ad free: the ad slots of the
+  clock area live inside the clock lists, not on the way into them.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/textColor"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/bannerAd"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="26dp"
+        android:paddingBottom="20dp">
 
         <FrameLayout
             android:id="@+id/frameAnalogClock"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/small_" />
+            android:layout_marginLeft="28dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="28dp"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center">
+                android:layout_height="76dp"
+                android:background="@drawable/bg_clock_section_button"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
-                <TextView
-                    android:layout_width="120dp"
-                    android:layout_height="match_parent"
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:fontFamily="@font/myfont"
-                    android:gravity="center"
-                    android:text="Analog\nClock"
-                    android:textColor="@color/textColor"
-                    android:textSize="20sp" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/myfont"
+                        android:text="@string/clock_analog_title"
+                        android:textColor="@color/textColor"
+                        android:textSize="19sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/clock_choose_analog"
+                        android:textColor="@color/textColor"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <ImageView
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    android:src="@drawable/clock_logo" />
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:contentDescription="@null"
+                    android:src="@@drawable/clock_logo" />
             </LinearLayout>
         </FrameLayout>
-
         <FrameLayout
             android:id="@+id/frameTextClock"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/small_" />
+            android:layout_marginLeft="28dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="28dp"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="120dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/myfont"
-                    android:gravity="center"
-                    android:text="Digital\nClock"
-                    android:textColor="@color/textColor"
-                    android:textSize="20sp" />
+                android:layout_height="76dp"
+                android:background="@drawable/bg_clock_section_button"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                    <ImageView
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:adjustViewBounds="true"
-                        android:padding="10dp"
-                        android:src="@drawable/text_logo" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/myfont"
+                        android:text="@string/clock_digital_title"
+                        android:textColor="@color/textColor"
+                        android:textSize="19sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/clock_choose_digital"
+                        android:textColor="@color/textColor"
+                        android:textSize="12sp" />
                 </LinearLayout>
+
+                <ImageView
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:contentDescription="@null"
+                    android:src="@@drawable/text_logo" />
             </LinearLayout>
         </FrameLayout>
-
         <FrameLayout
             android:id="@+id/frameSmartClock"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/small_" />
+            android:layout_marginLeft="28dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="28dp"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="120dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/myfont"
-                    android:gravity="center"
-                    android:text="Smart\nClock"
-                    android:textColor="@color/textColor"
-                    android:textSize="20sp" />
+                android:layout_height="76dp"
+                android:background="@drawable/bg_clock_section_button"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                    <ImageView
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:adjustViewBounds="true"
-                        android:padding="10dp"
-                        android:src="@drawable/digital_logo" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/myfont"
+                        android:text="@string/clock_smart_title"
+                        android:textColor="@color/textColor"
+                        android:textSize="19sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/clock_choose_smart"
+                        android:textColor="@color/textColor"
+                        android:textSize="12sp" />
                 </LinearLayout>
+
+                <ImageView
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:contentDescription="@null"
+                    android:src="@@drawable/digital_logo" />
             </LinearLayout>
         </FrameLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="28dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginRight="28dp"
+            android:gravity="center"
+            android:text="@string/clock_section_hint"
+            android:textColor="@color/section_hint"
+            android:textSize="12sp" />
     </LinearLayout>
-
-
-    <RelativeLayout
-        android:id="@+id/bannerAd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center">
-
-
-    </RelativeLayout>
-</RelativeLayout>
+</ScrollView>

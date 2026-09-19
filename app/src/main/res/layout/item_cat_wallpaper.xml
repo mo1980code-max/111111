@@ -16,6 +16,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
+        android:contentDescription="@null"
         android:scaleType="centerCrop" />
 
     <androidx.cardview.widget.CardView
@@ -25,19 +26,34 @@
         app:cardBackgroundColor="@color/appColor"
         app:cardCornerRadius="8dp">
 
-        <TextView
-            android:id="@+id/textName"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginVertical="10dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp"
-            android:fontFamily="@font/myfont"
-            android:text="Wallpaper"
-            android:textColor="@color/textColor"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="10dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/myfont"
+                android:maxLines="1"
+                android:text="@string/wallpaper_title"
+                android:textColor="@color/textColor"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/textCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/textWhite"
+                android:textSize="11sp" />
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.cardview.widget.CardView>

@@ -7,14 +7,76 @@
     android:layout_gravity="center"
     android:layout_margin="10dp"
     app:cardBackgroundColor="@color/themeDarkColor"
-    app:cardCornerRadius="5dp"
+    app:cardCornerRadius="8dp"
     app:cardUseCompatPadding="true">
 
-    <ImageView
-        android:id="@+id/iv_clock"
-        android:layout_width="wrap_content"
-        android:layout_height="260dp"
-        android:layout_gravity="center"
-        android:adjustViewBounds="true"
-        android:scaleType="centerCrop" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/iv_clock"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <View
+            android:id="@+id/lockScrim"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:background="@drawable/bg_lock_scrim"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/lockBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_lock_badge"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="8dp"
+            android:paddingTop="4dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="4dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="@string/content_locked"
+                android:src="@drawable/ic_locked" />
+
+            <TextView
+                android:id="@+id/lockLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:text="@string/content_unlock_cta"
+                android:textColor="@color/lock_badge_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iv_clock"
+            android:background="@color/appColor"
+            android:ellipsize="end"
+            android:fontFamily="@font/myfont"
+            android:maxLines="1"
+            android:paddingLeft="10dp"
+            android:paddingTop="8dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/textColor"
+            android:textSize="13sp" />
+    </RelativeLayout>
 </androidx.cardview.widget.CardView>

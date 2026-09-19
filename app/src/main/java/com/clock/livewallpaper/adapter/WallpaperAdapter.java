@@ -1,36 +1,35 @@
 package com.clock.livewallpaper.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.BaseRequestOptions;
-import com.bumptech.glide.request.RequestOptions;
 import com.clock.livewallpaper.R;
-import com.clock.livewallpaper.model.ImageUrlsItem;
+import com.clock.livewallpaper.catalog.WallpaperEntry;
 
 import java.util.List;
 
-
-
-
-
+/**
+ * Wallpaper tiles of one section.
+ *
+ * <p>Every tile is decoded from {@code assets/wallpapers/<section>/}: there is no image URL, no
+ * placeholder-while-downloading state and nothing to wait for. A locked tile only differs by the scrim,
+ * the padlock pill and the "open it with an ad" label, and its tap is answered by the Activity with the
+ * unlock dialog -- the ad is never shown just for opening the list.
+ */
 public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.ViewHolder> {
+
+    private final List<WallpaperEntry> entries;
     private ClickListener clickListener;
-    List<ImageUrlsItem> imagesItems;
-
-
 
     public interface ClickListener {
-        void setClick(int i);
-    }
-
-    public WallpaperAdapter(List<ImageUrlsItem> list) {
-        this.imagesItems = list;
+        void setClick(int position, WallpaperEntry entry);
     }
 
     public ClickListener getClickListener() {
@@ -41,27 +40,41 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
         this.clickListener = clickListener;
     }
 
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        private final ImageView viewStub;
+        final ImageView image;
+        final TextView title;
 
         public ViewHolder(View view) {
             super(view);
-            this.viewStub = (ImageView) view.findViewById(R.id.iv_clock);
+            this.image = (ImageView) view.findViewById(R.id.iv_clock);
+            this.title = (TextView) view.findViewById(R.id.textName);
         }
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_wallpaper, viewGroup, false));
+    public WallpaperAdapter(@NonNull List<WallpaperEntry> entries) {
+        this.entries = entries;
     }
 
-    public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        Glide.with(viewHolder.viewStub.getContext()).load(this.imagesItems.get(i).getImageUrl()).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
-        viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        return new ViewHolder(LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.item_wallpaper, viewGroup, false));
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        final WallpaperEntry entry = this.entries.get(position);
+        final View tile = holder.itemView;
+        final Context context = tile.getContext();
+        holder.title.setText(entry.getTitle());
+        LockOverlay.apply(tile, null, !LockOverlay.isAvailable(context, entry));
+        LockOverlay.loadPreview(holder.image, entry.getAssetPath(), context);
+        tile.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View view) {
                 if (WallpaperAdapter.this.clickListener != null) {
-                    WallpaperAdapter.this.clickListener.setClick(i);
+                    WallpaperAdapter.this.clickListener.setClick(holder.getAdapterPosition(), entry);
                 }
             }
         });
@@ -69,6 +82,6 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
 
     @Override
     public int getItemCount() {
-        return this.imagesItems.size();
+        return this.entries.size();
     }
 }

@@ -1,236 +1,247 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  Home screen: the four section buttons plus share / rate, and one native ad card at the bottom.
+
+  The whole thing sits in a ScrollView with fillViewport: content stays vertically centred on a tall
+  screen, and on a short one it scrolls instead of pushing the Azkar button (or the ad) off the bottom
+  edge, which is what a ~260 dp in-feed card would otherwise do here.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/textColor"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="0.5">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingLeft="0dp"
+        android:paddingTop="10dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="14dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_margin="10dp">
-
+            android:layout_margin="10dp"
+            android:orientation="horizontal">
 
             <ImageView
                 android:id="@+id/rateus"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="4dp"
                 android:src="@drawable/star"
-                app:tint="@color/adBg"></ImageView>
+                app:tint="@color/adBg" />
 
-            <ImageView
+            <Space
                 android:layout_width="10dp"
-                android:layout_height="?attr/actionBarSize"
-                android:padding="5dp"></ImageView>
+                android:layout_height="match_parent" />
 
             <ImageView
                 android:id="@+id/share"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:padding="5dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="4dp"
                 android:src="@drawable/ic_share"
-                app:tint="@color/adBg"></ImageView>
-
+                app:tint="@color/adBg" />
         </LinearLayout>
-
-    </FrameLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="0.5">
-
 
         <TextView
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginLeft="15dp"
+            android:layout_marginTop="26dp"
             android:layout_marginRight="15dp"
-            android:layout_weight="1"
             android:fontFamily="@font/myfont"
             android:gravity="center"
             android:text="@string/app_name"
             android:textColor="@color/appColor"
             android:textSize="23sp" />
 
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/frameClock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="35dp"
-        android:layout_marginRight="35dp">
-
-        <ImageView
+        <FrameLayout
+            android:id="@+id/frameClock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:src="@drawable/big_" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/myfont"
-                android:gravity="center"
-                android:text="Android 12 Clock"
-                android:textColor="@color/textColor"
-                android:textSize="20sp" />
+            android:layout_marginLeft="35dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginRight="35dp"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_weight="1"
-                android:padding="15dp"
-                android:src="@drawable/clock_logo" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/frameWallpaper"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="35dp"
-        android:layout_marginRight="35dp">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:src="@drawable/big_" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="150dp"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/myfont"
-                android:gravity="center"
-                android:text="Wallpaper"
-                android:textColor="@color/textColor"
-                android:textSize="20sp" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:src="@drawable/big_" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1">
+                android:layout_gravity="center"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/myfont"
+                    android:gravity="center"
+                    android:text="Android 12 Clock"
+                    android:textColor="@color/textColor"
+                    android:textSize="20sp" />
 
                 <ImageView
                     android:layout_width="120dp"
                     android:layout_height="120dp"
-                    android:adjustViewBounds="true"
+                    android:layout_weight="1"
+                    android:contentDescription="@null"
                     android:padding="15dp"
-                    android:src="@drawable/wallpaper_logo" />
+                    android:src="@drawable/clock_logo" />
             </LinearLayout>
-        </LinearLayout>
-    </FrameLayout>
+        </FrameLayout>
 
-    <!-- Quran: opens the offline reader (QuranActivity). -->
-    <FrameLayout
-        android:id="@+id/frameQuran"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="35dp"
-        android:layout_marginRight="35dp"
-        android:layout_marginTop="14dp"
-        android:foreground="?attr/selectableItemBackground">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:background="@drawable/bg_quran_button"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_quran" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="12dp"
-                android:fontFamily="@font/myfont"
-                android:text="@string/quran_title"
-                android:textColor="@color/quran_on_button"
-                android:textSize="18sp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <!-- Azkar: standalone entry point, styled exactly like the Quran button above. -->
-    <FrameLayout
-        android:id="@+id/frameAzkar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="35dp"
-        android:layout_marginRight="35dp"
-        android:layout_marginTop="14dp"
-        android:foreground="?attr/selectableItemBackground">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:background="@drawable/bg_azkar_button"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_azkar" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="12dp"
-                android:fontFamily="@font/myfont"
-                android:text="@string/azkar_title"
-                android:textColor="@color/azkar_on_primary"
-                android:textSize="18sp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <RelativeLayout
-            android:id="@+id/bannerAd"
+        <FrameLayout
+            android:id="@+id/frameWallpaper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_gravity="center">
+            android:layout_marginLeft="35dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginRight="35dp"
+            android:foreground="?attr/selectableItemBackground">
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:src="@drawable/big_" />
 
-        </RelativeLayout>
-    </FrameLayout>
-</LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/myfont"
+                    android:gravity="center"
+                    android:text="Wallpaper"
+                    android:textColor="@color/textColor"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@null"
+                        android:padding="15dp"
+                        android:src="@drawable/wallpaper_logo" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Quran: opens the offline reader (QuranActivity). -->
+        <FrameLayout
+            android:id="@+id/frameQuran"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="35dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginRight="35dp"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_quran_button"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_quran" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:fontFamily="@font/myfont"
+                    android:text="@string/quran_title"
+                    android:textColor="@color/quran_on_button"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Azkar: standalone entry point, styled exactly like the Quran button above. -->
+        <FrameLayout
+            android:id="@+id/frameAzkar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="35dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginRight="35dp"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_azkar_button"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_azkar" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:fontFamily="@font/myfont"
+                    android:text="@string/azkar_title"
+                    android:textColor="@color/azkar_on_primary"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!--
+          The only home-screen ad: one in-feed native ad below the section buttons, inside its own paper
+          card with an "ad" badge (see layout/ad_native.xml). It is never styled like a section button, it
+          is not between them, and it is removed completely when no ad is available, so the screen
+          looks exactly like an ad-free one.
+        -->
+        <FrameLayout
+            android:id="@+id/homeNativeAd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginRight="25dp"
+            android:layout_marginBottom="4dp" />
+    </LinearLayout>
+</ScrollView>

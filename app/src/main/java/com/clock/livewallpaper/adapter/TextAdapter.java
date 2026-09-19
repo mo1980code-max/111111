@@ -1,33 +1,37 @@
 package com.clock.livewallpaper.adapter;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
 import com.clock.livewallpaper.model.TextClocks;
 import com.clock.livewallpaper.viewUtils.SquareRelativeLayout;
 
-import java.util.ArrayList;
+import java.util.List;
 
-
-
-
+/**
+ * Digital clock tiles.
+ *
+ * <p>The tile art is always the local preview in {@code assets/previews/clock/digital/}, both for the
+ * free tier and for a locked tile, so what the user sees in the list is what they get after an unlock.
+ * {@code textClockPosition} in the editor still uses {@link TextClocks#getStyle()} -- the layout index,
+ * deliberately independent from the position in this list, because unlocked variants may be added
+ * without moving anybody's saved style.
+ */
 public class TextAdapter extends RecyclerView.Adapter<TextAdapter.ViewHolder> {
+
+    private final List<TextClocks> textClocks;
     private ClickListener clickListener;
-    private View[] layouts;
-    ArrayList<TextClocks> textClocks;
-    int width = 0;
-    int height = 0;
-
-
 
     public interface ClickListener {
-        void setClick(int i, TextClocks textClocks);
+        void setClick(int position, TextClocks textClocks);
     }
 
     public ClickListener getClickListener() {
@@ -38,34 +42,46 @@ public class TextAdapter extends RecyclerView.Adapter<TextAdapter.ViewHolder> {
         this.clickListener = clickListener;
     }
 
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        SquareRelativeLayout layout;
-        private final ImageView viewStub;
+        final ImageView art;
+        final SquareRelativeLayout layout;
 
         public ViewHolder(View view) {
             super(view);
-            this.viewStub = (ImageView) view.findViewById(R.id.clockwise);
+            this.art = (ImageView) view.findViewById(R.id.clockwise);
             this.layout = (SquareRelativeLayout) view.findViewById(R.id.layoutBackground);
         }
     }
 
-    public TextAdapter(ArrayList<TextClocks> arrayList) {
-        this.textClocks = arrayList;
+    public TextAdapter(@NonNull List<TextClocks> textClocks) {
+        this.textClocks = textClocks;
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_textclock, viewGroup, false));
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        return new ViewHolder(LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.item_textclock, viewGroup, false));
     }
 
-    public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        viewHolder.layout.setCardBackgroundColor(Color.parseColor(this.textClocks.get(i).getBgColor()));
-        viewHolder.viewStub.setImageResource(this.textClocks.get(i).getThumb());
-        viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        final TextClocks item = this.textClocks.get(position);
+        final View tile = holder.itemView;
+        final Context context = tile.getContext();
+        // The preview is the artwork of both states, so only the scrim and the padlock change.
+        LockOverlay.apply(tile, null, !LockOverlay.isAvailable(context, item));
+        try {
+            holder.layout.setCardBackgroundColor(Color.parseColor(item.getBgColor()));
+        } catch (IllegalArgumentException ignored) {
+            // A bad colour string must not break the list.
+        }
+        LockOverlay.loadPreview(holder.art, item.getPreviewAsset(), context);
+        tile.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View view) {
                 if (TextAdapter.this.clickListener != null) {
-                    TextAdapter.this.clickListener.setClick(i, TextAdapter.this.textClocks.get(i));
+                    TextAdapter.this.clickListener.setClick(holder.getAdapterPosition(), item);
                 }
             }
         });

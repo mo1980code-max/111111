@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "freePerSection": 3,
+  "sections": [
+    {
+      "id": "mecca",
+      "name": "مساجد مكة",
+      "items": [
+        {
+          "id": "mecca_1",
+          "file": "wallpapers/mecca/mecca_1.jpg",
+          "title": "المسجد الحرام",
+          "free": true
+        },
+        {
+          "id": "mecca_2",
+          "file": "wallpapers/mecca/mecca_2.jpg",
+          "title": "أروقة الحرم",
+          "free": true
+        },
+        {
+          "id": "mecca_3",
+          "file": "wallpapers/mecca/mecca_3.jpg",
+          "title": "مآذن مكة",
+          "free": true
+        },
+        {
+          "id": "mecca_4",
+          "file": "wallpapers/mecca/mecca_4.jpg",
+          "title": "المسجد الحرام ليلًا",
+          "free": false
+        },
+        {
+          "id": "mecca_5",
+          "file": "wallpapers/mecca/mecca_5.jpg",
+          "title": "أروقة الحرم ليلًا",
+          "free": false
+        },
+        {
+          "id": "mecca_6",
+          "file": "wallpapers/mecca/mecca_6.jpg",
+          "title": "مآذن مكة ليلًا",
+          "free": false
+        }
+      ]
+    },
+    {
+      "id": "madinah",
+      "name": "مساجد المدينة المنورة",
+      "items": [
+        {
+          "id": "madinah_1",
+          "file": "wallpapers/madinah/madinah_1.jpg",
+          "title": "المسجد النبوي",
+          "free": true
+        },
+        {
+          "id": "madinah_2",
+          "file": "wallpapers/madinah/madinah_2.jpg",
+          "title": "مظلات الحرم",
+          "free": true
+        },
+        {
+          "id": "madinah_3",
+          "file": "wallpapers/madinah/madinah_3.jpg",
+          "title": "مسجد قباء",
+          "free": true
+        },
+        {
+          "id": "madinah_4",
+          "file": "wallpapers/madinah/madinah_4.jpg",
+          "title": "المسجد النبوي ليلًا",
+          "free": false
+        },
+        {
+          "id": "madinah_5",
+          "file": "wallpapers/madinah/madinah_5.jpg",
+          "title": "مظلات الحرم ليلًا",
+          "free": false
+        },
+        {
+          "id": "madinah_6",
+          "file": "wallpapers/madinah/madinah_6.jpg",
+          "title": "مسجد قباء ليلًا",
+          "free": false
+        }
+      ]
+    },
+    {
+      "id": "aqsa",
+      "name": "المسجد الأقصى",
+      "items": [
+        {
+          "id": "aqsa_1",
+          "file": "wallpapers/aqsa/aqsa_1.jpg",
+          "title": "قبة الصخرة",
+          "free": true
+        },
+        {
+          "id": "aqsa_2",
+          "file": "wallpapers/aqsa/aqsa_2.jpg",
+          "title": "المسجد القبلي",
+          "free": true
+        },
+        {
+          "id": "aqsa_3",
+          "file": "wallpapers/aqsa/aqsa_3.jpg",
+          "title": "ساحة الأقصى",
+          "free": true
+        },
+        {
+          "id": "aqsa_4",
+          "file": "wallpapers/aqsa/aqsa_4.jpg",
+          "title": "قبة الصخرة ليلًا",
+          "free": false
+        },
+        {
+          "id": "aqsa_5",
+          "file": "wallpapers/aqsa/aqsa_5.jpg",
+          "title": "المسجد القبلي ليلًا",
+          "free": false
+        },
+        {
+          "id": "aqsa_6",
+          "file": "wallpapers/aqsa/aqsa_6.jpg",
+          "title": "ساحة الأقصى ليلًا",
+          "free": false
+        }
+      ]
+    },
+    {
+      "id": "mosques",
+      "name": "مساجد أخرى",
+      "items": [
+        {
+          "id": "mosques_1",
+          "file": "wallpapers/mosques/mosques_1.jpg",
+          "title": "قبة عند الغروب",
+          "free": true
+        },
+        {
+          "id": "mosques_2",
+          "file": "wallpapers/mosques/mosques_2.jpg",
+          "title": "مسجد تحت النجوم",
+          "free": true
+        },
+        {
+          "id": "mosques_3",
+          "file": "wallpapers/mosques/mosques_3.jpg",
+          "title": "فناء الرخام",
+          "free": true
+        },
+        {
+          "id": "mosques_4",
+          "file": "wallpapers/mosques/mosques_4.jpg",
+          "title": "مسجد التل",
+          "free": false
+        },
+        {
+          "id": "mosques_5",
+          "file": "wallpapers/mosques/mosques_5.jpg",
+          "title": "مآذن متقابلة",
+          "free": false
+        },
+        {
+          "id": "mosques_6",
+          "file": "wallpapers/mosques/mosques_6.jpg",
+          "title": "زخرفة هندسية",
+          "free": false
+        }
+      ]
+    },
+    {
+      "id": "minarets",
+      "name": "مآذن",
+      "items": [
+        {
+          "id": "minarets_1",
+          "file": "wallpapers/minarets/minarets_1.jpg",
+          "title": "مئذنة وهلال",
+          "free": true
+        },
+        {
+          "id": "minarets_2",
+          "file": "wallpapers/minarets/minarets_2.jpg",
+          "title": "صف المآذن",
+          "free": true
+        },
+        {
+          "id": "minarets_3",
+          "file": "wallpapers/minarets/minarets_3.jpg",
+          "title": "مآذن النجوم",
+          "free": true
+        },
+        {
+          "id": "minarets_4",
+          "file": "wallpapers/minarets/minarets_4.jpg",
+          "title": "هلال الغروب",
+          "free": false
+        },
+        {
+          "id": "minarets_5",
+          "file": "wallpapers/minarets/minarets_5.jpg",
+          "title": "مآذن و قبة",
+          "free": false
+        },
+        {
+          "id": "minarets_6",
+          "file": "wallpapers/minarets/minarets_6.jpg",
+          "title": "صفّان من المآذن",
+          "free": false
+        }
+      ]
+    },
+    {
+      "id": "allah",
+      "name": "صور مكتوب عليها \"الله\"",
+      "items": [
+        {
+          "id": "allah_1",
+          "file": "wallpapers/allah/allah_1.jpg",
+          "title": "الله",
+          "free": true
+        },
+        {
+          "id": "allah_2",
+          "file": "wallpapers/allah/allah_2.jpg",
+          "title": "الله على عاجي",
+          "free": true
+        },
+        {
+          "id": "allah_3",
+          "file": "wallpapers/allah/allah_3.jpg",
+          "title": "الله في الليل",
+          "free": true
+        },
+        {
+          "id": "allah_4",
+          "file": "wallpapers/allah/allah_4.jpg",
+          "title": "الله تحت القوس",
+          "free": false
+        },
+        {
+          "id": "allah_5",
+          "file": "wallpapers/allah/allah_5.jpg",
+          "title": "الله بإطار",
+          "free": false
+        },
+        {
+          "id": "allah_6",
+          "file": "wallpapers/allah/allah_6.jpg",
+          "title": "الله — نور",
+          "free": false
+        }
+      ]
+    }
+  ]
+}

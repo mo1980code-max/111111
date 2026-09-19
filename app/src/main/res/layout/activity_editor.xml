@@ -103,7 +103,7 @@
         android:id="@+id/layoutBottom"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_above="@+id/adContainer"
+        android:layout_alignParentBottom="true"
         android:background="@color/appColor"
         android:orientation="horizontal">
 
@@ -174,9 +174,4 @@
             android:src="@drawable/ic_done" />
     </LinearLayout>
 
-    <RelativeLayout
-        android:id="@+id/adContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true" />
 </RelativeLayout>
