@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Azkar feature strings and theme.
+
+  Colours live in res/values/colors.xml (azkar_background, azkar_primary, azkar_gold, ...)
+  so there is exactly one definition of the palette.
+
+  Language policy: the dhikr itself is Arabic (part of the religious content, stored verbatim in
+  assets/azkar.json); navigation chrome ("Morning Azkar", "Reset", "Completed") is English to match
+  the Quran feature and the rest of the app. Flip either group here without touching the layouts.
+
+  Mandatory data sources (also embedded in assets/azkar.json and AzkarRepository):
+    Morning: https://www.islambook.com/azkar/1/أذكار-الصباح
+    Evening: https://www.islambook.com/azkar/2/أذكار-المساء
+    Tasbeeh: https://www.islamiokul.com/arabic/zikirler.html
+-->
+<resources>
+
+    <!-- Home-screen entry and Azkar home title -->
+    <string name="azkar_title">Azkar</string>
+    <string name="azkar_home_subtitle">Daily remembrance of Allah</string>
+
+    <!-- The three Azkar sections -->
+    <string name="azkar_morning_title">Morning Azkar</string>
+    <string name="azkar_morning_subtitle" translatable="false">أذكار الصباح</string>
+    <string name="azkar_evening_title">Evening Azkar</string>
+    <string name="azkar_evening_subtitle" translatable="false">أذكار المساء</string>
+    <string name="azkar_tasbeeh_title">Tasbeeh</string>
+    <string name="azkar_tasbeeh_subtitle" translatable="false">تسابيح</string>
+
+    <!-- Cards -->
+    <!-- %1$d the 1-based Azkar number -->
+    <string name="azkar_card_number">Azkar #%1$d</string>
+    <!-- %1$d required repetitions, e.g. "Repeat 3x" -->
+    <string name="azkar_repeat_chip">Repeat %1$dx</string>
+    <string name="azkar_reset">Reset</string>
+    <string name="azkar_completed">✓ Completed</string>
+    <string name="azkar_tap_to_count">Tap to count</string>
+
+    <!-- Progress -->
+    <!-- %1$d completed, %2$d total, e.g. "7 / 31 Completed" -->
+    <string name="azkar_progress">%1$d / %2$d Completed</string>
+    <string name="azkar_all_completed">All Azkar Completed ✓</string>
+    <string name="azkar_source_note">Text and counts from the sources listed in About</string>
+
+    <!-- Errors: always actionable, never a blank screen -->
+    <string name="azkar_load_error">Unable to load the Azkar. The offline Azkar data is missing or damaged.</string>
+    <string name="azkar_unknown_category">Please open Morning, Evening or Tasbeeh from the Azkar home.</string>
+
+    <!-- Accessibility -->
+    <string name="azkar_cd_back">Back</string>
+    <!-- %1$d the Azkar number, %2$d current count, %3$d required repetitions -->
+    <string name="azkar_cd_counter">Azkar %1$d, counted %2$d of %3$d. Activate to count one more.</string>
+    <!-- %1$d the Azkar number -->
+    <string name="azkar_cd_reset">Reset Azkar %1$d to zero</string>
+
+    <!--
+      Theme for the two Azkar screens. AppCompat-based to match the rest of the app;
+      windowBackground stays the Azkar ivory so the first frame never flashes another colour.
+    -->
+    <style name="AzkarTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowBackground">@color/azkar_background</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">@color/azkar_primary</item>
+        <item name="colorAccent">@color/azkar_primary</item>
+    </style>
+</resources>

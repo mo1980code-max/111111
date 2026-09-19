@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Completed Azkar item card: subtle green tint with an emerald stroke. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/azkar_completed_bg" />
+    <stroke
+        android:width="1.5dp"
+        android:color="@color/azkar_primary" />
+    <corners android:radius="16dp" />
+</shape>

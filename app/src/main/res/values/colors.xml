@@ -49,4 +49,37 @@
     <color name="quran_badge">#EFEADA</color>
     <!-- Load/permission errors on quran_background. -->
     <color name="quran_error">#C62828</color>
+
+    <!--
+      Azkar palette. Single source of truth for the Azkar home and category screens;
+      used by res/values/azkar.xml and the activity_azkar_*/item_azkar layouts.
+      Deep emerald + emerald + soft gold on ivory/warm white: peaceful, premium Islamic feel.
+    -->
+
+    <!-- Screen background: warm ivory. -->
+    <color name="azkar_background">#FAF7EE</color>
+    <!-- Card surface: warm white. -->
+    <color name="azkar_card">#FFFDF7</color>
+    <!-- Primary text: deep green-charcoal ink. -->
+    <color name="azkar_text">#22312A</color>
+    <!-- Secondary text: muted warm grey. -->
+    <color name="azkar_muted">#7C7666</color>
+    <!-- Primary action / completed state: emerald green. -->
+    <color name="azkar_primary">#0E7C5B</color>
+    <!-- Pressed state for azkar_primary. -->
+    <color name="azkar_primary_dark">#0A5C44</color>
+    <!-- Deep emerald: header accents and evening tile. -->
+    <color name="azkar_deep">#0B3D2E</color>
+    <!-- Soft gold: badges, icon accents, card strokes. -->
+    <color name="azkar_gold">#C9A227</color>
+    <!-- Pale gold wash behind number badges. -->
+    <color name="azkar_gold_soft">#F3E9C8</color>
+    <!-- Foreground for text drawn on top of azkar_primary. -->
+    <color name="azkar_on_primary">#FFFFFF</color>
+    <!-- Completed card wash: subtle green tint. -->
+    <color name="azkar_completed_bg">#E5F3EB</color>
+    <!-- Hairline separators and card strokes on azkar_background. -->
+    <color name="azkar_divider">#E6E0CE</color>
+    <!-- Progress track behind the emerald progress fill. -->
+    <color name="azkar_track">#E9E4D2</color>
 </resources>

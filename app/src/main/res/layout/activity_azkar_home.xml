@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Azkar home screen: the standalone entry point reached from the home-screen Azkar icon.
+
+  Regions, top to bottom:
+    1. Header  - back arrow, "Azkar" title + subtitle
+    2. Divider - hairline
+    3. Cards   - Morning Azkar, Evening Azkar, Tasbeeh; identical style, dimensions,
+                 spacing and behaviour. Each card shows its icon, titles and live progress.
+
+  Tapping a card opens AzkarListActivity with the matching category. Progress labels are
+  refreshed in onResume so counts made in a category are visible when coming back.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/azkar_home_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/azkar_background"
+    android:orientation="vertical"
+    tools:context=".activity.AzkarHomeActivity">
+
+    <!-- 1. Screen header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp">
+
+        <ImageButton
+            android:id="@+id/azkar_home_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/azkar_cd_back"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_back"
+            android:tint="@color/azkar_text" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/azkar_home_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/azkar_title"
+                android:textColor="@color/azkar_text"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/azkar_home_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/azkar_home_subtitle"
+                android:textColor="@color/azkar_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_azkar" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/azkar_divider" />
+
+    <!-- 2. The three Azkar sections -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Morning Azkar -->
+            <LinearLayout
+                android:id="@+id/azkar_card_morning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_azkar_home_card"
+                android:clickable="true"
+                android:elevation="3dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="104dp"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_azkar_morning" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/azkar_morning_title"
+                        android:textColor="@color/azkar_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/azkar_morning_subtitle"
+                        android:textColor="@color/azkar_muted"
+                        android:textDirection="rtl"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/azkar_home_progress_morning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/azkar_muted"
+                        android:textSize="12sp"
+                        tools:text="7 / 31 Completed" />
+
+                    <ProgressBar
+                        android:id="@+id/azkar_home_bar_morning"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/azkar_progress" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Evening Azkar -->
+            <LinearLayout
+                android:id="@+id/azkar_card_evening"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_azkar_home_card"
+                android:clickable="true"
+                android:elevation="3dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="104dp"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_azkar_evening" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/azkar_evening_title"
+                        android:textColor="@color/azkar_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/azkar_evening_subtitle"
+                        android:textColor="@color/azkar_muted"
+                        android:textDirection="rtl"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/azkar_home_progress_evening"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/azkar_muted"
+                        android:textSize="12sp"
+                        tools:text="0 / 30 Completed" />
+
+                    <ProgressBar
+                        android:id="@+id/azkar_home_bar_evening"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/azkar_progress" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Tasbeeh -->
+            <LinearLayout
+                android:id="@+id/azkar_card_tasbeeh"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_azkar_home_card"
+                android:clickable="true"
+                android:elevation="3dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="104dp"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_azkar_tasbeeh" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/azkar_tasbeeh_title"
+                        android:textColor="@color/azkar_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/azkar_tasbeeh_subtitle"
+                        android:textColor="@color/azkar_muted"
+                        android:textDirection="rtl"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/azkar_home_progress_tasbeeh"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/azkar_muted"
+                        android:textSize="12sp"
+                        tools:text="0 / 17 Completed" />
+
+                    <ProgressBar
+                        android:id="@+id/azkar_home_bar_tasbeeh"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/azkar_progress" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

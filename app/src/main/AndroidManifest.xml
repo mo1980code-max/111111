@@ -35,6 +35,19 @@
             android:label="@string/quran_title"
             android:theme="@style/QuranTheme" />
 
+        <!-- Azkar: standalone home screen plus one category screen per section. -->
+        <activity
+            android:name="com.clock.livewallpaper.activity.AzkarHomeActivity"
+            android:exported="false"
+            android:label="@string/azkar_title"
+            android:theme="@style/AzkarTheme" />
+
+        <activity
+            android:name="com.clock.livewallpaper.activity.AzkarListActivity"
+            android:exported="false"
+            android:label="@string/azkar_title"
+            android:theme="@style/AzkarTheme" />
+
         <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
         <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
