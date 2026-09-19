@@ -1,0 +1,74 @@
+Tanzil Quran Text (Uthmani, Version 1.1)
+Copyright (C) 2007-2026 Tanzil Project
+License: Creative Commons Attribution 3.0
+Source: http://tanzil.net
+Updates: http://tanzil.net/updates/
+
+====================================================================
+
+This notice covers the Quranic Arabic text shipped in this repository at:
+
+    app/src/main/assets/databases/quran.ar.uthmani.db
+        table `arabic_text` (sura, ayah, text) -- 114 surahs, 6236 ayahs
+
+and the surah names mirrored into:
+
+    app/src/main/java/com/clock/livewallpaper/quran/SurahIndex.java
+        ARABIC_NAMES[]
+
+The database is a verbatim, unmodified copy of the Tanzil text. Per the Tanzil
+terms of use, the text is redistributed unchanged: no diacritic removal, no
+normalisation, no re-ordering, and no automatic insertion of the basmallah into
+ayah text. The surah/ayah keys are the Hafs numbering.
+
+Full license text: Creative Commons Attribution 3.0 Unported
+https://creativecommons.org/licenses/by/3.0/legalcode
+
+--------------------------------------------------------------------
+Tanzil TERMS OF USE (reproduced from the source file header)
+--------------------------------------------------------------------
+
+  - Permission is granted to copy and distribute verbatim copies
+    of this text, but CHANGING IT IS NOT ALLOWED.
+
+  - This Quran text can be used in any website or application,
+    provided that its source (Tanzil Project) is clearly indicated,
+    and a link is made to tanzil.net to enable users to keep
+    track of changes.
+
+  - This copyright notice shall be included in all verbatim copies
+    of the text, and shall be reproduced appropriately in all files
+    derived from or containing substantial portion of this text.
+
+--------------------------------------------------------------------
+Attribution shown to end users
+--------------------------------------------------------------------
+
+The same attribution is exposed inside the app at runtime, so the notice travels
+with distributed APKs and not only with the source tree:
+
+  * the `properties` table of quran.ar.uthmani.db records `source`,
+    `text_version` and `license`;
+  * the Surah Index screen footer credits "Quran text: Tanzil Project (tanzil.net)".
+
+--------------------------------------------------------------------
+Reproducing the asset
+--------------------------------------------------------------------
+
+The database is generated, never hand-edited:
+
+    python3 tools/build_quran_db.py
+
+That script re-downloads the Tanzil XML, verifies the copyright block, the
+114/6236 structure and every per-surah ayah count, then writes and independently
+re-verifies the .db. Pass --xml <path> to rebuild without network access.
+
+--------------------------------------------------------------------
+Font
+--------------------------------------------------------------------
+
+The Quran font at app/src/main/assets/fonts/quran_font.ttf is Amiri Quran
+Regular (Amiri Project, SIL Open Font License 1.1). See
+docs/licenses/AmiriQuran-OFL-1.1.txt. It is a separate work from the Tanzil
+text and carries its own license. Amiri Quran covers every codepoint used by
+the Tanzil Uthmani text.

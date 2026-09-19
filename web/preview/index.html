@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quran — Android layout preview</title>
+<!--
+  Design preview of the two Android screens added in this change set. NOT part of the APK.
+
+  The CSS below is a 1:1 transcription (dp -> px, sp -> px) of:
+      app/src/main/res/layout/activity_surah_list.xml
+      app/src/main/res/layout/item_surah.xml
+      app/src/main/res/layout/activity_quran.xml
+      app/src/main/res/values/colors.xml
+  Data comes from /api/index and /api/surah/N, which read the real bundled
+  quran.ar.uthmani.db and the real SurahIndex.java arrays. The Arabic face is the real
+  assets/fonts/quran_font.ttf. Change a colour or a dimension in the Android XML and mirror it here.
+-->
+<style>
+  @font-face {
+    font-family: 'QuranPreview';
+    src: url('/quran_font.ttf') format('truetype');
+    font-display: block;
+  }
+
+  :root {
+    /* values/colors.xml */
+    --quran-background: #FBF9F0;
+    --quran-text: #1A1A1A;
+    --quran-highlight: #D0ECE4;
+    --quran-header: #7A7A7A;
+    --quran-button: #2D7D46;
+    --quran-button-pressed: #246438;
+    --quran-on-button: #FBF9F0;
+    --quran-divider: #E8E4D5;
+    --quran-badge: #EFEADA;
+    --quran-error: #C62828;
+    --system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--system);
+    background: #2b2b2b;
+    color: var(--quran-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 24px 12px 40px;
+  }
+
+  .banner {
+    max-width: 760px;
+    color: #ddd;
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .banner b { color: #fff; }
+  .banner code { background: #3a3a3a; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* ---- phone frame ---- */
+  .phone {
+    width: 400px;
+    height: 800px;
+    background: var(--quran-background);
+    border-radius: 34px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 9px solid #141414;
+  }
+  .statusbar {
+    height: 30px; flex: 0 0 30px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; font-size: 12px; font-weight: 600; color: var(--quran-text);
+    background: var(--quran-background);
+  }
+
+  .screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .screen.active { display: flex; }
+
+  /* ================= activity_surah_list.xml ================= */
+  .idx-head {
+    min-height: 64px; display: flex; align-items: center;
+    padding: 0 20px 0 8px; flex: 0 0 auto;
+  }
+  .iconbtn {
+    width: 48px; height: 48px; border: 0; background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; border-radius: 24px;
+    color: var(--quran-text); flex: 0 0 48px;
+  }
+  .iconbtn:active { background: var(--quran-highlight); }
+  .idx-titles { flex: 1; margin-left: 8px; min-width: 0; }
+  .idx-title { font-size: 20px; font-weight: 700; color: var(--quran-text); }
+  .idx-sub { font-size: 13px; color: var(--quran-header); }
+  .idx-logo { width: 28px; height: 28px; flex: 0 0 28px; }
+
+  .divider { height: 1px; background: var(--quran-divider); flex: 0 0 1px; }
+
+  #surahRecycler { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0; }
+
+  /* ---- item_surah.xml ---- */
+  .row {
+    min-height: 84px; display: flex; align-items: center; direction: ltr;
+    padding: 12px 16px; cursor: pointer; border: 0; width: 100%;
+    background: transparent; text-align: left; font-family: var(--system);
+  }
+  .row:hover { background: rgba(208,236,228,.45); }
+  .row:active { background: var(--quran-highlight); }
+  .badge {
+    width: 44px; height: 44px; flex: 0 0 44px; border-radius: 12px;
+    background: var(--quran-badge); border: 1px solid var(--quran-divider);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: var(--quran-header);
+  }
+  .rowmid { flex: 1; min-width: 0; margin-left: 14px; display: flex; flex-direction: column; }
+  .rowen { font-size: 16px; font-weight: 700; color: var(--quran-text);
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rowmean { font-size: 12px; color: var(--quran-header);
+             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rowmeta { font-size: 12px; color: var(--quran-header); margin-top: 2px;
+             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rowar {
+    font-family: 'QuranPreview', serif; font-size: 22px; color: var(--quran-text);
+    direction: rtl; margin-left: 12px; max-width: 150px; text-align: right; flex: 0 0 auto;
+  }
+
+  .attribution {
+    min-height: 40px; display: flex; align-items: center; justify-content: center;
+    padding: 6px 20px; font-size: 11px; color: var(--quran-header); text-align: center;
+    flex: 0 0 auto;
+  }
+
+  /* ================= activity_quran.xml ================= */
+  .nav { min-height: 52px; display: flex; align-items: center; direction: ltr;
+         padding: 0 20px 0 8px; flex: 0 0 auto; }
+  .nav .iconbtn { color: var(--quran-header); }
+  .nav .spacer { flex: 1; }
+  .navpos { font-size: 13px; color: var(--quran-header); }
+
+  .head { min-height: 44px; display: flex; align-items: center; direction: ltr;
+          padding: 0 20px; flex: 0 0 auto; }
+  /* Surah Name = LEFT, Juz = RIGHT, both #7A7A7A */
+  .headname {
+    flex: 3; min-width: 0; text-align: left; direction: rtl;
+    font-family: 'QuranPreview', serif; font-size: 20px; font-weight: 700;
+    color: var(--quran-header); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .headjuz {
+    flex: 2; min-width: 0; margin-left: 12px; text-align: right; direction: rtl;
+    font-family: 'QuranPreview', serif; font-size: 15px; color: var(--quran-header);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .bodywrap { flex: 1; min-height: 0; position: relative; }
+  #quranScroll {
+    position: absolute; inset: 0; overflow-y: auto; padding: 0 20px;
+  }
+  #quranText {
+    direction: rtl; text-align: center; unicode-bidi: plaintext;
+    font-family: 'QuranPreview', serif; font-size: 26px; line-height: 1.25;
+    /* lineSpacingExtra 10dp on a 26sp body */
+    padding: 18px 0 24px; color: var(--quran-text); white-space: pre-wrap;
+  }
+  .state {
+    position: absolute; inset: 0; display: none; flex-direction: column;
+    align-items: center; justify-content: center; padding: 24px; gap: 14px; text-align: center;
+  }
+  .state.on { display: flex; }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 4px solid var(--quran-divider); border-top-color: var(--quran-button);
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #quranStatus { font-size: 15px; color: var(--quran-header); }
+  #quranStatus.err { color: var(--quran-error); }
+
+  .footer {
+    min-height: 68px; display: flex; align-items: center; direction: ltr;
+    padding: 12px 16px; flex: 0 0 auto;
+  }
+  .navbtn {
+    flex: 1; height: 44px; border: 0; border-radius: 22px; cursor: pointer;
+    background: var(--quran-button); color: var(--quran-on-button);
+    font-family: var(--system); font-size: 14px; padding: 0 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .navbtn:active:not(:disabled) { background: var(--quran-button-pressed); }
+  .navbtn:disabled { background: var(--quran-divider); color: var(--quran-header); cursor: default; }
+  #quranPage {
+    min-width: 86px; margin: 0 12px; text-align: center; direction: rtl;
+    font-family: 'QuranPreview', serif; font-size: 14px; color: var(--quran-header);
+    flex: 0 0 auto;
+  }
+  .retry { width: auto; flex: 0 0 auto; padding: 0 30px; display: none; }
+  .retry.on { display: block; }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .toolbar button {
+    background: #3d3d3d; color: #eee; border: 1px solid #555; border-radius: 8px;
+    padding: 7px 13px; font-size: 12.5px; cursor: pointer; font-family: var(--system);
+  }
+  .toolbar button:hover { background: #4a4a4a; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <b>Design preview</b> of <code>activity_surah_list.xml</code>, <code>item_surah.xml</code> and
+  <code>activity_quran.xml</code> — not the APK. Text comes from the real bundled
+  <code>quran.ar.uthmani.db</code>, the index from the real <code>SurahIndex.java</code> arrays, and
+  the Arabic face is the real <code>assets/fonts/quran_font.ttf</code>.
+</div>
+
+<div class="toolbar">
+  <button data-goto="index">Show Surah Index</button>
+  <button data-open="1">Open Al-Fatihah</button>
+  <button data-open="2">Open Al-Baqarah</button>
+  <button data-open="9">Open At-Tawbah (no basmallah)</button>
+  <button data-open="114">Open An-Nas</button>
+</div>
+
+<div class="phone">
+  <div class="statusbar"><span>9:41</span><span>5G &nbsp; 100%</span></div>
+
+  <!-- ============ SurahListActivity ============ -->
+  <section class="screen active" id="screenIndex">
+    <div class="idx-head">
+      <button class="iconbtn" id="idxBack" aria-label="Back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19,11H9l3.29,-3.29a1,1 0,0 0,0 -1.42,1 1,0 0,0 -1.41,0l-4.29,4.3A2,2 0,0 0,6 12H6a2,2 0,0 0,0.59 1.4l4.29,4.3a1,1 0,1 0,1.41 -1.42L9,13H19a1,1 0,0 0,0 -2Z"/></svg>
+      </button>
+      <div class="idx-titles">
+        <div class="idx-title">Surah Index</div>
+        <div class="idx-sub">114 Surahs &#183; 6236 Ayahs &#183; Works offline</div>
+      </div>
+      <svg class="idx-logo" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#2D7D46" d="M6.9,3.5H17.1A3.4,3.4 0 0 1 20.5,6.9V17.1A3.4,3.4 0 0 1 17.1,20.5H6.9A3.4,3.4 0 0 1 3.5,17.1V6.9A3.4,3.4 0 0 1 6.9,3.5Z"/>
+        <path fill="#FBF9F0" d="M12,6.1A2,2 0 0 1 12,10.1A2.8,2.8 0 0 0 12,6.1Z"/>
+        <path d="M5.7,11.9C7.5,10.6 10.2,10.6 12,11.9C13.8,10.6 16.5,10.6 18.3,11.9L18.3,16.7C16.5,15.4 13.8,15.4 12,16.7C10.2,15.4 7.5,15.4 5.7,16.7Z" fill="none" stroke="#FBF9F0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12,11.9L12,16.7" stroke="#FBF9F0" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="divider"></div>
+    <div id="surahRecycler"></div>
+    <div class="divider"></div>
+    <div class="attribution">Quran text: Tanzil Project (tanzil.net) &#183; Font: Amiri Quran (OFL)</div>
+  </section>
+
+  <!-- ============ QuranActivity ============ -->
+  <section class="screen" id="screenReader">
+    <div class="nav">
+      <button class="iconbtn" id="quranBack" aria-label="Back to the Surah index">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19,11H9l3.29,-3.29a1,1 0,0 0,0 -1.42,1 1,0 0,0 -1.41,0l-4.29,4.3A2,2 0,0 0,6 12H6a2,2 0,0 0,0.59 1.4l4.29,4.3a1,1 0,1 0,1.41 -1.42L9,13H19a1,1 0,0 0,0 -2Z"/></svg>
+      </button>
+      <div class="spacer"></div>
+      <div class="navpos" id="quranPosition">1 of 114</div>
+    </div>
+
+    <div class="head">
+      <div class="headname" id="quranSurahName">سورة الفاتحة</div>
+      <div class="headjuz" id="quranJuz">الجزء ١</div>
+    </div>
+    <div class="divider"></div>
+
+    <div class="bodywrap">
+      <div id="quranScroll"><div id="quranText"></div></div>
+      <div class="state" id="quranState">
+        <div class="spinner" id="quranSpinner"></div>
+        <div id="quranStatus">Loading Surah&#8230;</div>
+        <button class="navbtn retry" id="quranRetry">Retry</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="footer">
+      <button class="navbtn" id="quranPrev">Previous Surah</button>
+      <div id="quranPage">صفحة ١</div>
+      <button class="navbtn" id="quranNext">Next Surah</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const AR = '٠١٢٣٤٥٦٧٨٩';
+  const arabicNumber = (n) => String(n).split('').map(c => /\d/.test(c) ? AR[+c] : c).join('');
+
+  let surahs = [];
+  let currentSurah = 1;
+  let loadToken = 0;
+
+  async function api(path) {
+    const response = await fetch(path);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || response.statusText);
+    return payload;
+  }
+
+  // ---------- SurahListActivity + SurahListAdapter ----------
+  async function buildIndex() {
+    const data = await api('/api/index');
+    surahs = data.surahs;
+    const list = $('surahRecycler');
+    list.textContent = '';
+    for (const surah of surahs) {
+      const row = document.createElement('button');
+      row.className = 'row';
+      row.type = 'button';
+      row.setAttribute('aria-label',
+        `Surah ${surah.id}, ${surah.englishName}, ${surah.arabicName}, ${surah.ayahCount} ayahs, revealed in ${surah.medinan ? 'Madinah' : 'Makkah'}`);
+
+      const place = surah.medinan ? 'Madinah' : 'Makkah';
+      row.innerHTML =
+        `<span class="badge">${surah.id}</span>` +
+        `<span class="rowmid">` +
+          `<span class="rowen"></span>` +
+          `<span class="rowmean"></span>` +
+          `<span class="rowmeta"></span>` +
+        `</span>` +
+        `<span class="rowar"></span>`;
+      // Text nodes, not interpolation, so a name can never break the markup.
+      row.querySelector('.rowen').textContent = surah.englishName;
+      row.querySelector('.rowmean').textContent = surah.englishMeaning;
+      row.querySelector('.rowmeta').textContent =
+        `${surah.ayahCount} Ayahs \u00B7 ${place} \u00B7 Juz ${surah.firstJuz}`;
+      row.querySelector('.rowar').textContent = surah.arabicName;
+
+      // onSurahClick -> Intent(surah_id, surah_name) -> QuranActivity
+      row.addEventListener('click', () => openSurah(surah.id));
+      list.appendChild(row);
+    }
+  }
+
+  // ---------- QuranActivity ----------
+  function show(state) {
+    $('screenIndex').classList.toggle('active', state === 'index');
+    $('screenReader').classList.toggle('active', state === 'reader');
+  }
+
+  function showLoading(message) {
+    $('quranScroll').style.visibility = 'hidden';
+    $('quranState').classList.add('on');
+    $('quranSpinner').style.display = '';
+    $('quranStatus').classList.remove('err');
+    $('quranStatus').textContent = message;
+    $('quranRetry').classList.remove('on');
+    $('quranPrev').disabled = true;
+    $('quranNext').disabled = true;
+  }
+
+  function showError(message, allowRetry) {
+    $('quranScroll').style.visibility = 'hidden';
+    $('quranState').classList.add('on');
+    $('quranSpinner').style.display = 'none';
+    $('quranStatus').classList.add('err');
+    $('quranStatus').textContent = message;
+    $('quranRetry').classList.toggle('on', !!allowRetry);
+    $('quranPrev').disabled = true;
+    $('quranNext').disabled = true;
+  }
+
+  async function openSurah(surahId) {
+    if (surahId < 1 || surahId > 114) return;
+    currentSurah = surahId;
+    show('reader');
+    showLoading('Loading Surah\u2026');
+
+    const token = ++loadToken;
+    try {
+      const surah = await api('/api/surah/' + surahId);
+      if (token !== loadToken) return;          // a newer navigation already won
+
+      $('quranText').textContent = surah.text;
+
+      // Header: Surah Name (left), Juz (right)
+      $('quranSurahName').textContent = 'سورة ' + surah.arabicName;
+      $('quranJuz').textContent = surah.firstJuz !== surah.lastJuz
+        ? `الجزء ${arabicNumber(surah.firstJuz)}\u2013${arabicNumber(surah.lastJuz)}`
+        : `الجزء ${arabicNumber(surah.firstJuz)}`;
+
+      // Footer: page number between the two buttons
+      $('quranPage').textContent = surah.firstPage !== surah.lastPage
+        ? `صفحة ${arabicNumber(surah.firstPage)}\u2013${arabicNumber(surah.lastPage)}`
+        : `صفحة ${arabicNumber(surah.firstPage)}`;
+      $('quranPosition').textContent = `${surahId} of 114`;
+
+      $('quranPrev').disabled = surahId <= 1;
+      $('quranNext').disabled = surahId >= 114;
+
+      $('quranState').classList.remove('on');
+      $('quranScroll').style.visibility = '';
+      $('quranScroll').scrollTop = 0;
+      document.title = 'Quran — ' + surah.englishName;
+    } catch (error) {
+      if (token !== loadToken) return;
+      showError(error.message || 'Unable to open this Surah.', true);
+    }
+  }
+
+  function navigate(delta) { openSurah(currentSurah + delta); }
+
+  $('quranPrev').addEventListener('click', () => navigate(-1));
+  $('quranNext').addEventListener('click', () => navigate(+1));
+  $('quranRetry').addEventListener('click', () => openSurah(currentSurah));
+  $('quranBack').addEventListener('click', () => show('index'));
+  $('idxBack').addEventListener('click', () => show('index'));
+
+  for (const button of document.querySelectorAll('.toolbar button')) {
+    button.addEventListener('click', () => {
+      if (button.dataset.goto) show('index');
+      else openSurah(Number(button.dataset.open));
+    });
+  }
+
+  buildIndex().catch((error) => {
+    $('surahRecycler').innerHTML =
+      `<div class="attribution" style="color:var(--quran-error);font-size:13px">${error.message}</div>`;
+  });
+})();
+</script>
+</body>
+</html>

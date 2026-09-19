@@ -1,141 +1,328 @@
-# Offline Quran reader (native Android / Java)
+# Offline Quran — Surah Index + Reader
 
-The implementation is integrated into the existing `com.clock.livewallpaper` app. It uses native Android APIs, supports API 23 and newer, and adds no libraries or network calls.
+A fully offline, fully navigable Quran reader inside the existing `com.clock.livewallpaper` app.
+All 114 surahs are browsable from an index and readable from a single reader screen that pages
+between surahs in place. **No network access, no runtime downloads, no API keys.**
 
-## Build configuration (updated)
+Native Android APIs only, `minSdk 23`, `targetSdk`/`compileSdk` 36, Java 17. No new Gradle
+dependencies were added.
 
-| Setting | Value |
-| --- | --- |
-| Gradle runtime / Java compiler | JDK 17 |
-| Android Gradle Plugin | 8.13.2 |
-| Gradle wrapper distribution | 8.13 |
-| compileSdk / targetSdk | 36 / 36 |
-| minSdk | 23 |
-| Java source / target | `JavaVersion.VERSION_17` |
+---
 
-`app/build.gradle` sets SDK levels, Java 17 compile options, and the Java 17 compiler toolchain. The **root** `build.gradle` declares AGP 8.13.2; `gradle/wrapper/gradle-wrapper.properties` selects Gradle 8.13. All three must be updated together. See the [official AGP compatibility table](https://developer.android.com/build/releases/agp-8-13-0-release-notes#compatibility).
+## 1. What this replaces
 
-Set Android Studio's **Gradle JDK** to JDK 17, or export `JAVA_HOME` to an installed JDK 17 before invoking the wrapper. The compiler toolchain does not change the JVM that launches Gradle. Install Android SDK Platform 36 and the build tools required by AGP; no machine-specific JDK/SDK path is committed.
+An earlier iteration fetched surahs at runtime from `api.alquran.cloud` and fell back to a
+hard-coded 7-ayah array for Al-Fatihah, so in practice only Al-Fatihah was reliably readable.
+That online path is **deleted**: `QuranApiClient.java`, `tests/test_quran_api.py`,
+`docs/DYNAMIC_QURAN.md` and `docs/OFFLINE_QURAN_COMPLETE.md` no longer exist, and the
+`res/values/quran_surah_names.xml` array was superseded by Java arrays.
 
-Existing Clock/Wallpaper dependencies are retained (one duplicate Glide declaration was removed). Debug shrinking is disabled for easier debugging; release still uses R8 and resource shrinking with the optimized default ProGuard rules. `android.nonFinalResIds=false` in `gradle.properties` preserves the legacy `switch (R.id...)` code in `EditorActivity` under AGP 8. The root build prefers Google/Maven Central/JitPack, retaining a JCenter fallback for legacy artifacts.
+The reader now queries a real bundled SQLite database, so every surah is available on a device in
+airplane mode.
 
-**Scope:** the Quran reader handles Android 15/16 enforced edge-to-edge with native window insets and readable system-bar icons. This is not a full target-36 migration audit of the Clock/Wallpaper screens or their old third-party libraries. Test their permissions, media/storage access, back navigation, system-bar insets, and dependency/R8 compatibility separately before releasing the entire app.
+---
 
-## 1. Supply the two real assets before building
+## 2. Screen flow
 
-```text
-app/src/main/assets/
-├── databases/
-│   └── quran.ar.uthmani.db
-└── fonts/
-    └── quran_font.ttf
+```
+MainActivity (home)
+   └── Quran tile  ──►  SurahListActivity          RecyclerView, 114 rows, offline, instant
+                            │  tap a row
+                            │  Intent extras: surah_id (int), surah_name (String)
+                            ▼
+                         QuranActivity             header + scrollable Arabic body + footer
+                            ▲  │
+                            └──┘  "Previous Surah" / "Next Surah"
+                                  re-query and rebind in place — no new Activity,
+                                  no back-stack growth
 ```
 
-**Neither binary was supplied in this repository.** Obtain a verified, licensed copy of the Uthmani database and its compatible Quran font, then place them at these exact, case-sensitive paths. Do not substitute generated Quran text or an empty database. No download occurs at runtime. A missing/unreadable font or database produces an error message, not a silent font substitution or blank reader.
+`SurahListActivity` also pre-warms the database on a worker thread, so the first surah a user opens
+usually needs no spinner. The pre-warm is idempotent and shares a process-wide lock with the copy
+started from `AppClass.onCreate()`.
 
-The database must be an uncompressed, standalone SQLite file (not a ZIP or a database that depends on a separate WAL file). Required schema contract:
+---
+
+## 3. Bundled assets
+
+Both binaries are committed, because the feature is offline by definition.
+
+| Path | Size | What it is |
+| --- | --- | --- |
+| `app/src/main/assets/databases/quran.ar.uthmani.db` | 1.6 MB | 114 surahs / 6236 ayahs, Uthmani script, Hafs numbering |
+| `app/src/main/assets/fonts/quran_font.ttf` | 164 KB | Amiri Quran Regular — the face designed for this text |
+
+### Provenance
+
+* **Text** — Tanzil Quran Text (Uthmani, Version 1.1), Copyright (C) 2007-2026 Tanzil Project,
+  Creative Commons Attribution 3.0, http://tanzil.net. Stored **verbatim**: no diacritic stripping,
+  no normalisation, no re-ordering.
+* **Font** — Amiri Quran Regular, Amiri Project, SIL Open Font License 1.1. Verified to cover every
+  codepoint in the database, plus all 114 surah names, the Arabic header labels, Arabic-Indic digits
+  and both ornate parentheses.
+* **Licence texts** — `docs/licenses/Tanzil-Uthmani-CC-BY-3.0.txt`,
+  `docs/licenses/AmiriQuran-OFL-1.1.txt`. CC-BY-3.0 requires the source to be indicated in the
+  application, so the index screen carries a visible attribution line and the database records
+  `source`/`license` in its `properties` table.
+
+### Regenerating the database
+
+The `.db` is generated, never hand-edited:
+
+```sh
+python3 tools/build_quran_db.py                 # downloads the Tanzil XML and rebuilds
+python3 tools/build_quran_db.py --xml path.xml  # rebuild offline from a local copy
+```
+
+It refuses to emit a file unless the copyright block is present, all 114 surahs and 6236 ayahs are
+there, every per-surah ayah count matches, and `PRAGMA quick_check` is clean.
+
+---
+
+## 4. Database contract
 
 ```sql
--- Describes the required columns; do not create an empty database with this SQL.
-CREATE TABLE arabic_text (
-    sura INTEGER,
-    ayah INTEGER,
-    text TEXT
-);
+CREATE TABLE arabic_text (sura INTEGER NOT NULL, ayah INTEGER NOT NULL, text TEXT NOT NULL);
+CREATE TABLE properties  (property TEXT NOT NULL, value TEXT NOT NULL);
+CREATE INDEX arabic_text_sura_ayah ON arabic_text (sura, ayah);
 
--- Actual query contract used by the Java helper:
-SELECT sura, ayah, text
-FROM arabic_text
-WHERE sura = ?
-ORDER BY ayah ASC;
+-- the only query the reader needs:
+SELECT sura, ayah, text FROM arabic_text WHERE sura = ? ORDER BY ayah ASC;
 ```
 
-Extra columns/tables are fine. Surahs and ayahs are one-based. The helper expects complete Hafs-numbered Surahs, checks for missing/duplicate/empty verses, and checks their expected verse counts. The font must support the database's actual text encoding and Quranic diacritics. Merely renaming an unrelated font is not sufficient. Verify text authenticity and rendering against a trusted Mushaf; structural validation cannot establish textual authenticity.
+Surahs and ayahs are one-based. Extra columns and tables are ignored, so a richer database can be
+dropped in unchanged. The index makes `WHERE sura = ? ORDER BY ayah ASC` a range scan with no sort.
 
-## 2. Open a Surah from an existing Java click handler
+`QuranDatabaseHelper` deliberately does **not** extend `SQLiteOpenHelper`: the shipped database is a
+read-only external artifact with its own version, and extending the helper would mean writing an
+`onCreate()` that must never run and accepting that Android may rewrite the upstream schema version.
+Copying the file and opening it read-only keeps the bytes on disk identical to the bytes in the APK.
+
+### Install safety
+
+1. Copy the asset to `quran.ar.uthmani.db.installing` in the same private database directory.
+2. `flush()` + `FileDescriptor.sync()`, so a crash cannot leave a hollow file.
+3. Validate: `PRAGMA quick_check`, the required schema, and a `GROUP BY sura` count compared against
+   `QuranMetadata` for all 114 surahs.
+4. Only then `renameTo()` into place — atomic within one directory, so a reader never opens a partial
+   database.
+
+A process-wide lock stops two activities installing at once. A structurally invalid installed copy is
+recovered from the packaged asset. Validation is memoised per process, because re-reading 6236 rows on
+every Next/Previous tap would be the most expensive part of navigation. `getDatabasePath()` is used,
+never a hard-coded `/data/data` path. No storage permission is needed.
+
+---
+
+## 5. Java API
+
+### `QuranDatabaseHelper`
 
 ```java
-import android.content.Intent;
-import com.clock.livewallpaper.activity.QuranActivity;
+QuranDatabaseHelper db = new QuranDatabaseHelper(context);
 
-// For example, inside your existing Activity:
+db.prepareDatabase();              // first-run asset copy; worker thread only
+db.isDatabaseReady();              // never throws; safe for UI decisions
+
+String text = db.getSurahText(2);  // whole surah, display-ready, ﴿n﴾ markers
+String text = db.getSurahText(2, false);          // without the basmallah header
+List<QuranDatabaseHelper.Ayah> ayahs = db.getVersesBySurah(2);
+String basmallah = db.getBasmallah();             // read from 1:1, never hard-coded
+QuranDatabaseHelper.ayahMarker(255);              // "﴿٢٥٥﴾"
+QuranDatabaseHelper.clearCache();                 // after replacing the database
+```
+
+`getSurahText(int)` returns one string: every ayah terminated by its number in ornate parentheses
+with non-breaking-space padding so a number never wraps away from its ayah. Results are held in an
+8-entry `LruCache`, which is what makes Next/Previous feel instant.
+
+**Basmallah handling.** The Tanzil text keeps the basmallah out of the numbered ayahs of every surah
+except 1, and surah 9 has none. A mushaf prints it above surahs 2-8 and 10-114, so it is emitted as an
+un-numbered leading line rather than spliced into ayah 1 — splicing it would have mis-numbered every
+ayah or duplicated text in surah 1. It is read back out of the database (1:1) so its orthography can
+never drift from the text beside it.
+
+### `SurahIndex`
+
+```java
+SurahIndex.TOTAL_SURAHS;                    // 114
+SurahIndex.TOTAL_AYAHS;                     // 6236
+SurahIndex.ARABIC_NAMES / ENGLISH_NAMES / ENGLISH_MEANINGS;   // String[114]
+SurahIndex.isValid(2); SurahIndex.get(2); SurahIndex.all();
+SurahIndex.arabicName(2); SurahIndex.englishName(2);
+
+SurahIndex.Surah s = SurahIndex.get(2);
+s.id; s.arabicName; s.englishName; s.englishMeaning; s.medinan; s.ayahCount;
+s.firstJuz; s.lastJuz; s.firstPage; s.lastPage;
+s.hasBasmallahHeader(); s.spansMultipleJuz(); s.spansMultiplePages(); s.arabicNumber();
+```
+
+Names live in Java as requested. Ayah counts and the page/Juz mapping are delegated to
+`QuranMetadata` rather than duplicated, so the list screen, the header and the database cannot
+disagree.
+
+### Opening a surah
+
+```java
 Intent intent = new Intent(this, QuranActivity.class);
-intent.putExtra(QuranActivity.EXTRA_SURAH, 2); // 1–114; defaults to Al-Fatihah
-intent.putExtra(QuranActivity.EXTRA_AYAH, 255); // optional; defaults to ayah 1
+intent.putExtra(QuranActivity.EXTRA_SURAH_ID, 2);            // "surah_id", 1-114, defaults to 1
+intent.putExtra(QuranActivity.EXTRA_SURAH_NAME, "البقرة");    // "surah_name"
+intent.putExtra(QuranActivity.EXTRA_AYAH, 255);              // optional scroll target
 startActivity(intent);
 ```
 
-The reader is registered in `AndroidManifest.xml` with a native no-action-bar theme and `exported="false"`. Your existing launcher and navigation are unchanged; connect the Intent to your preferred Quran entry point. No storage permission is needed: the database lives in app-private storage. Existing Internet permissions used by other app features are untouched; this reader does not use them.
+`surah_id` is the single source of truth: it drives the query, the header and the navigation.
+`surah_name` sets the window title; the on-screen header is rendered from `SurahIndex` instead,
+because it has to stay correct after the user pages to a surah no caller passed in. A mismatch is
+logged, not displayed. The legacy `quran.surah` / `quran.ayah` keys are still accepted.
 
-This app's built-in entry point is the home screen (`MainActivity` → `activity_select_function.xml`): a `#2D7D46` pill button with the `res/drawable/ic_quran.xml` icon that launches `QuranActivity` (Surah 1, ayah 1) via an `OnClickListener` + `Intent`.
+---
 
-## Included files
+## 6. UI
 
-| File | Purpose |
-| --- | --- |
-| `app/src/main/java/com/clock/livewallpaper/quran/QuranDatabaseHelper.java` | First-use asset copy, integrity/schema checks, read-only SQLite query, closed resources |
-| `app/src/main/java/com/clock/livewallpaper/activity/QuranActivity.java` | Background loading, font, clickable verses, persistent selection, state restoration |
-| `app/src/main/java/com/clock/livewallpaper/quran/QuranMetadata.java` | Ayah counts and official 604-page Madani page/Juz mapping |
-| `app/src/main/res/layout/activity_quran.xml` | Paper-colored, RTL, centered, scrollable reader |
-| `app/src/main/res/values/quran.xml` | Colors, labels, error messages and native theme |
-| `app/src/main/res/values/quran_surah_names.xml` | All 114 Arabic Surah names, in default resources so the existing English-only resource configuration retains them |
+| Spec | Where | Value |
+| --- | --- | --- |
+| Background | `colors.xml` → `quran_background` | `#FBF9F0` |
+| Text | `colors.xml` → `quran_text` | `#1A1A1A` |
+| Highlight | `colors.xml` → `quran_highlight` | `#D0ECE4` |
+| Header | `colors.xml` → `quran_header` | `#7A7A7A` |
+| Buttons | `colors.xml` → `quran_button` | `#2D7D46` |
 
-To reuse this in a different application, copy all six files, change package declarations and the `R` import, and register `QuranActivity` with `@style/QuranTheme` in that application's manifest. Also merge the background `prepareDatabase()` startup hook from `app/src/main/java/com/clock/livewallpaper/AppClass.java` into your existing `Application.onCreate()`; do not replace unrelated application initialization. Apply the build configuration listed above.
+`colors.xml` is the single definition of the palette; `res/values/quran.xml` holds only strings and
+the theme. Supporting shades (`quran_button_pressed`, `quran_on_button`, `quran_divider`,
+`quran_badge`, `quran_error`) are derived from those five.
 
-## Rendering and metadata behavior
+**Reader** (`activity_quran.xml`), top to bottom:
 
-- Paper: `#FBF9F0`; verse ink: `#1A1A1A`; Surah/Juz/page labels: `#7A7A7A`.
-- Surah is physically right and Juz left, regardless of the device language; the footer is physically right.
-- Text is centered and explicitly RTL. Each verse is followed by a marker such as `﴿ ٢٥٥ ﴾` with Arabic-Indic digits.
-- Tap any verse to highlight its entire text and marker in `#D0ECE4`. The initially requested ayah is highlighted and scrolled into view. Selection and scroll offset survive Activity recreation.
-- **Juz and page refer to the selected ayah**, initially ayah 1 unless another is requested. Tap a later verse to update both labels. Juz boundaries use exact Surah/ayah positions, including boundaries occurring within a printed page.
-- This is a **whole-Surah, reflowable TextView**, not an exact 15-line printed page or an image-based Mushaf. A long Surah spans many printed pages; phone scroll position is not treated as a Mushaf page number. Metadata assumes the standard 604-page Madani Mushaf with Hafs verse numbering.
-- Database text is preserved verbatim: no diacritic removal, normalization, or automatic basmallah insertion. Upstream text variants can differ in whether basmallah is included, so blindly prepending it can duplicate text.
+1. Navigation bar — back arrow (left), `2 of 114` (right).
+2. Header — **Surah Name left**, **Juz Number right**, both `#7A7A7A`. A surah spanning several juz
+   shows a range (`الجزء ١–٣`).
+3. Body — one `ScrollView` → `TextView`, centred, explicitly RTL, `quran_font.ttf` applied from Java
+   (an asset path cannot be referenced from XML), selectable so an ayah can be copied.
+4. Footer — **Previous Surah** (left) · **Page Number** (centre) · **Next Surah** (right), both
+   buttons `#2D7D46` via `bg_quran_nav_button.xml`. Multi-page surahs show a page range.
 
-## Database lifecycle
+Header and footer rows pin `android:layoutDirection="ltr"` so "left" and "right" stay physical in
+every device locale, while the Arabic body pins RTL independently. Both nav buttons are disabled at
+the ends of the mushaf — surah 1 has no previous, surah 114 has no next — and are frozen while a load
+is in flight so rapid taps cannot queue stale surahs.
 
-`AppClass.onCreate()` calls `prepareDatabase()` on a worker thread at initial app launch (and validates/reuses the installed copy on later starts). A failure is logged without crashing unrelated Clock/Wallpaper features. `QuranActivity` also prepares the database when querying, so it safely waits for an in-progress install or retries a failed startup install.
+**Index** (`activity_surah_list.xml` + `item_surah.xml`) — number badge, transliteration, English
+meaning, `286 Ayahs · Madinah · Juz 1`, and the Arabic name on the right. Whole row is the click
+target (`clickable` + `focusable`) for TalkBack and d-pad. Attribution line at the foot.
 
-The helper uses `context.getDatabasePath("quran.ar.uthmani.db")`, not a hard-coded `/data/data` path. On first use, it copies to a temporary file in the same private database directory, syncs and validates it, then renames it into place. A partial first-run copy is never opened under the final database name. A process-wide lock prevents competing Activity instances from installing simultaneously.
+Language policy: mushaf labels are Arabic, navigation chrome is English. Both live in
+`res/values/quran.xml` and can be flipped without touching a layout.
 
-Subsequent opens reuse the installed file after validation. A structurally invalid installed copy is recovered from the packaged asset. Database copying and querying run on a worker thread; cursors and connections are closed in try-with-resources. Destroyed Activities ignore late results.
+---
 
-`QuranDatabaseHelper` intentionally does **not** extend `SQLiteOpenHelper`: there is no empty `onCreate()` schema and no forced change to the upstream database version. This sample is single-process; do not call its installer from multiple Android processes without an inter-process lock. If a later app version ships revised Quran data, add an explicit version/hash-based replacement policy; a valid installed database is intentionally not overwritten on each launch.
+## 7. Threading, state and error handling
 
-## Official repository references and licensing
+* The first-run copy and every query run on a single worker thread; `prepareDatabase()` must never be
+  called on the main thread.
+* Results posted to a destroyed or finishing activity are dropped, so rotating mid-load cannot crash.
+* `onSaveInstanceState` keeps the current surah and the exact scroll offset across rotation.
+* Body views set `android:saveEnabled="false"` so the activity's explicit scroll restoration is the
+  only authority (a selectable `TextView` otherwise restores its own state and fights it).
+* Both screens handle Android 15/16 enforced edge-to-edge through `utils/EdgeToEdgeInsets`, which
+  applies system-bar, cutout and IME insets on top of each root's design padding and keeps the bar
+  icons dark on the paper background.
+* Errors are always actionable: a missing/corrupt database offers Retry; a missing font says exactly
+  which asset path to check. Neither silently substitutes a system face nor shows a blank reader.
 
-Reference revision: [`1ec595ecced95ab215b1e9c542c910c4c5436166`](https://github.com/quran/quran_android/tree/1ec595ecced95ab215b1e9c542c910c4c5436166).
+---
 
-- [DatabaseHandler.kt](https://github.com/quran/quran_android/blob/1ec595ecced95ab215b1e9c542c910c4c5436166/app/src/main/java/com/quran/labs/androidquran/database/DatabaseHandler.kt): `arabic_text`, `sura`, `ayah`, `text`, and verse ordering. The implementation here is Java, not an import of the upstream Kotlin database layer.
-- [ArabicDatabaseUtils.kt](https://github.com/quran/quran_android/blob/1ec595ecced95ab215b1e9c542c910c4c5436166/app/src/main/java/com/quran/labs/androidquran/model/translation/ArabicDatabaseUtils.kt): text retrieval and notes about basmallah differences.
-- [MadaniDataSource.kt](https://github.com/quran/quran_android/blob/1ec595ecced95ab215b1e9c542c910c4c5436166/pages/data/madani/src/main/kotlin/com/quran/labs/androidquran/pages/data/madani/MadaniDataSource.kt): numeric metadata adapted into `QuranMetadata.java`. Page starts are encoded as `surah * 1000 + ayah`; Juz starts are taken from every eighth quarter boundary.
-- [Arabic Surah names](https://github.com/quran/quran_android/blob/1ec595ecced95ab215b1e9c542c910c4c5436166/common/ui/core/src/main/res/values-ar/sura_names.xml): adapted with a feature-specific resource name.
+## 8. Licensing — read before distributing
 
-Upstream is GPL-3.0. Its license is preserved in `docs/licenses/quran_android-GPL-3.0.txt`; the adapted metadata and names are attributed in their files. **Review GPL compatibility before distributing this within your existing app.** For an incompatible distribution model, replace those resources with appropriately licensed metadata. Separately verify the database and font redistribution licenses and include their required notices. This integration does not imply permission to redistribute arbitrary Quran databases/fonts.
+* **Tanzil text** — CC-BY-3.0. Verbatim redistribution is permitted; changing it is not. Attribution
+  is required and is already surfaced in-app.
+* **Amiri Quran font** — SIL OFL 1.1. Embeddable and redistributable; the licence text must ship with
+  it, and it does.
+* **`QuranMetadata.java`** — the 604-page and 30-juz boundary tables are adapted from the **GPL-3.0**
+  project `quran/quran_android` (`MadaniDataSource.kt`), with its licence preserved at
+  `docs/licenses/quran_android-GPL-3.0.txt`. This predates the current change set and is the one
+  GPL-derived component in the feature. **Review GPL compatibility against your distribution model.**
+  If it is incompatible, replace those two integer tables with data you have the rights to use — they
+  are the only GPL-derived values, and nothing else in the feature imports them except
+  `SurahIndex`'s derived juz/page fields.
 
-## Validation
+The surah names are now the Tanzil names (CC-BY-3.0), no longer the GPL-adapted ones.
 
-Run the SDK-independent checks:
+---
+
+## 9. Validation
 
 ```sh
-python3 -m unittest discover -s tests -p 'test_offline_quran.py' -v
+python3 -m unittest discover -s tests -v
 ```
 
-These check metadata coverage, page/Juz boundaries, layout/resource wiring, and the SQLite query contract using synthetic non-Quran fixture strings. They also validate the real bundled database/font if present, and compile/run the metadata Java class if a JDK is available.
+47 SDK-independent checks across two files:
 
-Then, in an environment with JDK 17 and Android SDK 36 configured:
+* `tests/test_offline_quran.py` — metadata completeness and monotonicity, known page/juz boundaries,
+  the 114-entry Java arrays, the conventional 28-Madinan classification, the real bundled database
+  (integrity, schema, all 6236 keys in order, the exact query contract, bound parameters, basmallah
+  semantics, recorded provenance, verbatim Uthmani marks), font glyph coverage of both the database
+  text and the Arabic chrome, layout structure and required colours, manifest registration, the
+  offline guarantee, licence files, and in-app attribution.
+* `tests/test_quran_wiring.py` — resolves every `R.id`/`R.string`/`R.color`/`R.drawable` reference in
+  Java and every `@color`/`@string`/`@id` reference in XML against the resources actually defined in
+  `res/`, checks `findViewById` ids against the layout each activity inflates, verifies
+  `getString(...)` format arity at every call site, and confirms no network API survives.
+
+With a JDK present, `CompiledBehaviourTests` additionally compiles and executes `QuranMetadata` and
+`SurahIndex` and asserts 114 surahs, 6236 ayahs, the juz/page ranges and the rejection of invalid ids.
+
+**What these cannot prove:** that the app compiles against the Android SDK, or that it renders
+correctly. All 41 Java files were parsed for syntax and every cross-class call was checked against the
+declared signatures, but no `javac`/`android.jar` was available in this workspace.
+
+Then, with JDK 17 and Android SDK 36:
 
 ```sh
 bash gradlew :app:assembleDebug :app:lintDebug
 ```
 
-Android build/device tests could not be run in the provided workspace because it has no JDK or Android SDK. Before shipping, test:
+### Device checklist
 
-1. Fresh install in airplane mode: open Surahs 1, 2, 9 and 114; verify counts and glyphs.
-2. Tap ayahs, including 2:141 → 2:142, 5:81 → 5:82, and 9:92 → 9:93; verify Juz changes.
-3. Rotate while loading and while scrolled into a long Surah; check state and errors.
-4. Reopen offline; confirm the installed database is reused.
-5. On a debug device, test an invalid installed database, missing assets, and interrupted first-run installation.
-6. Check RTL layout, large system font sizes, TalkBack clickable verses, and scroll/tap behavior on API 23 and an Android 16/API 36 device.
+1. Fresh install in airplane mode: open surahs 1, 2, 9, 55 and 114; check ayah counts, the basmallah
+   header (present for 2, absent for 1 and 9) and glyph rendering against a trusted mushaf.
+2. Tap Next from 1 to 114 and Previous back; confirm the header, juz, page and position update and
+   that no new activity is stacked (Back exits the reader in one press).
+3. Confirm Previous is disabled on surah 1 and Next on surah 114.
+4. Rotate while loading and while deep-scrolled in surah 2; confirm the surah and scroll offset survive.
+5. Kill the process mid first-run copy; relaunch and confirm the `.installing` temp file is discarded
+   and the copy completes.
+6. On a debug build, corrupt the installed `.db` and confirm it is recovered from the asset.
+7. Check TalkBack on both screens, large system font sizes, and RTL/physical left-right placement with
+   the device language set to Arabic.
+8. On API 36, check portrait/landscape, gesture and three-button navigation, cutouts and large-screen
+   resizing — header and footer must never slide under a system bar.
 
-7. On API 36, test portrait/landscape, gesture and three-button navigation, display cutouts, and large-screen resizing; ensure header/footer never overlap system bars.
+---
+
+## 10. File inventory
+
+| File | Role |
+| --- | --- |
+| `quran/QuranDatabaseHelper.java` | asset copy + validation, `getSurahText(int)`, caching |
+| `quran/SurahIndex.java` | 114 surahs in Java: names, meanings, counts, juz/page, Makkah/Madinah |
+| `quran/QuranMetadata.java` | ayah counts and the 604-page / 30-juz mapping |
+| `activity/SurahListActivity.java` | index screen, `RecyclerView`, launches the reader |
+| `adapter/SurahListAdapter.java` | row binding and the click callback |
+| `activity/QuranActivity.java` | reader: load, header/body/footer, in-place navigation |
+| `utils/EdgeToEdgeInsets.java` | shared target-36 edge-to-edge inset handling |
+| `AppClass.java` | background first-run install at app launch |
+| `activity/MainActivity.java` | home Quran tile now opens the index |
+| `res/layout/activity_surah_list.xml`, `item_surah.xml`, `activity_quran.xml` | layouts |
+| `res/values/colors.xml`, `quran.xml` | palette, strings, `QuranTheme` |
+| `res/drawable/bg_quran_nav_button.xml`, `bg_surah_row.xml`, `bg_surah_badge.xml`, `bg_quran_button.xml` | backgrounds |
+| `res/color/quran_nav_button_text.xml` | button text colour state list |
+| `tools/build_quran_db.py` | regenerates the database asset from the Tanzil source |
+
+To reuse in another app, copy the `quran/` package, both activities, the adapter, `EdgeToEdgeInsets`,
+the layouts, the Quran colour/string/theme resources and the two assets; register both activities with
+`@style/QuranTheme`; and merge (not replace) the `prepareDatabase()` startup hook into your own
+`Application.onCreate()`.
+
+`assets/quran/index.html` is an unrelated earlier web prototype that loads fonts from a CDN. It is not
+used by this feature and can be deleted.

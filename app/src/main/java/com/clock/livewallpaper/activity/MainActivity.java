@@ -83,12 +83,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Quran icon: launch the offline Surah reader.
+        // Quran icon: open the offline Surah index, which launches QuranActivity with a surah_id.
         this.frameQuran.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                MainActivity.this.startActivity(new Intent(MainActivity.this, QuranActivity.class));
+                MainActivity.this.startActivity(new Intent(MainActivity.this, SurahListActivity.class));
 
             }
         });

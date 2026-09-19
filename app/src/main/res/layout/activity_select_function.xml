@@ -179,7 +179,7 @@
                 android:layout_marginLeft="12dp"
                 android:fontFamily="@font/myfont"
                 android:text="@string/quran_title"
-                android:textColor="@color/quran_paper"
+                android:textColor="@color/quran_on_button"
                 android:textSize="18sp" />
         </LinearLayout>
     </FrameLayout>
