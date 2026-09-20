@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clock.livewallpaper.R;
+import com.google.android.gms.ads.nativead.MediaContent;
 import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
@@ -25,9 +26,8 @@ import java.util.List;
  *
  * <p>Rendering follows the Google "native ads (advanced)" guide: a {@link NativeAdView} is the root
  * of the card, every asset view is registered on it and the {@link NativeAd} is attached last. The
- * ad badge ("إعلان") is always visible and the Google attribution string is shown next to it when the
- * ad provides one, so the card can never be mistaken for a wallpaper or clock tile. The call to action
- * falls back to "Install" when the ad omits it, which is what the guide prescribes.
+ * ad badge ("إعلان") is always visible, so the card can never be mistaken for a wallpaper or clock
+ * tile. The call to action falls back to "Install" when the ad omits it, which is what the guide prescribes.
  *
  * <p>Load failures are silent and leave no gap: {@link #renderInto} removes the row's content and the
  * row collapses to zero height, so the grid keeps flowing offline exactly as it does with no ads at
@@ -136,7 +136,6 @@ public final class NativePlacement {
         TextView callToAction = view.findViewById(R.id.adCallToAction);
         ImageView icon = view.findViewById(R.id.adIcon);
         MediaView media = view.findViewById(R.id.adMedia);
-        TextView attribution = view.findViewById(R.id.adAttribution);
 
         setText(headline, nativeAd.getHeadline());
         setText(body, nativeAd.getBody());
@@ -165,7 +164,7 @@ public final class NativePlacement {
         icon.setVisibility(iconShown ? View.VISIBLE : View.GONE);
         view.setIconView(iconShown ? icon : null);
 
-        NativeAd.MediaContent content = nativeAd.getMediaContent();
+        MediaContent content = nativeAd.getMediaContent();
         if (content != null) {
             media.setVisibility(View.VISIBLE);
             media.setMediaContent(content);
@@ -174,7 +173,6 @@ public final class NativePlacement {
             media.setVisibility(View.GONE);
         }
 
-        setText(attribution, nativeAd.getAttribution());
         view.setHeadlineView(headline);
         view.setBodyView(body);
         view.setAdvertiserView(advertiser);

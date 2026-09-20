@@ -62,7 +62,7 @@
                     android:layout_width="52dp"
                     android:layout_height="52dp"
                     android:contentDescription="@null"
-                    android:src="@@drawable/clock_logo" />
+                    android:src="@drawable/clock_logo" />
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
@@ -110,7 +110,7 @@
                     android:layout_width="52dp"
                     android:layout_height="52dp"
                     android:contentDescription="@null"
-                    android:src="@@drawable/text_logo" />
+                    android:src="@drawable/text_logo" />
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
@@ -158,7 +158,7 @@
                     android:layout_width="52dp"
                     android:layout_height="52dp"
                     android:contentDescription="@null"
-                    android:src="@@drawable/digital_logo" />
+                    android:src="@drawable/digital_logo" />
             </LinearLayout>
         </FrameLayout>
         <TextView
