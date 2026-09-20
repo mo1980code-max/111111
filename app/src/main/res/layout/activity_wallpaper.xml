@@ -13,10 +13,13 @@
     android:background="@color/textColor"
     android:orientation="vertical">
 
+        <!-- The banner MUST have a bounded height. With wrap_content, the splash_bg ImageView below
+             (match_parent x match_parent) measures against the full remaining screen and stretches
+             this header to full screen height, leaving the RecyclerView (weight=1) with 0dp and
+             hiding every item. 84dp keeps it compact: 44dp back button + title + hint line. -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="?attr/actionBarSize"
+            android:layout_height="84dp"
             android:orientation="vertical">
 
             <ImageView

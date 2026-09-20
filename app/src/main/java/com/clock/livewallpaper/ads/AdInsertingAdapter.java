@@ -98,6 +98,9 @@ public class AdInsertingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             rows.add(Integer.valueOf(TYPE_AD));
             slotIndex++;
         }
+        android.util.Log.d("CONTENT_DEBUG", "AdInsertingAdapter.rebuild contentCount=" + contentCount
+                + " adSlots=" + slots.size() + " totalRows=" + rows.size()
+                + " contentAdapter=" + contentAdapter.getClass().getSimpleName());
     }
 
     @NonNull
