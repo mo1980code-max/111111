@@ -3,6 +3,7 @@ package com.clock.livewallpaper.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -132,7 +133,7 @@ public class ClockCardActivity extends AppCompatActivity {
                         });
             }
         });
-        bindList(adapter);
+        bindList(adapter, "analog");
     }
 
     private void showDigitalClocks() {
@@ -156,7 +157,7 @@ public class ClockCardActivity extends AppCompatActivity {
                         });
             }
         });
-        bindList(adapter);
+        bindList(adapter, "digital");
     }
 
     private void showSmartClocks() {
@@ -180,7 +181,7 @@ public class ClockCardActivity extends AppCompatActivity {
                         });
             }
         });
-        bindList(adapter);
+        bindList(adapter, "smart");
     }
 
     /** Rebinds the content rows so a fresh unlock swaps the padlock off without reopening the screen. */
@@ -197,11 +198,42 @@ public class ClockCardActivity extends AppCompatActivity {
     }
 
     /** Wraps the section adapter so in-feed native ads land between the tiles, never on top of them. */
-    private void bindList(@NonNull RecyclerView.Adapter<?> raw) {
+    private void bindList(@NonNull RecyclerView.Adapter<?> raw, @NonNull final String section) {
         this.rawAdapter = raw;
         this.listAdapter = new AdInsertingAdapter(raw, new NativePlacement());
         this.recyclerViewCategory.setLayoutManager(new GridLayoutManager(this, SPAN_COUNT));
         this.recyclerViewCategory.setAdapter(this.listAdapter);
+
+        // CONTENT_DEBUG: the full runtime state of the pipeline when the screen opens.
+        final RecyclerView recycler = this.recyclerViewCategory;
+        final Object layoutManager = recycler.getLayoutManager();
+        Log.d("CONTENT_DEBUG", "ClockCardActivity.open section=" + section
+                + " sourceSize=" + raw.getItemCount()
+                + " rawAdapter=" + raw.getClass().getSimpleName()
+                + " listAdapter=" + this.listAdapter.getClass().getSimpleName()
+                + " listCount=" + this.listAdapter.getItemCount()
+                + " layoutManager=" + (layoutManager == null ? "null" : layoutManager.getClass().getSimpleName())
+                + " recyclerVisibility=" + visibilityName(recycler.getVisibility()));
+        // The measured size is only known after the first layout pass, so report it from there.
+        recycler.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("CONTENT_DEBUG", "ClockCardActivity.measured section=" + section
+                        + " recyclerSize=" + recycler.getWidth() + "x" + recycler.getHeight()
+                        + " recyclerVisibility=" + visibilityName(recycler.getVisibility()));
+            }
+        });
+    }
+
+    private static String visibilityName(int visibility) {
+        switch (visibility) {
+            case View.VISIBLE:
+                return "VISIBLE";
+            case View.INVISIBLE:
+                return "INVISIBLE";
+            default:
+                return "GONE";
+        }
     }
 
     // ---------------------------------------------------------------------

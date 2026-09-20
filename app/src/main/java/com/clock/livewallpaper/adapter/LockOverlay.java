@@ -33,8 +33,13 @@ public final class LockOverlay {
     /**
      * Applies the locked or unlocked look to a tile.
      *
-     * @param primary live content view (the ticking analog view, or the tile image). Hidden while the
-     *                tile is locked, because locked content must never be usable or even rendered.
+     * <p>A locked tile is always drawn as <b>the original preview, dimmed by {@code lockScrim}, with
+     * the padlock pill {@code lockBadge} on top</b>. The primary content view (the ticking analog
+     * view, or the tile image) is kept <b>VISIBLE in both states</b> -- the user must keep seeing the
+     * preview of what they are about to unlock, so it must never be hidden with {@code View.GONE}.
+     *
+     * @param primary live content view (the ticking analog view, or the tile image). Always kept
+     *                visible; the lock state only adds the scrim and the badge above it.
      */
     public static void apply(@NonNull View tile, @Nullable View primary, boolean locked) {
         View scrim = tile.findViewById(R.id.lockScrim);
@@ -46,7 +51,8 @@ public final class LockOverlay {
             badge.setVisibility(locked ? View.VISIBLE : View.GONE);
         }
         if (primary != null) {
-            primary.setVisibility(locked ? View.GONE : View.VISIBLE);
+            // Never hide the preview for locked content: locked look = preview + scrim + badge.
+            primary.setVisibility(View.VISIBLE);
         }
     }
 

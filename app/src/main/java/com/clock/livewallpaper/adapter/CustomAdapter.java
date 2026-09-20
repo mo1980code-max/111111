@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.adapter;
 
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,10 +20,12 @@ import java.util.List;
 /**
  * Analog clock tiles.
  *
- * <p>Free and already-unlocked tiles render the live {@link AnalogClock}. A locked tile renders the
- * preview image bundled in {@code assets/previews/clock/analog/} under a scrim instead, and the live
- * view is switched off, so a locked clock cannot tick behind its lock. Nothing is fetched from the
- * network: the artwork for both states ships with the app.
+ * <p>Free and already-unlocked tiles render the live {@link AnalogClock}. A locked tile keeps its
+ * original preview visible -- the live view stays on screen (ticking paused while covered) and the
+ * bundled preview artwork from {@code assets/previews/clock/analog/} is drawn over it, dimmed by the
+ * scrim with the padlock badge on top. The preview is never hidden, so the user always sees what they
+ * are about to unlock. Nothing is fetched from the network: the artwork for both states ships with
+ * the app.
  *
  * <p>Clicks are reported to the Activity, which is the only place allowed to decide between "open the
  * clock" and "offer a rewarded unlock".
@@ -77,22 +80,26 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         final Clocks clock = this.localDataSet.get(position);
         final boolean available = LockOverlay.isAvailable(holder.itemView.getContext(), clock);
 
+        // The live clock view stays VISIBLE in both states (LockOverlay never hides the primary).
+        // A locked tile is the original preview artwork over it, dimmed by the scrim, with the
+        // padlock badge on top -- the user always sees what they are about to unlock.
         LockOverlay.apply(holder.itemView, holder.clock, !available);
-        holder.preview.setVisibility(available ? View.GONE : View.VISIBLE);
-        if (!available) {
-            // Locked: static artwork only, no live rendering and no ad on the way in.
-            holder.clock.setAutoUpdate(false);
-            LockOverlay.loadPreview(holder.preview, clock.getPreviewAsset(),
-                    holder.itemView.getContext());
-        } else {
-            try {
-                holder.layout.setCardBackgroundColor(Color.parseColor(clock.getBgColor()));
-            } catch (IllegalArgumentException ignored) {
-                // A bad colour string must not break the list; the card keeps its default background.
-            }
+        try {
+            holder.layout.setCardBackgroundColor(Color.parseColor(clock.getBgColor()));
+        } catch (IllegalArgumentException ignored) {
+            // A bad colour string must not break the list; the card keeps its default background.
+        }
+        if (available) {
+            holder.preview.setVisibility(View.GONE);
             holder.clock.setClock(clock);
             sizeClock(holder);
             holder.clock.setAutoUpdate(true);
+        } else {
+            // Locked: original preview over the dimmed live clock; no ticking while covered.
+            holder.preview.setVisibility(View.VISIBLE);
+            LockOverlay.loadPreview(holder.preview, clock.getPreviewAsset(),
+                    holder.itemView.getContext());
+            holder.clock.setAutoUpdate(false);
         }
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,6 +109,13 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
                 }
             }
         });
+        if (position < 3) {
+            Log.d("CONTENT_DEBUG", "CustomAdapter.onBindViewHolder position=" + position
+                    + " id=" + clock.getId() + " available=" + available
+                    + " clockVisible=" + (holder.clock.getVisibility() == View.VISIBLE)
+                    + " previewVisible=" + (holder.preview.getVisibility() == View.VISIBLE)
+                    + " cardSize=" + holder.layout.getWidth() + "x" + holder.layout.getHeight());
+        }
     }
 
     /** The clock is drawn at a fraction of the card, which is only known after the first layout. */

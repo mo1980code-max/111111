@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -88,6 +89,10 @@ public class CategoryWallpaperAdapter extends RecyclerView.Adapter<CategoryWallp
                 }
             }
         });
+        if (position < 3) {
+            Log.d("CONTENT_DEBUG", "CategoryWallpaperAdapter.onBindViewHolder position=" + position
+                    + " section=" + section.getId() + " entries=" + section.getEntries().size());
+        }
     }
 
     @Override

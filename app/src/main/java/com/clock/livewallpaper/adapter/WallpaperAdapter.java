@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,6 +84,13 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
                 }
             }
         });
+        if (position < 3) {
+            Log.d("CONTENT_DEBUG", "WallpaperAdapter.onBindViewHolder position=" + position
+                    + " id=" + entry.getId() + " asset=" + entry.getAssetPath()
+                    + " free=" + entry.isFreeByDefault()
+                    + " available=" + LockOverlay.isAvailable(context, entry)
+                    + " imageVisible=" + (holder.image.getVisibility() == View.VISIBLE));
+        }
     }
 
     @Override
