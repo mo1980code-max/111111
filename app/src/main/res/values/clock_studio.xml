@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="clock_studio_title">Clock Studio</string>
+    <string name="clock_studio_back">Back</string>
+    <string name="clock_studio_style_label">Clock styles</string>
+    <string name="clock_studio_position_label">Position</string>
+    <string name="clock_studio_size_label">Size</string>
+    <string name="clock_studio_format_label">Format</string>
+    <string name="clock_studio_seconds_label">Seconds</string>
+    <string name="clock_studio_fullscreen">Full screen</string>
+    <string name="clock_studio_show_controls">Show controls</string>
+    <string name="clock_studio_position_value">Position: %1$s</string>
+    <string name="clock_studio_size_value">Size: %1$s</string>
+    <string name="clock_studio_format_12">12-hour</string>
+    <string name="clock_studio_format_24">24-hour</string>
+    <string name="clock_studio_seconds_on">Seconds: On</string>
+    <string name="clock_studio_seconds_off">Seconds: Off</string>
+    <string name="clock_studio_hijri_on">Hijri: On</string>
+    <string name="clock_studio_hijri_off">Hijri: Off</string>
+    <string name="clock_studio_gregorian_on">Gregorian: On</string>
+    <string name="clock_studio_gregorian_off">Gregorian: Off</string>
+    <string name="clock_studio_day_on">Day: On</string>
+    <string name="clock_studio_day_off">Day: Off</string>
+    <string name="clock_studio_adjustment_value">Hijri adjustment: %1$d</string>
+    <string name="clock_studio_adjustment_zero">0</string>
+    <string name="clock_studio_adjustment_day">%1$d days</string>
+    <string name="clock_studio_top">Top</string>
+    <string name="clock_studio_center">Center</string>
+    <string name="clock_studio_bottom">Bottom</string>
+    <string name="clock_studio_small">Small</string>
+    <string name="clock_studio_medium">Medium</string>
+    <string name="clock_studio_large">Large</string>
+    <string name="clock_style_content_description">Clock style: %1$s</string>
+
+    <string name="clock_family_analog">Analog</string>
+    <string name="clock_family_digital">Digital</string>
+    <string name="clock_family_neon">Neon</string>
+    <string name="clock_family_glass">Glass</string>
+    <string name="clock_family_hybrid">Hybrid</string>
+
+    <string name="clock_style_minimal_analog">Minimal Analog</string>
+    <string name="clock_style_classic_analog">Classic Analog</string>
+    <string name="clock_style_luxury_gold_analog">Luxury Gold Analog</string>
+    <string name="clock_style_black_gold_analog">Black &amp; Gold Analog</string>
+    <string name="clock_style_silver_analog">Silver Analog</string>
+    <string name="clock_style_floating_hands_analog">Floating Hands Analog</string>
+    <string name="clock_style_minimal_white">Minimal White</string>
+    <string name="clock_style_modern_bold">Modern Bold</string>
+    <string name="clock_style_elegant_thin">Elegant Thin</string>
+    <string name="clock_style_luxury_gold">Luxury Gold</string>
+    <string name="clock_style_led">LED</string>
+    <string name="clock_style_seven_segment">Seven Segment</string>
+    <string name="clock_style_neon_cyan">Neon Cyan</string>
+    <string name="clock_style_neon_blue">Neon Blue</string>
+    <string name="clock_style_neon_green">Neon Green</string>
+    <string name="clock_style_neon_gold">Neon Gold</string>
+    <string name="clock_style_dark_glass">Dark Glass</string>
+    <string name="clock_style_light_glass">Light Glass</string>
+    <string name="clock_style_hybrid_gold_analog">Gold Analog + Hijri</string>
+    <string name="clock_style_hybrid_minimal">Minimal Date Clock</string>
+    <string name="clock_style_hybrid_analog_digital">Analog + Digital Date</string>
+    <string name="clock_style_hybrid_glass">Glass Date Clock</string>
+    <string name="clock_style_hybrid_neon">Neon Date Clock</string>
+    <string name="clock_style_hybrid_luxury">Luxury Full Date</string>
+
+    <color name="clock_studio_text">#FFF8E7</color>
+    <color name="clock_studio_muted">#B5C9C7</color>
+    <color name="clock_studio_gold">#E1B95E</color>
+
+    <style name="ClockStudioTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowBackground">@drawable/bg_allah_screen</item>
+        <item name="android:statusBarColor">@color/allah_screen_start</item>
+        <item name="android:navigationBarColor">@color/allah_screen_start</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/clock_studio_gold</item>
+        <item name="colorAccent">@color/clock_studio_gold</item>
+    </style>
+</resources>

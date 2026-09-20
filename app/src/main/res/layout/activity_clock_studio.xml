@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/clock_studio_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_allah_screen"
+    android:keepScreenOn="true"
+    android:orientation="vertical">
+
+    <!-- The preview is independent from the editor so full-screen mode can hide controls cleanly. -->
+    <FrameLayout
+        android:id="@+id/clock_studio_preview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true">
+
+        <View
+            android:id="@+id/clock_studio_theme_backdrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_allah_theme_navy" />
+
+        <LinearLayout
+            android:id="@+id/clock_studio_composition"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="54dp"
+            android:paddingBottom="10dp">
+
+            <!-- The Name owns its own upper region; the clock is always laid out below it. -->
+            <LinearLayout
+                android:id="@+id/clock_studio_name_panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.30"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp">
+
+                <TextView
+                    android:id="@+id/clock_studio_name_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/allah_gold_light"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/clock_studio_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:includeFontPadding="true"
+                    android:maxLines="2"
+                    android:textColor="@color/allah_card_text"
+                    android:textDirection="rtl"
+                    android:textSize="34sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="64dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@color/allah_gold" />
+
+                <TextView
+                    android:id="@+id/clock_studio_name_transliteration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/allah_card_muted"
+                    android:textDirection="ltr"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/clock_studio_clock_area"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.45" />
+
+            <FrameLayout
+                android:id="@+id/clock_studio_date_area"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.25"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+                <LinearLayout
+                    android:id="@+id/clock_studio_date_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_clock_date_panel"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/clock_studio_day"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:textColor="@color/allah_gold_light"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/clock_studio_hijri"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:textColor="@color/allah_card_text"
+                        android:textDirection="rtl"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <View
+                        android:id="@+id/clock_studio_date_divider"
+                        android:layout_width="72dp"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:background="@drawable/bg_clock_date_divider" />
+
+                    <TextView
+                        android:id="@+id/clock_studio_gregorian"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:textColor="@color/allah_card_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/clock_studio_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_gravity="top"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="12dp">
+
+            <ImageView
+                android:id="@+id/clock_studio_back"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:autoMirrored="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/clock_studio_back"
+                android:padding="11dp"
+                android:src="@drawable/ic_back" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif"
+                android:text="@string/clock_studio_title"
+                android:textColor="@color/allah_card_text"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/clock_studio_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_clock_controls"
+        android:orientation="vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/clock_studio_style_label"
+            android:textColor="@color/allah_gold_light"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/clock_studio_styles"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:clipToPadding="false"
+            android:layoutDirection="ltr"
+            android:overScrollMode="never"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:scrollbars="none" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <TextView
+                    android:id="@+id/clock_studio_position_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="108dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_size_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="98dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_format_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="92dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_seconds_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="102dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_hijri_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="92dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_gregorian_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="108dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_day_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="82dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_adjustment_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="132dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/clock_studio_fullscreen_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_margin="3dp"
+                    android:background="@drawable/bg_clock_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="104dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="@string/clock_studio_fullscreen"
+                    android:textColor="@color/clock_studio_text"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+</LinearLayout>

@@ -49,6 +49,17 @@
             android:theme="@style/AzkarTheme" />
 
         <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
+        <activity
+            android:name="com.clock.livewallpaper.activity.ClockStudioActivity"
+            android:exported="false"
+            android:label="@string/clock_studio_title"
+            android:theme="@style/ClockStudioTheme" />
+        <!-- Stage 1: replaces the home-screen Wallpapers entry without removing legacy wallpaper files. -->
+        <activity
+            android:name="com.clock.livewallpaper.activity.NamesOfAllahActivity"
+            android:exported="false"
+            android:label="@string/names_allah_title"
+            android:theme="@style/NamesAllahTheme" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
         <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
         <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />

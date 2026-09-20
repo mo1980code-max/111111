@@ -25,6 +25,9 @@
     <string name="unlock_wallpaper_title">خلفية مقفلة</string>
     <string name="unlock_wallpaper_message">هذه الخلفية ليست ضمن الصور المجانية. يمكنك فتحها مرة واحدة بمشاهدة إعلان قصير، وستبقى مفتوحة دائمًا على جهازك.</string>
     <string name="unlock_wallpaper_cta">مشاهدة إعلان لفتح هذه الخلفية</string>
+    <string name="unlock_allah_name_title">فتح اسم من أسماء الله الحسنى</string>
+    <string name="unlock_allah_name_message">شاهد إعلانًا واحدًا لفتح هذا الاسم وتصميم ساعته بشكل دائم على جهازك.</string>
+    <string name="unlock_allah_name_cta">مشاهدة إعلان لفتح الاسم</string>
     <string name="unlock_later">لاحقًا</string>
 
     <!-- Outcomes. Each one states what keeps working, so the user is never left guessing. -->

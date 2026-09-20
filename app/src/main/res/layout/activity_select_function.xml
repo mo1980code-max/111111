@@ -112,7 +112,7 @@
         </FrameLayout>
 
         <FrameLayout
-            android:id="@+id/frameWallpaper"
+            android:id="@+id/frameNamesAllah"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="35dp"
@@ -133,30 +133,48 @@
                 android:layout_gravity="center"
                 android:gravity="center">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="150dp"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="15dp"
                     android:layout_marginRight="15dp"
                     android:layout_weight="1"
-                    android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Wallpaper"
-                    android:textColor="@color/textColor"
-                    android:textSize="20sp" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center"
+                        android:text="@string/names_allah_title"
+                        android:textColor="@color/textColor"
+                        android:textDirection="rtl"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:gravity="center"
+                        android:text="@string/names_allah_subtitle"
+                        android:textColor="@color/textColor"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:gravity="center">
 
                     <ImageView
                         android:layout_width="120dp"
                         android:layout_height="120dp"
-                        android:adjustViewBounds="true"
-                        android:contentDescription="@null"
+                        android:contentDescription="@string/names_allah_title"
                         android:padding="15dp"
-                        android:src="@drawable/wallpaper_logo" />
+                        android:src="@drawable/ic_names_allah" />
                 </LinearLayout>
             </LinearLayout>
         </FrameLayout>

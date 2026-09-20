@@ -24,4 +24,9 @@ public interface Unlockable {
      * rewarded flow and the same permanent local unlock record.
      */
     boolean isClockContent();
+
+    /** True for the Names of Allah namespace; lets the shared prompt use name-specific wording. */
+    default boolean isAllahNameContent() {
+        return false;
+    }
 }

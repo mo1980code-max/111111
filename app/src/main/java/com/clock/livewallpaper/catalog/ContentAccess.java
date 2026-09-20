@@ -53,7 +53,9 @@ public final class ContentAccess {
                 listener.onBlocked(message);
             }
         };
-        if (item.isClockContent()) {
+        if (item.isAllahNameContent()) {
+            UnlockPrompt.showAllahName(activity, item.getUnlockId(), result);
+        } else if (item.isClockContent()) {
             UnlockPrompt.showClock(activity, item.getUnlockId(), result);
         } else {
             UnlockPrompt.showWallpaper(activity, item.getUnlockId(), result);

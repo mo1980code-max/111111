@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- A simple geometric remembrance emblem; the names themselves are rendered as TextViews. -->
+    <path
+        android:fillColor="#D8B15A"
+        android:pathData="M48,8L56,30L78,18L66,40L88,48L66,56L78,78L56,66L48,88L40,66L18,78L30,56L8,48L30,40L18,18L40,30Z" />
+    <path
+        android:fillColor="#102E49"
+        android:pathData="M48,22L54,39L71,39L57,49L62,66L48,56L34,66L39,49L25,39L42,39Z" />
+    <path
+        android:fillColor="#F2D48D"
+        android:pathData="M48,43A5,5 0 1,0 48,53A5,5 0 1,0 48,43Z" />
+</vector>

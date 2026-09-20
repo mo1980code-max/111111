@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kept as resources so the Arabic religious month names are rendered as text, never artwork. -->
+    <string-array name="hijri_months_arabic" translatable="false">
+        <item>محرم</item>
+        <item>صفر</item>
+        <item>ربيع الأول</item>
+        <item>ربيع الآخر</item>
+        <item>جمادى الأولى</item>
+        <item>جمادى الآخرة</item>
+        <item>رجب</item>
+        <item>شعبان</item>
+        <item>رمضان</item>
+        <item>شوال</item>
+        <item>ذو القعدة</item>
+        <item>ذو الحجة</item>
+    </string-array>
+
+    <string-array name="hijri_months_english" translatable="false">
+        <item>Muharram</item>
+        <item>Safar</item>
+        <item>Rabi' al-Awwal</item>
+        <item>Rabi' al-Thani</item>
+        <item>Jumada al-Awwal</item>
+        <item>Jumada al-Thani</item>
+        <item>Rajab</item>
+        <item>Sha'ban</item>
+        <item>Ramadan</item>
+        <item>Shawwal</item>
+        <item>Dhu al-Qi'dah</item>
+        <item>Dhu al-Hijjah</item>
+    </string-array>
+</resources>

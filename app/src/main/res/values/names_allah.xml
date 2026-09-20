@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Stage 1: Names of Allah screen chrome. -->
+    <string name="names_allah_title" translatable="false">أسماء الله الحسنى</string>
+    <string name="names_allah_subtitle">99 Names of Allah</string>
+    <string name="names_allah_back">Back</string>
+    <string name="allah_name_number" translatable="false">#%1$d</string>
+    <string name="allah_name_content_description" translatable="false">Name %1$d: %2$s, %3$s</string>
+    <string name="allah_name_locked" translatable="false">مقفلة</string>
+    <string name="allah_names_progress" translatable="false">%1$d / 99 available</string>
+
+    <!-- Deep, quiet screen palette. Card themes add the brighter accents. -->
+    <color name="allah_screen_start">#071522</color>
+    <color name="allah_screen_end">#0B3B37</color>
+    <color name="allah_header_start">#102E49</color>
+    <color name="allah_header_end">#0A5B4D</color>
+    <color name="allah_gold">#D8B15A</color>
+    <color name="allah_gold_light">#F2D48D</color>
+    <color name="allah_card_text">#FFF8E7</color>
+    <color name="allah_card_muted">#D6C995</color>
+    <color name="allah_number_background">#332710</color>
+    <color name="allah_number_text">#F4D687</color>
+    <color name="allah_divider">#C9A24C</color>
+    <color name="allah_lock_badge_background">#DFF8F1E0</color>
+    <color name="allah_lock_badge_text">#332710</color>
+
+    <style name="NamesAllahTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowBackground">@drawable/bg_allah_screen</item>
+        <item name="android:statusBarColor">@color/allah_screen_start</item>
+        <item name="android:navigationBarColor">@color/allah_screen_start</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/allah_gold</item>
+        <item name="colorAccent">@color/allah_gold</item>
+    </style>
+</resources>
