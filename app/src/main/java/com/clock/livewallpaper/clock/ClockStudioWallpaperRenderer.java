@@ -380,6 +380,8 @@ public final class ClockStudioWallpaperRenderer {
             clockBounds.set((width - clockWidth) / 2f, centerY - clockHeight / 2f,
                     (width + clockWidth) / 2f, centerY + clockHeight / 2f);
         }
+        // Position is a preference, not permission to let the dial or panel leave its safe band.
+        fitInsideVerticalBand(clockBounds, regionTop, primaryBottom);
         if (secondaryClock != null) {
             float secondaryWidth = Math.min(safeWidth, Math.max(width * 0.44f, secondaryHeight * 3f));
             secondaryBounds.set((width - secondaryWidth) / 2f,
@@ -390,6 +392,19 @@ public final class ClockStudioWallpaperRenderer {
             layoutView(secondaryClock, secondaryBounds);
         }
         laidOut = true;
+    }
+
+    private void fitInsideVerticalBand(RectF bounds, float bandTop, float bandBottom) {
+        float bandHeight = Math.max(1f, bandBottom - bandTop);
+        float clockHeight = Math.min(bounds.height(), bandHeight);
+        float top = bounds.top;
+        if (top < bandTop) {
+            top = bandTop;
+        }
+        if (top + clockHeight > bandBottom) {
+            top = bandBottom - clockHeight;
+        }
+        bounds.set(bounds.left, top, bounds.right, top + clockHeight);
     }
 
     private void layoutView(View view, RectF bounds) {
