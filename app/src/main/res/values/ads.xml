@@ -53,6 +53,9 @@
     <string name="wallpaper_section_hint">٣ صور مجانية في كل قسم · الصور الإضافية تُفتح بالإعلان</string>
     <string name="wallpaper_section_count">%1$d صور · %2$d مجانية</string>
     <string name="wallpaper_set">Set Wallpaper</string>
+    <!-- "Preparing the image…": shown while the bundled JPEG is copied for set / share. Deliberately
+         NOT the ad string: this toast belongs to a content action and must never mention ads. -->
+    <string name="wallpaper_preparing">جارٍ تجهيز الصورة…</string>
     <string name="wallpaper_saved_locally">الصورة محفوظة على جهازك — لا حاجة للإنترنت</string>
     <string name="wallpaper_missing">تعذّر تجهيز صورة الخلفية من داخل التطبيق. أعد المحاولة.</string>
     <string name="share">مشاركة</string>

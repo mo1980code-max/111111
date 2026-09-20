@@ -201,7 +201,7 @@ public class SetWallpaperActivity extends AppCompatActivity {
         if (file == null) {
             // Still copying (or the asset is missing): retry the copy, do not pretend it worked.
             startCopy();
-            Toast.makeText(this, R.string.ad_preparing, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.wallpaper_preparing, Toast.LENGTH_SHORT).show();
             return;
         }
         this.tinyDB.putString("isWallpaper", file.getAbsolutePath());
@@ -218,7 +218,7 @@ public class SetWallpaperActivity extends AppCompatActivity {
         File file = cachedCopy();
         if (file == null) {
             startCopy();
-            Toast.makeText(this, R.string.ad_preparing, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.wallpaper_preparing, Toast.LENGTH_SHORT).show();
             return;
         }
         Uri uri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", file);
