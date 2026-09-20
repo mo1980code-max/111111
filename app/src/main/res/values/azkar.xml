@@ -33,9 +33,21 @@
     <string name="azkar_card_number">Azkar #%1$d</string>
     <!-- %1$d required repetitions, e.g. "Repeat 3x" -->
     <string name="azkar_repeat_chip">Repeat %1$dx</string>
-    <string name="azkar_reset">Reset</string>
     <string name="azkar_completed">✓ Completed</string>
     <string name="azkar_tap_to_count">Tap to count</string>
+    <!-- Short toast shown once when a countdown reaches zero -->
+    <string name="azkar_done_toast" translatable="false">تم</string>
+
+    <!-- Display-settings bottom sheet (size + font family + Azkar-only night mode) -->
+    <string name="azkar_settings_cd">Display settings</string>
+    <string name="azkar_sheet_title">Display settings</string>
+    <string name="azkar_font_label">Text size</string>
+    <string name="azkar_sheet_font_label">Font</string>
+    <string name="azkar_font_default">Default</string>
+    <string name="azkar_font_amiri">Amiri</string>
+    <string name="azkar_font_cairo">Cairo</string>
+    <string name="azkar_font_tajawal">Tajawal</string>
+    <string name="azkar_sheet_night_label">Night mode</string>
 
     <!-- Progress -->
     <!-- %1$d completed, %2$d total, e.g. "7 / 31 Completed" -->
@@ -49,10 +61,10 @@
 
     <!-- Accessibility -->
     <string name="azkar_cd_back">Back</string>
-    <!-- %1$d the Azkar number, %2$d current count, %3$d required repetitions -->
-    <string name="azkar_cd_counter">Azkar %1$d, counted %2$d of %3$d. Activate to count one more.</string>
-    <!-- %1$d the Azkar number -->
-    <string name="azkar_cd_reset">Reset Azkar %1$d to zero</string>
+    <!-- %1$d the Azkar number, %2$d remaining, %3$d required repetitions -->
+    <string name="azkar_cd_counter">Azkar %1$d, %2$d of %3$d left. Activate to count one.</string>
+    <string name="azkar_cd_font_minus">Decrease text size</string>
+    <string name="azkar_cd_font_plus">Increase text size</string>
 
     <!--
       Theme for the two Azkar screens. AppCompat-based to match the rest of the app;

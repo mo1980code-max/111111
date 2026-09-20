@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.clock.livewallpaper.R;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -76,14 +77,15 @@ public class AdInsertingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     private void rebuild() {
+        // CRITICAL INVARIANT: content rows are unconditional. The grid must render its clocks /
+        // wallpapers no matter what the ad layer does (no network, no fill, protected section, or an
+        // ad-free build). Ad rows are purely additive: they are inserted *between* content rows only
+        // when policy allows them, and they can never replace or hide a content row.
         rows.clear();
-        if (!AdPolicy.nativeAdsAllowed()) {
-            // No ad rows at all while a protected section (the Quran screens) owns the task, so even a
-            // list reused inside such a section stays clean instead of merely showing an empty slot.
-            return;
-        }
         int contentCount = contentAdapter.getItemCount();
-        List<Integer> slots = AdPolicy.nativeSlotPositions(contentCount);
+        List<Integer> slots = AdPolicy.nativeAdsAllowed()
+                ? AdPolicy.nativeSlotPositions(contentCount)
+                : Collections.<Integer>emptyList();
         int slotIndex = 0;
         for (int position = 0; position < contentCount; position++) {
             if (slotIndex < slots.size() && slots.get(slotIndex) == position) {
@@ -144,7 +146,13 @@ public class AdInsertingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public boolean onFailedToRecycleView(@NonNull RecyclerView.ViewHolder holder) {
-        return true;
+        // Only the ad row opts out of recycling (rebinding a NativeAdView mid-scroll can flicker).
+        // Content tiles must recycle normally, otherwise every scroll inflates new tiles and the grid
+        // stutters on low-end devices.
+        if (holder instanceof AdViewHolder) {
+            return true;
+        }
+        return contentAdapter.onFailedToRecycleView(holder);
     }
 
     @Override

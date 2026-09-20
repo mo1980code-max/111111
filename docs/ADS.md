@@ -63,9 +63,10 @@ turns a content adapter into "content + ad rows":
 * in a `GridLayoutManager` an ad row spans the full width (`SpanSizeLookup` in the wrapper);
 * a row that has no ad renders **nothing**: the slot has zero height and no margins of its own, so a
   failed request, no fill or offline leaves no white strip behind;
-* the wrapper asks for an ad only when its plan actually contains an ad row, re-plans on every data
-  change (so an unlock that changes the row count re-computes the slots), and returns nothing at all
-  while `AdPolicy.nativeAdsAllowed()` is false;
+* the wrapper asks for an ad only when its plan actually contains an ad row and re-plans on every data
+  change (so an unlock that changes the row count re-computes the slots). Content rows are unconditional:
+  while `AdPolicy.nativeAdsAllowed()` is false the wrapper returns the content rows with no ad row at all,
+  so the grid always renders and an ad can never replace or hide content;
 * the click never overlaps an app action: ad rows can only be inserted between list tiles, and no ad is
   placed inside the clock editor, the wallpaper preview or the app's dialogs.
 

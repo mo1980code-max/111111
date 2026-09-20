@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night completed counter button: solid bright emerald; text is white. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/azkar_night_primary" />
+    <corners android:radius="14dp" />
+</shape>

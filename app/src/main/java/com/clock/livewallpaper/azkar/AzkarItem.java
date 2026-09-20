@@ -7,12 +7,21 @@ import androidx.annotation.NonNull;
  *
  * <p>Content fields ({@code id}, {@code category}, {@code order}, {@code arabicText},
  * {@code repeatCount}, {@code virtue}) come verbatim from {@code assets/azkar.json} and never
- * change at runtime. {@code currentCount} is the persisted tap count; {@link #isCompleted()} is
- * derived, never stored — an item is complete exactly when
- * {@code currentCount == repeatCount}.
+ * change at runtime.
+ *
+ * <h2>Counter contract (session-only countdown)</h2>
+ * <ul>
+ *   <li>كل ذِكر يبدأ عدّاده من عدده الأصلي: {@code remaining = repeatCount} (مثلاً 3).</li>
+ *   <li>كل ضغطة على زر العدّاد تنقص واحداً: {@code remaining--} عبر {@link #countDown()}.</li>
+ *   <li>الاكتمال عند الوصول للصفر: {@link #isCompleted()} مشتقة دائماً ({@code remaining == 0})
+ *       ولا تُخزَّن أبداً.</li>
+ *   <li>العدّاد لا يُحفظ في أي تخزين: عند إغلاق التطبيق وإعادة فتحه تُبنى عناصر جديدة من
+ *       {@link AzkarRepository#items} فيعود كل عدّاد لعدده الأصلي تلقائياً.</li>
+ *   <li>لا يعيد العدّاد نفسه إلا بإعادة فتح الشاشة — لا زر إعادة، ولا تصفير تلقائي.</li>
+ * </ul>
  *
  * <p>Every item carries its own {@code repeatCount} from the source (1, 3, 4, 7, 10, 100, ...);
- * the counter target is always that number, never a shared constant.
+ * the counter always starts from that number, never from a shared constant.
  */
 public final class AzkarItem {
 
@@ -23,22 +32,26 @@ public final class AzkarItem {
     private final int repeatCount;
     private final String virtue;
 
-    private int currentCount;
+    /**
+     * المتبقي من هذا الذِكر. يبدأ دائماً من {@link #repeatCount} عند إنشاء العنصر
+     * (أي عند كل فتح للشاشة)، ويعيش في الذاكرة فقط — لا يُقرأ ولا يُكتب في التخزين.
+     */
+    private int remaining;
 
     public AzkarItem(int id,
                      @NonNull AzkarCategory category,
                      int order,
                      @NonNull String arabicText,
                      int repeatCount,
-                     @NonNull String virtue,
-                     int currentCount) {
+                     @NonNull String virtue) {
         this.id = id;
         this.category = category;
         this.order = order;
         this.arabicText = arabicText;
         this.repeatCount = Math.max(1, repeatCount);
         this.virtue = virtue;
-        setCurrentCount(currentCount);
+        // أهم سطر في العقد: البداية دائماً من العدد الأصلي، وليست من أي قيمة محفوظة.
+        this.remaining = this.repeatCount;
     }
 
     /** @return the 1-based Azkar number within its category, as numbered by the source */
@@ -74,35 +87,26 @@ public final class AzkarItem {
         return virtue;
     }
 
-    /** @return taps so far, always within {@code [0, repeatCount]} */
-    public int currentCount() {
-        return currentCount;
+    /** @return taps left, always within {@code [0, repeatCount]} */
+    public int remaining() {
+        return remaining;
     }
 
-    /** @return {@code true} exactly when {@code currentCount == repeatCount} */
+    /** @return {@code true} exactly when the countdown reached zero */
     public boolean isCompleted() {
-        return currentCount >= repeatCount;
+        return remaining == 0;
     }
 
     /**
-     * Advances the counter by one tap. Never exceeds {@link #repeatCount()}.
+     * Counts one tap down. Never goes below zero; taps on a completed item change nothing.
      *
      * @return {@code true} if the tap changed the count, {@code false} if already complete
      */
-    public boolean countUp() {
-        if (currentCount >= repeatCount) {
+    public boolean countDown() {
+        if (remaining <= 0) {
             return false;
         }
-        currentCount++;
+        remaining--;
         return true;
-    }
-
-    /** Resets the counter to zero so the Azkar can be repeated. */
-    public void reset() {
-        currentCount = 0;
-    }
-
-    private void setCurrentCount(int value) {
-        currentCount = Math.max(0, Math.min(value, repeatCount));
     }
 }

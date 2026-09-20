@@ -126,8 +126,9 @@ public final class AdsManager {
 
     private void loadRewarded(@NonNull final Context context, @Nullable final Runnable then) {
         initialize(context);
-        RewardedAd.load(context.getApplicationContext(), AdConfig.REWARDED_AD_UNIT_ID,
-                new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
+        try {
+            RewardedAd.load(context.getApplicationContext(), AdConfig.REWARDED_AD_UNIT_ID,
+                    new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull RewardedAd ad) {
                         rewardedAd = ad;
@@ -146,6 +147,15 @@ public final class AdsManager {
                         }
                     }
                 });
+        } catch (Exception error) {
+            // Missing / outdated Play services (or any SDK failure) must never crash the unlock flow:
+            // report "no ad" and let the caller show its friendly message instead.
+            rewardedAd = null;
+            Log.w(TAG, "rewarded load failed", error);
+            if (then != null) {
+                then.run();
+            }
+        }
     }
 
     /**
@@ -193,6 +203,9 @@ public final class AdsManager {
                 rewardedShowing = false;
                 rewardedAd = null;
                 AdPolicy.markAdDismissed();
+                // The consumed ad is gone: warm the cache for the next locked item so its dialog
+                // answers instantly. This is a single background load, never an automatic show.
+                preloadRewarded(activity.getApplicationContext());
             }
 
             @Override
@@ -220,6 +233,9 @@ public final class AdsManager {
             callback.onUnlocked();
         } else {
             callback.onUnavailable(activity.getString(R.string.ad_unavailable_message));
+            // One background reload attempt so a transient no-fill does not leave every later tap
+            // cold. This cannot loop: the reload carries no callback, so its own failure ends here.
+            preloadRewarded(activity.getApplicationContext());
         }
         if (!rewardedShowing) {
             // Only the paths that never reached the screen have to clear the flag here (a failed load);
@@ -241,21 +257,27 @@ public final class AdsManager {
             return;
         }
         initialize(context);
-        AppOpenAd.load(context.getApplicationContext(), AdConfig.APP_OPEN_AD_UNIT_ID,
-                new AdRequest.Builder().build(), AdPolicy.requestedOrientation(),
-                new AppOpenAd.AppOpenAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(@NonNull AppOpenAd ad) {
-                        appOpenAd = ad;
-                        appOpenLoadedAt = System.currentTimeMillis();
-                    }
+        try {
+            AppOpenAd.load(context.getApplicationContext(), AdConfig.APP_OPEN_AD_UNIT_ID,
+                    new AdRequest.Builder().build(), AdPolicy.requestedOrientation(),
+                    new AppOpenAd.AppOpenAdLoadCallback() {
+                        @Override
+                        public void onAdLoaded(@NonNull AppOpenAd ad) {
+                            appOpenAd = ad;
+                            appOpenLoadedAt = System.currentTimeMillis();
+                        }
 
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError error) {
-                        appOpenAd = null;
-                        Log.i(TAG, "app open ad unavailable: " + error.getCode());
-                    }
-                });
+                        @Override
+                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                            appOpenAd = null;
+                            Log.i(TAG, "app open ad unavailable: " + error.getCode());
+                        }
+                    });
+        } catch (Exception error) {
+            // Same guarantee as every other format: an SDK failure degrades to "no ad", never a crash.
+            appOpenAd = null;
+            Log.w(TAG, "app open load failed", error);
+        }
     }
 
     /**

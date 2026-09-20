@@ -84,6 +84,30 @@
     <color name="azkar_track">#E9E4D2</color>
 
     <!--
+      Azkar night palette. Used ONLY inside the Azkar section when the user enables its
+      own night mode (AzkarFontStore KEY_NIGHT_MODE); the day palette above stays the
+      default and is restored untouched when night mode is off. Deep green-charcoal
+      surfaces with warm off-white ink and a brighter emerald accent: calm and readable.
+    -->
+    <!-- Night screen background: deep green-charcoal. -->
+    <color name="azkar_night_background">#0F1714</color>
+    <!-- Night card surface. -->
+    <color name="azkar_night_card">#1B2620</color>
+    <!-- Night counter button surface (a touch darker than the card). -->
+    <color name="azkar_night_counter">#141E19</color>
+    <!-- Night primary text: warm off-white ink. -->
+    <color name="azkar_night_text">#ECE7D6</color>
+    <!-- Night secondary text. -->
+    <color name="azkar_night_muted">#A89F88</color>
+    <!-- Night accent: brighter emerald, readable on dark surfaces. -->
+    <color name="azkar_night_primary">#45B981</color>
+    <!-- Night completed card wash: deep green tint. -->
+    <color name="azkar_night_completed_bg">#16352A</color>
+    <!-- Night hairlines, strokes and progress track. -->
+    <color name="azkar_night_divider">#2C3A32</color>
+    <color name="azkar_night_track">#2C3A32</color>
+
+    <!--
       Ad and unlock layer palette (see values/ads.xml, docs/ADS.md). One definition for every ad
       surface so a native ad card can never take a content card's colours by accident.
     -->
