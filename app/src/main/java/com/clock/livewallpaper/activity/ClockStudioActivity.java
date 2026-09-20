@@ -1,5 +1,9 @@
 package com.clock.livewallpaper.activity;
 
+import android.app.WallpaperManager;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -17,6 +21,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,11 +29,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.ads.AdPolicy;
 import com.clock.livewallpaper.adapter.ClockStyleAdapter;
 import com.clock.livewallpaper.catalog.AllahNamesCatalog;
+import com.clock.livewallpaper.catalog.ContentAccess;
 import com.clock.livewallpaper.clock.AnalogClockView;
 import com.clock.livewallpaper.clock.ClockStyle;
 import com.clock.livewallpaper.clock.ClockStyleRegistry;
+import com.clock.livewallpaper.clock.ClockStudioTheme;
+import com.clock.livewallpaper.clock.ClockStudioWallpaperConfig;
 import com.clock.livewallpaper.clock.DigitalClockView;
 import com.clock.livewallpaper.date.HijriDate;
 import com.clock.livewallpaper.date.HijriDateFormatter;
@@ -51,25 +60,25 @@ public final class ClockStudioActivity extends AppCompatActivity {
     public static final String EXTRA_NAME_ID = "clock_studio_name_id";
     public static final String EXTRA_NAME_NUMBER = "clock_studio_name_number";
 
-    private static final String PREFS_NAME = "names_allah_clock_studio";
-    private static final String KEY_STYLE = "style_id";
-    private static final String KEY_POSITION = "clock_position";
-    private static final String KEY_SIZE = "clock_size";
-    private static final String KEY_24_HOUR = "twenty_four_hour";
-    private static final String KEY_SECONDS = "show_seconds";
-    private static final String KEY_SHOW_HIJRI = "show_hijri_date";
-    private static final String KEY_SHOW_GREGORIAN = "show_gregorian_date";
-    private static final String KEY_SHOW_DAY = "show_day_name";
-    private static final String KEY_HIJRI_ADJUSTMENT = "hijri_date_adjustment";
+    private static final String PREFS_NAME = ClockStudioWallpaperConfig.PREFS_NAME;
+    private static final String KEY_STYLE = ClockStudioWallpaperConfig.KEY_STYLE;
+    private static final String KEY_POSITION = ClockStudioWallpaperConfig.KEY_POSITION;
+    private static final String KEY_SIZE = ClockStudioWallpaperConfig.KEY_SIZE;
+    private static final String KEY_24_HOUR = ClockStudioWallpaperConfig.KEY_24_HOUR;
+    private static final String KEY_SECONDS = ClockStudioWallpaperConfig.KEY_SECONDS;
+    private static final String KEY_SHOW_HIJRI = ClockStudioWallpaperConfig.KEY_SHOW_HIJRI;
+    private static final String KEY_SHOW_GREGORIAN = ClockStudioWallpaperConfig.KEY_SHOW_GREGORIAN;
+    private static final String KEY_SHOW_DAY = ClockStudioWallpaperConfig.KEY_SHOW_DAY;
+    private static final String KEY_HIJRI_ADJUSTMENT = ClockStudioWallpaperConfig.KEY_HIJRI_ADJUSTMENT;
 
-    private static final int POSITION_TOP = 0;
-    private static final int POSITION_CENTER = 1;
-    private static final int POSITION_BOTTOM = 2;
-    private static final int SIZE_SMALL = 0;
-    private static final int SIZE_MEDIUM = 1;
-    private static final int SIZE_LARGE = 2;
-    private static final int MIN_HIJRI_ADJUSTMENT = -2;
-    private static final int MAX_HIJRI_ADJUSTMENT = 2;
+    private static final int POSITION_TOP = ClockStudioWallpaperConfig.POSITION_TOP;
+    private static final int POSITION_CENTER = ClockStudioWallpaperConfig.POSITION_CENTER;
+    private static final int POSITION_BOTTOM = ClockStudioWallpaperConfig.POSITION_BOTTOM;
+    private static final int SIZE_SMALL = ClockStudioWallpaperConfig.SIZE_SMALL;
+    private static final int SIZE_MEDIUM = ClockStudioWallpaperConfig.SIZE_MEDIUM;
+    private static final int SIZE_LARGE = ClockStudioWallpaperConfig.SIZE_LARGE;
+    private static final int MIN_HIJRI_ADJUSTMENT = ClockStudioWallpaperConfig.MIN_HIJRI_ADJUSTMENT;
+    private static final int MAX_HIJRI_ADJUSTMENT = ClockStudioWallpaperConfig.MAX_HIJRI_ADJUSTMENT;
 
     private final List<ClockStyle> styles = ClockStyleRegistry.getAll();
     private final Handler dateHandler = new Handler(Looper.getMainLooper());
@@ -114,6 +123,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
     private TextView gregorianButton;
     private TextView dayButton;
     private TextView adjustmentButton;
+    private TextView liveWallpaperButton;
     private TextView dayText;
     private TextView hijriText;
     private TextView gregorianText;
@@ -181,6 +191,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
         gregorianButton = findViewById(R.id.clock_studio_gregorian_button);
         dayButton = findViewById(R.id.clock_studio_day_button);
         adjustmentButton = findViewById(R.id.clock_studio_adjustment_button);
+        liveWallpaperButton = findViewById(R.id.clock_studio_live_wallpaper_button);
         dayText = findViewById(R.id.clock_studio_day);
         hijriText = findViewById(R.id.clock_studio_hijri);
         gregorianText = findViewById(R.id.clock_studio_gregorian);
@@ -239,7 +250,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
         } catch (RuntimeException ignored) {
             // The platform Arabic face is a safe fallback if the bundled face is unavailable.
         }
-        backdrop.setBackgroundResource(themeForName(selectedName.getNumber()));
+        backdrop.setBackgroundResource(ClockStudioTheme.drawableForName(selectedName.getNumber()));
     }
 
     private void bindOptions() {
@@ -328,6 +339,12 @@ public final class ClockStudioActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setFullScreen(true);
+            }
+        });
+        liveWallpaperButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setAsLiveWallpaper();
             }
         });
         updateOptionLabels();
@@ -622,6 +639,65 @@ public final class ClockStudioActivity extends AppCompatActivity {
         }
     }
 
+    /** Saves an immutable snapshot, then gives Android the normal live-wallpaper confirmation flow. */
+    private void setAsLiveWallpaper() {
+        // Check before even updating editor preferences; a direct Activity launch cannot turn a locked
+        // Name into a saved wallpaper configuration.
+        if (!ContentAccess.isAvailable(this, selectedName)) {
+            Toast.makeText(this, R.string.clock_studio_live_wallpaper_locked,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        saveSettings();
+        boolean saved = ClockStudioWallpaperConfig.save(
+                this,
+                selectedName,
+                activeStyle,
+                ClockStudioTheme.idForName(selectedName.getNumber()),
+                clockPosition,
+                clockSize,
+                twentyFourHour,
+                showSeconds,
+                showHijri,
+                showGregorian,
+                showDay,
+                hijriAdjustment,
+                activeStyle.getPreviewColor(),
+                1f);
+        if (!saved) {
+            Toast.makeText(this, R.string.clock_studio_live_wallpaper_locked,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        WallpaperManager manager = WallpaperManager.getInstance(this);
+        if (!manager.isWallpaperSupported()
+                || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && !manager.isSetWallpaperAllowed())) {
+            Toast.makeText(this, R.string.clock_studio_live_wallpaper_unavailable,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AdPolicy.markSystemHandoff();
+        ComponentName service = new ComponentName(this, com.clock.livewallpaper.LiveClockWallpaper.class);
+        try {
+            Intent change = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
+            change.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, service);
+            startActivity(change);
+        } catch (ActivityNotFoundException error) {
+            try {
+                startActivity(new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER));
+            } catch (ActivityNotFoundException chooserError) {
+                Toast.makeText(this, R.string.clock_studio_live_wallpaper_unavailable,
+                        Toast.LENGTH_SHORT).show();
+            }
+        } catch (SecurityException error) {
+            Toast.makeText(this, R.string.clock_studio_live_wallpaper_unavailable,
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void setFullScreen(boolean enabled) {
         if (fullScreen == enabled) {
             return;
@@ -721,23 +797,6 @@ public final class ClockStudioActivity extends AppCompatActivity {
                 .putBoolean(KEY_SHOW_DAY, showDay)
                 .putInt(KEY_HIJRI_ADJUSTMENT, hijriAdjustment)
                 .apply();
-    }
-
-    private int themeForName(int number) {
-        switch ((number - 1) % 6) {
-            case 1:
-                return R.drawable.bg_allah_theme_emerald;
-            case 2:
-                return R.drawable.bg_allah_theme_black_gold;
-            case 3:
-                return R.drawable.bg_allah_theme_sapphire;
-            case 4:
-                return R.drawable.bg_allah_theme_forest;
-            case 5:
-                return R.drawable.bg_allah_theme_plum;
-            default:
-                return R.drawable.bg_allah_theme_navy;
-        }
     }
 
     private int clamp(int value, int min, int max) {

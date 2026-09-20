@@ -32,6 +32,7 @@ import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import com.clock.livewallpaper.LiveClockWallpaper;
 import com.clock.livewallpaper.adapter.BgAdapter;
+import com.clock.livewallpaper.clock.ClockStudioWallpaperConfig;
 import com.clock.livewallpaper.model.Clocks;
 import com.clock.livewallpaper.utils.RealPathUtil;
 import com.clock.livewallpaper.utils.TinyDB;
@@ -271,6 +272,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 EditorActivity.this.seekBar.setVisibility(View.GONE);
                 EditorActivity.this.layoutColor.setVisibility(View.VISIBLE);
                 EditorActivity.this.saveUserSettings();
+                // The legacy editor intentionally hands ownership back from the Clock Studio snapshot.
+                ClockStudioWallpaperConfig.disable(EditorActivity.this);
                 EditorActivity.isDone = true;
                 // Going to the system wallpaper picker must not be answered with an ad on the way back.
                 AdPolicy.markSystemHandoff();

@@ -10,6 +10,9 @@
     <string name="clock_studio_seconds_label">Seconds</string>
     <string name="clock_studio_fullscreen">Full screen</string>
     <string name="clock_studio_show_controls">Show controls</string>
+    <string name="clock_studio_set_live_wallpaper">Set as Live Wallpaper • تعيين كخلفية حية</string>
+    <string name="clock_studio_live_wallpaper_locked">Unlock this Name before setting it as a live wallpaper.</string>
+    <string name="clock_studio_live_wallpaper_unavailable">Live wallpaper preview is unavailable on this device.</string>
     <string name="clock_studio_preview_description">Live clock preview</string>
     <string name="clock_studio_position_value">Position: %1$s</string>
     <string name="clock_studio_size_value">Size: %1$s</string>

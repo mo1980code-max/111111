@@ -24,7 +24,9 @@ public final class DigitalClockView extends View {
     private final Paint panelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint smallTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF panel = new RectF();
     private final Calendar time = Calendar.getInstance();
+    private final Typeface meridiemTypeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable ticker = new Runnable() {
         @Override
@@ -37,9 +39,13 @@ public final class DigitalClockView extends View {
     };
 
     private ClockStyle style = ClockStyleRegistry.defaultStyle();
+    private int accentColor;
+    private boolean hasAccentColor;
     private boolean twentyFourHour;
     private boolean showSeconds = true;
     private boolean running;
+    private Typeface clockTypeface;
+    private float clockLetterSpacing;
 
     public DigitalClockView(Context context) {
         super(context);
@@ -47,11 +53,19 @@ public final class DigitalClockView extends View {
         textPaint.setSubpixelText(true);
         smallTextPaint.setSubpixelText(true);
         panelPaint.setDither(true);
+        updateStyleTypography();
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
     public void setStyle(@NonNull ClockStyle style) {
         this.style = style;
+        updateStyleTypography();
+        invalidate();
+    }
+
+    public void setAccentColor(int color) {
+        this.accentColor = color;
+        this.hasAccentColor = true;
         invalidate();
     }
 
@@ -131,7 +145,7 @@ public final class DigitalClockView extends View {
         float top = getHeight() * 0.12f;
         float right = getWidth() * 0.965f;
         float bottom = getHeight() * 0.88f;
-        RectF panel = new RectF(left, top, right, bottom);
+        panel.set(left, top, right, bottom);
 
         panelPaint.clearShadowLayer();
         panelPaint.setStyle(Paint.Style.FILL);
@@ -166,13 +180,12 @@ public final class DigitalClockView extends View {
 
         String time = formattedTime();
         int timeColor = timeColor(accent);
-        Typeface face = typefaceForStyle();
         textPaint.clearShadowLayer();
         textPaint.setStyle(Paint.Style.FILL);
-        textPaint.setTypeface(face);
+        textPaint.setTypeface(clockTypeface);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(timeColor);
-        textPaint.setLetterSpacing(letterSpacing());
+        textPaint.setLetterSpacing(clockLetterSpacing);
         float availableWidth = panel.width() * 0.90f;
         float textSize = Math.min(getHeight() * 0.40f, getWidth() * 0.22f);
         textPaint.setTextSize(textSize);
@@ -191,7 +204,7 @@ public final class DigitalClockView extends View {
             Calendar now = currentTime();
             String meridiem = now.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
             smallTextPaint.clearShadowLayer();
-            smallTextPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+            smallTextPaint.setTypeface(meridiemTypeface);
             smallTextPaint.setTextAlign(Paint.Align.CENTER);
             smallTextPaint.setTextSize(Math.max(11f, getHeight() * 0.085f));
             smallTextPaint.setColor(Color.argb(215, Color.red(timeColor), Color.green(timeColor), Color.blue(timeColor)));
@@ -228,6 +241,9 @@ public final class DigitalClockView extends View {
     }
 
     private int timeColor(int accent) {
+        if (hasAccentColor) {
+            return accentColor;
+        }
         if (style.usesNeonTreatment()) {
             return accent;
         }
@@ -249,30 +265,24 @@ public final class DigitalClockView extends View {
         return Color.rgb(248, 246, 238);
     }
 
-    private Typeface typefaceForStyle() {
+    /** Style typography is static for the lifetime of this view; do not allocate it per frame. */
+    private void updateStyleTypography() {
         if ("digital_elegant_thin".equals(style.getId())) {
-            return Typeface.create("sans-serif-light", Typeface.NORMAL);
-        }
-        if ("digital_led".equals(style.getId())
+            clockTypeface = Typeface.create("sans-serif-light", Typeface.NORMAL);
+            clockLetterSpacing = 0.045f;
+        } else if ("digital_led".equals(style.getId())
                 || "digital_seven_segment".equals(style.getId())) {
-            return Typeface.create(Typeface.MONOSPACE, Typeface.BOLD);
-        }
-        if ("digital_modern_bold".equals(style.getId())
+            clockTypeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD);
+            clockLetterSpacing = "digital_seven_segment".equals(style.getId()) ? 0.02f : 0f;
+        } else if ("digital_modern_bold".equals(style.getId())
                 || "digital_luxury_gold".equals(style.getId())
                 || style.usesNeonTreatment()) {
-            return Typeface.create("sans-serif", Typeface.BOLD);
+            clockTypeface = Typeface.create("sans-serif", Typeface.BOLD);
+            clockLetterSpacing = 0f;
+        } else {
+            clockTypeface = Typeface.create("sans-serif", Typeface.NORMAL);
+            clockLetterSpacing = 0f;
         }
-        return Typeface.create("sans-serif", Typeface.NORMAL);
-    }
-
-    private float letterSpacing() {
-        if ("digital_elegant_thin".equals(style.getId())) {
-            return 0.045f;
-        }
-        if ("digital_seven_segment".equals(style.getId())) {
-            return 0.02f;
-        }
-        return 0f;
     }
 
     private void drawLedBaseline(Canvas canvas, RectF panel, int color) {

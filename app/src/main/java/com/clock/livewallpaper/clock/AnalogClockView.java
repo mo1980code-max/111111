@@ -30,6 +30,7 @@ public final class AnalogClockView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Calendar time = Calendar.getInstance();
+    private final Typeface classicTypeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL);
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable ticker = new Runnable() {
         @Override
@@ -42,6 +43,8 @@ public final class AnalogClockView extends View {
     };
 
     private ClockStyle style = ClockStyleRegistry.defaultStyle();
+    private int accentColor;
+    private boolean hasAccentColor;
     private boolean showSeconds = true;
     private boolean running;
 
@@ -56,6 +59,12 @@ public final class AnalogClockView extends View {
 
     public void setStyle(@NonNull ClockStyle style) {
         this.style = style;
+        invalidate();
+    }
+
+    public void setAccentColor(int color) {
+        this.accentColor = color;
+        this.hasAccentColor = true;
         invalidate();
     }
 
@@ -133,7 +142,7 @@ public final class AnalogClockView extends View {
         boolean luxury = "analog_luxury_gold".equals(style.getId())
                 || "hybrid_gold_analog".equals(style.getId())
                 || "hybrid_luxury".equals(style.getId());
-        int accent = style.getPreviewColor();
+        int accent = hasAccentColor ? accentColor : style.getPreviewColor();
 
         paint.clearShadowLayer();
         paint.setStyle(Paint.Style.FILL);
@@ -183,7 +192,9 @@ public final class AnalogClockView extends View {
                              int accent, boolean floating, boolean neon) {
         String id = style.getId();
         int markerColor;
-        if (neon || "analog_luxury_gold".equals(id) || "analog_black_gold".equals(id)
+        if (hasAccentColor) {
+            markerColor = accent;
+        } else if (neon || "analog_luxury_gold".equals(id) || "analog_black_gold".equals(id)
                 || "hybrid_gold_analog".equals(id) || "hybrid_luxury".equals(id)
                 || floating) {
             markerColor = accent;
@@ -220,7 +231,7 @@ public final class AnalogClockView extends View {
             textPaint.setColor(Color.rgb(65, 54, 39));
             textPaint.setTextSize(radius * 0.16f);
             textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
+            textPaint.setTypeface(classicTypeface);
             for (int index = 0; index < 12; index++) {
                 double angle = Math.toRadians(index * 30d - 90d);
                 float x = cx + (float) Math.cos(angle) * radius * 0.61f;
@@ -241,7 +252,9 @@ public final class AnalogClockView extends View {
         float hour = (now.get(Calendar.HOUR) % 12) + minute / 60f;
 
         int handColor;
-        if (neon) {
+        if (hasAccentColor) {
+            handColor = accent;
+        } else if (neon) {
             handColor = accent;
         } else if ("analog_classic".equals(style.getId())) {
             handColor = Color.rgb(42, 49, 54);

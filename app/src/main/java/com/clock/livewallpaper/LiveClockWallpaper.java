@@ -15,6 +15,8 @@ import android.widget.LinearLayout;
 
 import androidx.core.view.InputDeviceCompat;
 
+import com.clock.livewallpaper.clock.ClockStudioWallpaperConfig;
+import com.clock.livewallpaper.clock.ClockStudioWallpaperRenderer;
 import com.clock.livewallpaper.model.Clocks;
 import com.clock.livewallpaper.utils.TinyDB;
 import com.clock.livewallpaper.viewUtils.AnalogClock;
@@ -37,14 +39,22 @@ public class LiveClockWallpaper extends WallpaperService {
     private final Handler mHandler = new Handler();
     private float mClockPosX = -1.0f;
     private float mClockPosY = -1.0f;
+    private boolean studioMode;
+    private ClockStudioWallpaperRenderer studioRenderer;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Context applicationContext = getApplicationContext();
         this.context = applicationContext;
-        this.tinyDB = new TinyDB(applicationContext);
-        init(this.context);
+        this.studioMode = ClockStudioWallpaperConfig.isEnabled(applicationContext);
+        if (this.studioMode) {
+            this.studioRenderer = new ClockStudioWallpaperRenderer(applicationContext,
+                    ClockStudioWallpaperConfig.read(applicationContext));
+        } else {
+            this.tinyDB = new TinyDB(applicationContext);
+            init(this.context);
+        }
     }
 
     public void init(Context context) {
@@ -71,12 +81,50 @@ public class LiveClockWallpaper extends WallpaperService {
 
     @Override
     public void onDestroy() {
+        if (this.studioRenderer != null) {
+            this.studioRenderer.destroy();
+            this.studioRenderer = null;
+        }
+        if (this.imageViewBase != null) {
+            this.imageViewBase.setAutoUpdate(false);
+        }
+        this.mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
     @Override
     public Engine onCreateEngine() {
         return new ClockEngine();
+    }
+
+    /**
+     * Re-reads the handoff flag for new engines as well as a newly-created service. Android may keep
+     * one WallpaperService instance alive while the user applies another snapshot from Clock Studio.
+     */
+    private void syncStudioMode() {
+        boolean shouldUseStudio = ClockStudioWallpaperConfig.isEnabled(this.context);
+        if (!shouldUseStudio) {
+            if (this.studioMode && this.studioRenderer != null) {
+                this.studioRenderer.destroy();
+                this.studioRenderer = null;
+            }
+            this.studioMode = false;
+            if (this.tinyDB == null) {
+                this.tinyDB = new TinyDB(this.context);
+                init(this.context);
+            }
+            return;
+        }
+
+        this.studioMode = true;
+        if (this.studioRenderer != null) {
+            this.studioRenderer.destroy();
+        }
+        this.studioRenderer = new ClockStudioWallpaperRenderer(this.context,
+                ClockStudioWallpaperConfig.read(this.context));
+        if (this.width > 0 && this.height > 0) {
+            this.studioRenderer.setSize(this.width, this.height);
+        }
     }
 
 
@@ -112,23 +160,35 @@ public class LiveClockWallpaper extends WallpaperService {
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
             super.onCreate(surfaceHolder);
+            LiveClockWallpaper.this.syncStudioMode();
         }
 
         @Override
         public void onDestroy() {
-            LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
-            super.onDestroy();
             LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            if (!LiveClockWallpaper.this.studioMode
+                    && LiveClockWallpaper.this.imageViewBase != null) {
+                LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
+            }
+            super.onDestroy();
         }
 
         @Override
         public void onVisibilityChanged(boolean z) {
             this.mVisible = z;
+            LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            if (z) {
+                LiveClockWallpaper.this.syncStudioMode();
+            }
+            if (LiveClockWallpaper.this.studioMode) {
+                if (z) {
+                    drawFrame();
+                }
+                return;
+            }
             LiveClockWallpaper.this.imageViewBase.setAutoUpdate(z);
             if (z) {
                 drawFrame();
-            } else {
-                LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
             }
         }
 
@@ -137,28 +197,44 @@ public class LiveClockWallpaper extends WallpaperService {
             super.onSurfaceChanged(surfaceHolder, i, i2, i3);
             LiveClockWallpaper.this.width = i2;
             LiveClockWallpaper.this.height = i3;
+            if (LiveClockWallpaper.this.studioMode
+                    && LiveClockWallpaper.this.studioRenderer != null) {
+                LiveClockWallpaper.this.studioRenderer.setSize(i2, i3);
+            }
             drawFrame();
         }
 
         @Override
         public void onSurfaceCreated(SurfaceHolder surfaceHolder) {
             super.onSurfaceCreated(surfaceHolder);
+            if (LiveClockWallpaper.this.studioMode && this.mVisible) {
+                drawFrame();
+            }
         }
 
         @Override
         public void onSurfaceDestroyed(SurfaceHolder surfaceHolder) {
             super.onSurfaceDestroyed(surfaceHolder);
             this.mVisible = false;
-            LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
             LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            if (!LiveClockWallpaper.this.studioMode
+                    && LiveClockWallpaper.this.imageViewBase != null) {
+                LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
+            }
         }
 
         @Override
         public void onOffsetsChanged(float f, float f2, float f3, float f4, int i, int i2) {
-            drawFrame();
+            if (this.mVisible) {
+                drawFrame();
+            }
         }
 
         void drawFrame() {
+            if (LiveClockWallpaper.this.studioMode) {
+                drawStudioFrame();
+                return;
+            }
             Throwable th;
             Canvas canvas;
             SurfaceHolder surfaceHolder = getSurfaceHolder();
@@ -193,6 +269,34 @@ public class LiveClockWallpaper extends WallpaperService {
             } catch (Throwable th3) {
                 th = th3;
                 canvas = null;
+            }
+        }
+
+        private void drawStudioFrame() {
+            LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            if (!this.mVisible || LiveClockWallpaper.this.studioRenderer == null) {
+                return;
+            }
+            Canvas canvas = null;
+            try {
+                canvas = getSurfaceHolder().lockCanvas();
+                if (canvas != null) {
+                    LiveClockWallpaper.this.studioRenderer.draw(canvas);
+                }
+            } catch (RuntimeException ignored) {
+                // Surface loss during launcher transitions is normal; the next visible callback retries.
+            } finally {
+                if (canvas != null) {
+                    try {
+                        getSurfaceHolder().unlockCanvasAndPost(canvas);
+                    } catch (RuntimeException ignored) {
+                        // The surface may have been destroyed between lock and post.
+                    }
+                }
+            }
+            if (this.mVisible && LiveClockWallpaper.this.studioRenderer != null) {
+                LiveClockWallpaper.this.mHandler.postDelayed(this.mDrawClock,
+                        LiveClockWallpaper.this.studioRenderer.nextFrameDelayMillis());
             }
         }
 
