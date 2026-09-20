@@ -6,7 +6,11 @@
     android:layout_height="182dp"
     android:layout_margin="6dp"
     android:background="@drawable/bg_allah_theme_navy"
+    android:clipToOutline="true"
     android:elevation="3dp"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:importantForAccessibility="yes"
     android:layoutDirection="rtl">
 
     <LinearLayout

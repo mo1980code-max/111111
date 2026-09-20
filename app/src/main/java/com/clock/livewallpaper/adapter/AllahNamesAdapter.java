@@ -47,6 +47,7 @@ public final class AllahNamesAdapter extends RecyclerView.Adapter<AllahNamesAdap
 
     public void setOnNameClickListener(OnNameClickListener listener) {
         this.nameClickListener = listener;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -63,7 +64,7 @@ public final class AllahNamesAdapter extends RecyclerView.Adapter<AllahNamesAdap
         }
         View card = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_allah_name, parent, false);
-        return new NameViewHolder(card);
+        return new NameViewHolder(card, this);
     }
 
     @Override
@@ -82,20 +83,24 @@ public final class AllahNamesAdapter extends RecyclerView.Adapter<AllahNamesAdap
                 name.getNumber(), name.getArabicName(), name.getTransliteration()));
         boolean locked = !ContentAccess.isAvailable(holder.card.getContext(), name);
         LockOverlay.apply(holder.card, holder.arabicName, locked);
+        holder.boundName = name;
+        holder.card.setScaleX(1f);
+        holder.card.setScaleY(1f);
         holder.card.setClickable(this.nameClickListener != null);
-        holder.card.setOnClickListener(this.nameClickListener == null ? null : new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (AllahNamesAdapter.this.nameClickListener != null) {
-                    AllahNamesAdapter.this.nameClickListener.onNameSelected(name);
-                }
-            }
-        });
     }
 
     @Override
     public long getItemId(int position) {
         return names.get(position).getNumber();
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull NameViewHolder holder) {
+        holder.card.animate().cancel();
+        holder.card.setScaleX(1f);
+        holder.card.setScaleY(1f);
+        holder.boundName = null;
+        super.onViewRecycled(holder);
     }
 
     /** The bound data set is intentionally exactly 99 items for Stage 1. */
@@ -109,13 +114,29 @@ public final class AllahNamesAdapter extends RecyclerView.Adapter<AllahNamesAdap
         final TextView number;
         final TextView arabicName;
         final TextView transliteration;
+        private final AllahNamesAdapter owner;
+        private AllahName boundName;
 
-        NameViewHolder(@NonNull View itemView) {
+        NameViewHolder(@NonNull View itemView, @NonNull AllahNamesAdapter owner) {
             super(itemView);
+            this.owner = owner;
             card = (FrameLayout) itemView.findViewById(R.id.allah_name_card);
             number = (TextView) itemView.findViewById(R.id.allah_name_number);
             arabicName = (TextView) itemView.findViewById(R.id.allah_name_arabic);
             transliteration = (TextView) itemView.findViewById(R.id.allah_name_transliteration);
+            card.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (boundName == null || owner.nameClickListener == null) {
+                        return;
+                    }
+                    card.animate().cancel();
+                    card.setScaleX(0.985f);
+                    card.setScaleY(0.985f);
+                    card.animate().scaleX(1f).scaleY(1f).setDuration(140L).start();
+                    owner.nameClickListener.onNameSelected(boundName);
+                }
+            });
         }
     }
 }

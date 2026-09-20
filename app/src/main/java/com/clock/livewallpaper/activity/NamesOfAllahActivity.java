@@ -2,7 +2,6 @@ package com.clock.livewallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,6 +25,7 @@ import com.clock.livewallpaper.model.AllahName;
 public final class NamesOfAllahActivity extends AppCompatActivity {
 
     private AllahNamesAdapter adapter;
+    private RecyclerView recyclerView;
     private TextView progress;
     /** Guards the dialog/ad request so rapid taps can never associate two rewards with one flow. */
     private boolean unlockFlowActive;
@@ -44,8 +44,10 @@ public final class NamesOfAllahActivity extends AppCompatActivity {
         });
         progress = findViewById(R.id.allah_names_progress);
 
-        RecyclerView recyclerView = findViewById(R.id.allah_names_recycler);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        recyclerView = findViewById(R.id.allah_names_recycler);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, gallerySpanCount()));
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemViewCacheSize(6);
         adapter = new AllahNamesAdapter(AllahNamesCatalog.getAll());
         adapter.setOnNameClickListener(new AllahNamesAdapter.OnNameClickListener() {
             @Override
@@ -56,9 +58,6 @@ public final class NamesOfAllahActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         updateProgress();
 
-        Log.d("CONTENT_DEBUG", "NamesOfAllahActivity.open itemCount="
-                + adapter.getItemCount() + " expected=" + AllahNamesCatalog.EXPECTED_COUNT
-                + " layoutManager=" + recyclerView.getLayoutManager().getClass().getSimpleName());
     }
 
     @Override
@@ -114,6 +113,13 @@ public final class NamesOfAllahActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ClockStudioActivity.class);
         intent.putExtra(ClockStudioActivity.EXTRA_NAME_ID, name.getStableId());
         startActivity(intent);
+        overridePendingTransition(R.anim.clock_studio_enter, R.anim.clock_studio_exit);
+    }
+
+    private int gallerySpanCount() {
+        float density = getResources().getDisplayMetrics().density;
+        float widthDp = getResources().getDisplayMetrics().widthPixels / density;
+        return Math.max(2, Math.min(4, (int) (widthDp / 170f)));
     }
 
     private void updateProgress() {
@@ -130,9 +136,28 @@ public final class NamesOfAllahActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        cancelGalleryAnimations();
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
         unlockFlowActive = false;
+        cancelGalleryAnimations();
         super.onDestroy();
+    }
+
+    private void cancelGalleryAnimations() {
+        if (recyclerView == null) {
+            return;
+        }
+        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+            View child = recyclerView.getChildAt(i);
+            child.animate().cancel();
+            child.setScaleX(1f);
+            child.setScaleY(1f);
+        }
     }
 
     private boolean isActivityUsable() {

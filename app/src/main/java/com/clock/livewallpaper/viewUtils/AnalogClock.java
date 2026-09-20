@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -28,6 +29,15 @@ public class AnalogClock extends View {
     public static boolean hourOnTop;
     public static boolean is24;
     private boolean autoUpdate;
+    private final Handler updateHandler = new Handler(Looper.getMainLooper());
+    private final Runnable autoUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (autoUpdate) {
+                setTime(Calendar.getInstance());
+            }
+        }
+    };
     private Clocks clocks;
     private int mBottom;
     private Calendar mCalendar;
@@ -51,6 +61,7 @@ public class AnalogClock extends View {
     public float mClockPosY = 250.0f;
     private boolean isTouchEnable = false;
     private String[] stringsDays = {"Sun", "Mon", "Tue", "Wed", "thu", "Fri", "Sat"};
+    private final TextPaint datePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
 
     public void setTouchEnable(boolean z) {
         this.isTouchEnable = z;
@@ -136,19 +147,33 @@ public class AnalogClock extends View {
     public void setTime(Calendar calendar) {
         this.mCalendar = calendar;
         invalidate();
+        updateHandler.removeCallbacks(autoUpdateRunnable);
         if (this.autoUpdate) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    AnalogClock.this.setTime(Calendar.getInstance());
-                }
-            }, 800);
+            updateHandler.postDelayed(autoUpdateRunnable, 800L);
         }
     }
 
     public void setAutoUpdate(boolean z) {
         this.autoUpdate = z;
+        if (!z) {
+            updateHandler.removeCallbacks(autoUpdateRunnable);
+        }
         setTime(Calendar.getInstance());
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        autoUpdate = false;
+        updateHandler.removeCallbacks(autoUpdateRunnable);
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility != View.VISIBLE) {
+            setAutoUpdate(false);
+        }
     }
 
     public void setTimezone(TimeZone timeZone) {
@@ -189,7 +214,7 @@ public class AnalogClock extends View {
             it.next().onDraw(canvas, i3, i4, i5, i6, this.mCalendar, true);
         }
         this.mHandsOverlay.onDraw(canvas, i3, i4, i5, i6, this.mCalendar, true);
-        TextPaint textPaint = new TextPaint();
+        TextPaint textPaint = this.datePaint;
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setAntiAlias(true);
         textPaint.setColor(Color.parseColor(this.clocks.textColor));

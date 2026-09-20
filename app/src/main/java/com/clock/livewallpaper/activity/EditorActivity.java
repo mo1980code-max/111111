@@ -108,12 +108,26 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     protected void onResume() {
         super.onResume();
         hideMenu();
+        if (analogClock != null && analogClock.getVisibility() == View.VISIBLE) {
+            analogClock.setAutoUpdate(true);
+        }
     }
 
     @Override
     protected void onPause() {
+        if (analogClock != null) {
+            analogClock.setAutoUpdate(false);
+        }
         super.onPause();
         hideMenu();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (analogClock != null) {
+            analogClock.setAutoUpdate(false);
+        }
+        super.onDestroy();
     }
 
     public void hideMenu() {
@@ -140,7 +154,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor1 = (Button) findViewById(R.id.btnColor1);
         this.btnColor2 = (Button) findViewById(R.id.btnColor2);
         this.seekBar = (AppCompatSeekBar) findViewById(R.id.seekBar);
-        this.analogClock.setAutoUpdate(true);
+        // Visibility/lifecycle callbacks start this single editor clock only while it is on screen.
+        this.analogClock.setAutoUpdate(false);
         this.bgRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
         getUserSettings();
         this.ivZoomOut.setOnClickListener(this);

@@ -18,18 +18,20 @@ import java.util.Locale;
 /** A reusable Canvas-rendered live digital clock with multiple premium treatments. */
 public final class DigitalClockView extends View {
 
-    private static final long FRAME_DELAY_MS = 200L;
+    private static final long SMOOTH_FRAME_DELAY_MS = 250L;
+    private static final long MIN_FRAME_DELAY_MS = 250L;
 
     private final Paint panelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint smallTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Calendar time = Calendar.getInstance();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable ticker = new Runnable() {
         @Override
         public void run() {
             if (running) {
                 postInvalidateOnAnimation();
-                handler.postDelayed(this, FRAME_DELAY_MS);
+                handler.postDelayed(this, nextFrameDelayMs());
             }
         }
     };
@@ -42,6 +44,9 @@ public final class DigitalClockView extends View {
     public DigitalClockView(Context context) {
         super(context);
         setWillNotDraw(false);
+        textPaint.setSubpixelText(true);
+        smallTextPaint.setSubpixelText(true);
+        panelPaint.setDither(true);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
@@ -57,7 +62,12 @@ public final class DigitalClockView extends View {
 
     public void setShowSeconds(boolean showSeconds) {
         this.showSeconds = showSeconds;
-        invalidate();
+        if (running) {
+            handler.removeCallbacks(ticker);
+            ticker.run();
+        } else {
+            invalidate();
+        }
     }
 
     public void startClock() {
@@ -74,10 +84,37 @@ public final class DigitalClockView extends View {
         handler.removeCallbacks(ticker);
     }
 
+    /** Digital text only needs the next visible time boundary, never a free-running animation loop. */
+    private long nextFrameDelayMs() {
+        if (showSeconds) {
+            return SMOOTH_FRAME_DELAY_MS;
+        }
+        Calendar now = Calendar.getInstance();
+        long untilMinute = 60_000L - now.get(Calendar.SECOND) * 1_000L
+                - now.get(Calendar.MILLISECOND) + 40L;
+        return Math.max(MIN_FRAME_DELAY_MS, untilMinute);
+    }
+
     @Override
     protected void onDetachedFromWindow() {
         stopClock();
         super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility != View.VISIBLE) {
+            stopClock();
+        }
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility != View.VISIBLE) {
+            stopClock();
+        }
     }
 
     @Override
@@ -151,7 +188,7 @@ public final class DigitalClockView extends View {
         canvas.drawText(time, getWidth() / 2f, baseline, textPaint);
 
         if (!twentyFourHour) {
-            Calendar now = Calendar.getInstance();
+            Calendar now = currentTime();
             String meridiem = now.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
             smallTextPaint.clearShadowLayer();
             smallTextPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
@@ -168,9 +205,14 @@ public final class DigitalClockView extends View {
         }
     }
 
+    private Calendar currentTime() {
+        time.setTimeInMillis(System.currentTimeMillis());
+        return time;
+    }
+
     @NonNull
     private String formattedTime() {
-        Calendar now = Calendar.getInstance();
+        Calendar now = currentTime();
         int hour = now.get(Calendar.HOUR_OF_DAY);
         if (!twentyFourHour) {
             hour %= 12;

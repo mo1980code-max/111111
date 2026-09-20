@@ -20,7 +20,7 @@ import java.util.List;
  * <p>Rows are laid out as {@code [content...] [ad] [content...] [ad] ...} where the ad positions come
  * from {@link AdPolicy#nativeSlotPositions(int)}: one ad every {@code NATIVE_AD_INTERVAL} items, and
  * no ad at all for short lists. Because the ad row spans the full width
- * ({@link GridLayoutManager.SpanSizeLookup} below), a two column clock or wallpaper grid keeps its
+ * ({@link GridLayoutManager.SpanSizeLookup} below), a responsive clock or wallpaper grid keeps its
  * rhythm and the ad never looks like just another card.
  *
  * <p>The wrapped adapter keeps owning its own view types; {@link #TYPE_AD} is far outside their range
@@ -98,9 +98,6 @@ public class AdInsertingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             rows.add(Integer.valueOf(TYPE_AD));
             slotIndex++;
         }
-        android.util.Log.d("CONTENT_DEBUG", "AdInsertingAdapter.rebuild contentCount=" + contentCount
-                + " adSlots=" + slots.size() + " totalRows=" + rows.size()
-                + " contentAdapter=" + contentAdapter.getClass().getSimpleName());
     }
 
     @NonNull

@@ -21,17 +21,22 @@ import java.util.Calendar;
  */
 public final class AnalogClockView extends View {
 
-    private static final long FRAME_DELAY_MS = 50L;
+    private static final long SMOOTH_FRAME_DELAY_MS = 100L;
+    private static final long MIN_FRAME_DELAY_MS = 250L;
+    private static final String[] CLASSIC_NUMBERS = {
+            "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
+    };
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Calendar time = Calendar.getInstance();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable ticker = new Runnable() {
         @Override
         public void run() {
             if (running) {
                 postInvalidateOnAnimation();
-                handler.postDelayed(this, FRAME_DELAY_MS);
+                handler.postDelayed(this, nextFrameDelayMs());
             }
         }
     };
@@ -44,6 +49,8 @@ public final class AnalogClockView extends View {
         super(context);
         setWillNotDraw(false);
         textPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+        textPaint.setSubpixelText(true);
+        paint.setDither(true);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
@@ -54,7 +61,12 @@ public final class AnalogClockView extends View {
 
     public void setShowSeconds(boolean showSeconds) {
         this.showSeconds = showSeconds;
-        invalidate();
+        if (running) {
+            handler.removeCallbacks(ticker);
+            ticker.run();
+        } else {
+            invalidate();
+        }
     }
 
     public void startClock() {
@@ -71,10 +83,37 @@ public final class AnalogClockView extends View {
         handler.removeCallbacks(ticker);
     }
 
+    /** Seconds need a smooth sweep; without seconds the next redraw is scheduled at the next minute. */
+    private long nextFrameDelayMs() {
+        if (showSeconds) {
+            return SMOOTH_FRAME_DELAY_MS;
+        }
+        Calendar now = Calendar.getInstance();
+        long untilMinute = 60_000L - now.get(Calendar.SECOND) * 1_000L
+                - now.get(Calendar.MILLISECOND) + 40L;
+        return Math.max(MIN_FRAME_DELAY_MS, untilMinute);
+    }
+
     @Override
     protected void onDetachedFromWindow() {
         stopClock();
         super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility != View.VISIBLE) {
+            stopClock();
+        }
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility != View.VISIBLE) {
+            stopClock();
+        }
     }
 
     @Override
@@ -182,20 +221,20 @@ public final class AnalogClockView extends View {
             textPaint.setTextSize(radius * 0.16f);
             textPaint.setTextAlign(Paint.Align.CENTER);
             textPaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
-            String[] numbers = {"12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"};
             for (int index = 0; index < 12; index++) {
                 double angle = Math.toRadians(index * 30d - 90d);
                 float x = cx + (float) Math.cos(angle) * radius * 0.61f;
                 float y = cy + (float) Math.sin(angle) * radius * 0.61f
                         - (textPaint.ascent() + textPaint.descent()) / 2f;
-                canvas.drawText(numbers[index], x, y, textPaint);
+                canvas.drawText(CLASSIC_NUMBERS[index], x, y, textPaint);
             }
         }
     }
 
     private void drawHands(Canvas canvas, float cx, float cy, float radius,
                            int accent, boolean neon) {
-        Calendar now = Calendar.getInstance();
+        time.setTimeInMillis(System.currentTimeMillis());
+        Calendar now = time;
         float milliseconds = now.get(Calendar.MILLISECOND) / 1000f;
         float second = now.get(Calendar.SECOND) + milliseconds;
         float minute = now.get(Calendar.MINUTE) + second / 60f;
@@ -258,12 +297,14 @@ public final class AnalogClockView extends View {
 
     private void drawGlowRing(Canvas canvas, float cx, float cy, float radius, int color) {
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(9f);
-        paint.setColor(Color.argb(55, Color.red(color), Color.green(color), Color.blue(color)));
-        paint.setShadowLayer(13f, 0f, 0f, color);
+        float glowWidth = Math.max(2f, radius * 0.035f);
+        float blur = Math.max(6f, radius * 0.055f);
+        paint.setStrokeWidth(glowWidth);
+        paint.setColor(Color.argb(48, Color.red(color), Color.green(color), Color.blue(color)));
+        paint.setShadowLayer(blur, 0f, 0f, color);
         canvas.drawCircle(cx, cy, radius, paint);
         paint.clearShadowLayer();
-        paint.setStrokeWidth(2.2f);
+        paint.setStrokeWidth(Math.max(1.5f, radius * 0.012f));
         paint.setColor(color);
         canvas.drawCircle(cx, cy, radius, paint);
     }

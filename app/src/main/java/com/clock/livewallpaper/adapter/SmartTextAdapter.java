@@ -1,7 +1,6 @@
 package com.clock.livewallpaper.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,12 +81,6 @@ public class SmartTextAdapter extends RecyclerView.Adapter<SmartTextAdapter.View
                 }
             }
         });
-        if (position < 3) {
-            Log.d("CONTENT_DEBUG", "SmartTextAdapter.onBindViewHolder position=" + position
-                    + " id=" + item.getId() + " available=" + LockOverlay.isAvailable(context, item)
-                    + " artVisible=" + (holder.art.getVisibility() == View.VISIBLE)
-                    + " artDrawable=" + (holder.art.getDrawable() != null));
-        }
     }
 
     @Override

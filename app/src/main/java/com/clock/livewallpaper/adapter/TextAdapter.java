@@ -2,7 +2,6 @@ package com.clock.livewallpaper.adapter;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -91,12 +90,6 @@ public class TextAdapter extends RecyclerView.Adapter<TextAdapter.ViewHolder> {
                 }
             }
         });
-        if (position < 3) {
-            Log.d("CONTENT_DEBUG", "TextAdapter.onBindViewHolder position=" + position
-                    + " id=" + item.getId() + " available=" + LockOverlay.isAvailable(context, item)
-                    + " artVisible=" + (holder.art.getVisibility() == View.VISIBLE)
-                    + " artDrawable=" + (holder.art.getDrawable() != null));
-        }
     }
 
     @Override

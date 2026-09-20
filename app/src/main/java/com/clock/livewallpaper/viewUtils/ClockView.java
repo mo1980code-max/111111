@@ -2,7 +2,6 @@ package com.clock.livewallpaper.viewUtils;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -57,7 +56,6 @@ public class ClockView extends View {
                     view.layout(left, top, right, bottom);
                     this.lastX = (int) motionEvent.getRawX();
                     this.lastY = (int) motionEvent.getRawY();
-                    Log.e("TAG", "onTouchEvent.........: " + this.lastX + "  " + this.lastY);
                     return true;
                 }
             }

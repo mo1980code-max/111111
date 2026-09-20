@@ -4,10 +4,12 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.format.DateFormat;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -77,6 +79,15 @@ public final class ClockStudioActivity extends AppCompatActivity {
             if (resumed) {
                 refreshDates();
                 scheduleNextDateRefresh();
+            }
+        }
+    };
+    private final Runnable clockLayoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateClockLayout();
+            if (resumed) {
+                startActiveClock();
             }
         }
     };
@@ -180,6 +191,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 finish();
+                overridePendingTransition(R.anim.clock_studio_return, R.anim.clock_studio_exit);
             }
         });
 
@@ -206,7 +218,20 @@ public final class ClockStudioActivity extends AppCompatActivity {
         TextView transliteration = findViewById(R.id.clock_studio_name_transliteration);
         number.setText(getString(R.string.allah_name_number, selectedName.getNumber()));
         name.setText(selectedName.getArabicName());
+        // Long Names keep their full Arabic text, but use a slightly smaller face so two lines
+        // remain comfortably inside the upper composition on compact phones.
+        float nameSize = selectedName.getArabicName().length() > 14 ? 28f : 34f;
+        if (getResources().getDisplayMetrics().heightPixels
+                / getResources().getDisplayMetrics().density < 600f) {
+            nameSize -= 4f;
+        }
+        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, nameSize);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            name.setBreakStrategy(android.text.Layout.BREAK_STRATEGY_BALANCED);
+            name.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
+        }
         transliteration.setText(selectedName.getTransliteration());
+        number.setContentDescription(selectedName.getArabicName());
         try {
             Typeface arabicTypeface = Typeface.createFromAsset(getAssets(), "fonts/cairo_regular.ttf");
             name.setTypeface(Typeface.create(arabicTypeface, Typeface.BOLD));
@@ -338,10 +363,15 @@ public final class ClockStudioActivity extends AppCompatActivity {
 
     private void rebuildClock(boolean animate) {
         stopActiveClock();
+        preview.removeCallbacks(clockLayoutRunnable);
         if (activeClock != null) {
+            activeClock.animate().cancel();
+            activeClock.clearAnimation();
             clockArea.removeView(activeClock);
         }
         if (secondaryClock != null) {
+            secondaryClock.animate().cancel();
+            secondaryClock.clearAnimation();
             clockArea.removeView(secondaryClock);
             secondaryClock = null;
         }
@@ -381,15 +411,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
             activeClock.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220L).start();
         }
         applyDateStyle();
-        preview.post(new Runnable() {
-            @Override
-            public void run() {
-                updateClockLayout();
-                if (resumed) {
-                    startActiveClock();
-                }
-            }
-        });
+        preview.post(clockLayoutRunnable);
     }
 
     private void applyClockSettings() {
@@ -491,6 +513,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
         gregorianText.setVisibility(showGregorian ? View.VISIBLE : View.GONE);
         dayText.setVisibility(showDay ? View.VISIBLE : View.GONE);
         dateDivider.setVisibility(showHijri && showGregorian ? View.VISIBLE : View.GONE);
+        applyResponsiveDateTypography();
 
         LinearLayout namePanel = findViewById(R.id.clock_studio_name_panel);
         LinearLayout.LayoutParams nameParams = (LinearLayout.LayoutParams) namePanel.getLayoutParams();
@@ -510,6 +533,14 @@ public final class ClockStudioActivity extends AppCompatActivity {
         dateArea.setLayoutParams(dateParams);
         applyDateStyle();
         preview.requestLayout();
+    }
+
+    private void applyResponsiveDateTypography() {
+        boolean compact = getResources().getDisplayMetrics().heightPixels
+                / getResources().getDisplayMetrics().density < 600f;
+        dayText.setTextSize(TypedValue.COMPLEX_UNIT_SP, compact ? 11f : 12f);
+        hijriText.setTextSize(TypedValue.COMPLEX_UNIT_SP, compact ? 13f : 15f);
+        gregorianText.setTextSize(TypedValue.COMPLEX_UNIT_SP, compact ? 10f : 11f);
     }
 
     /** Updates date text only on open, at midnight, or when a date setting changes. */
@@ -592,21 +623,55 @@ public final class ClockStudioActivity extends AppCompatActivity {
     }
 
     private void setFullScreen(boolean enabled) {
+        if (fullScreen == enabled) {
+            return;
+        }
         fullScreen = enabled;
-        controls.setVisibility(enabled ? View.GONE : View.VISIBLE);
-        toolbar.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        animateEditorVisibility(controls, !enabled);
+        animateEditorVisibility(toolbar, !enabled);
         if (enabled) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
-        preview.post(new Runnable() {
+        applySystemUiVisibility(enabled);
+        preview.removeCallbacks(clockLayoutRunnable);
+        preview.post(clockLayoutRunnable);
+    }
+
+    private void animateEditorVisibility(@NonNull final View view, boolean show) {
+        view.animate().cancel();
+        if (show) {
+            view.setVisibility(View.VISIBLE);
+            view.setAlpha(0f);
+            view.animate().alpha(1f).setDuration(180L).start();
+            return;
+        }
+        view.setVisibility(View.VISIBLE);
+        view.animate().alpha(0f).setDuration(180L).withEndAction(new Runnable() {
             @Override
             public void run() {
-                updateClockLayout();
+                if (fullScreen) {
+                    view.setVisibility(View.GONE);
+                    preview.requestLayout();
+                    preview.post(clockLayoutRunnable);
+                }
             }
-        });
+        }).start();
+    }
+
+    /** Hides both system bars for the ambient view while keeping a safe non-immersive fallback. */
+    private void applySystemUiVisibility(boolean immersive) {
+        int flags = immersive
+                ? View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                : View.SYSTEM_UI_FLAG_VISIBLE;
+        getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 
     private AllahName readSelectedName() {
@@ -687,9 +752,49 @@ public final class ClockStudioActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         resumed = true;
+        if (fullScreen) {
+            controls.setVisibility(View.GONE);
+            controls.setAlpha(0f);
+            toolbar.setVisibility(View.GONE);
+            toolbar.setAlpha(0f);
+            applySystemUiVisibility(true);
+        } else {
+            controls.setVisibility(View.VISIBLE);
+            controls.setAlpha(1f);
+            toolbar.setVisibility(View.VISIBLE);
+            toolbar.setAlpha(1f);
+        }
         startActiveClock();
         refreshDates();
         scheduleNextDateRefresh();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && fullScreen) {
+            applySystemUiVisibility(true);
+        }
+        if (!hasFocus && resumed) {
+            stopActiveClock();
+            if (activeClock != null) {
+                activeClock.animate().cancel();
+            }
+            if (controls != null) {
+                controls.animate().cancel();
+            }
+            if (toolbar != null) {
+                toolbar.animate().cancel();
+            }
+        } else if (hasFocus && resumed) {
+            if (activeClock != null) {
+                activeClock.animate().cancel();
+                activeClock.setAlpha(1f);
+                activeClock.setScaleX(1f);
+                activeClock.setScaleY(1f);
+            }
+            startActiveClock();
+        }
     }
 
     @Override
@@ -697,13 +802,38 @@ public final class ClockStudioActivity extends AppCompatActivity {
         resumed = false;
         stopActiveClock();
         dateHandler.removeCallbacks(dateRefreshRunnable);
+        if (preview != null) {
+            preview.removeCallbacks(clockLayoutRunnable);
+        }
+        if (controls != null) {
+            controls.animate().cancel();
+        }
+        if (toolbar != null) {
+            toolbar.animate().cancel();
+        }
+        if (activeClock != null) {
+            activeClock.animate().cancel();
+        }
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        resumed = false;
         stopActiveClock();
         dateHandler.removeCallbacksAndMessages(null);
+        if (preview != null) {
+            preview.removeCallbacks(clockLayoutRunnable);
+        }
+        if (activeClock != null) {
+            activeClock.animate().cancel();
+        }
+        if (controls != null) {
+            controls.animate().cancel();
+        }
+        if (toolbar != null) {
+            toolbar.animate().cancel();
+        }
         super.onDestroy();
     }
 
@@ -713,6 +843,7 @@ public final class ClockStudioActivity extends AppCompatActivity {
             setFullScreen(false);
         } else {
             super.onBackPressed();
+            overridePendingTransition(R.anim.clock_studio_return, R.anim.clock_studio_exit);
         }
     }
 }

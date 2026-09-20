@@ -7,6 +7,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.clock.livewallpaper.activity.ClockStudioActivity;
+import com.clock.livewallpaper.activity.NamesOfAllahActivity;
+
 /**
  * Watches background -> foreground transitions and gives the app open ad its only chance to appear.
  *
@@ -31,7 +34,9 @@ public final class AppForegroundWatcher implements Application.ActivityLifecycle
     public void onActivityStarted(@NonNull Activity activity) {
         boolean returningToForeground = startedActivities == 0 && hasBeenBackgrounded;
         startedActivities++;
-        if (returningToForeground && !AdPolicy.consumeSystemHandoff()) {
+        boolean protectedScreen = activity instanceof ClockStudioActivity
+                || activity instanceof NamesOfAllahActivity;
+        if (returningToForeground && !protectedScreen && !AdPolicy.consumeSystemHandoff()) {
             AdsManager.get().showAppOpenIfAllowed(activity);
         }
     }

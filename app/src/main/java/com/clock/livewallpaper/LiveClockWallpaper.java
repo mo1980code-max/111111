@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +57,9 @@ public class LiveClockWallpaper extends WallpaperService {
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         this.cat1Clock = new TextClockPreview(context);
         this.smartClockPreview = new SmartClockPreview(context);
-        this.imageViewBase.setAutoUpdate(true);
+        // The engine owns the visibility lifecycle; do not keep a clock handler alive while the
+        // wallpaper is only configured or the surface is hidden.
+        this.imageViewBase.setAutoUpdate(false);
         this.widgetGroup.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
         this.widgetGroup.setAddStatesFromChildren(true);
         this.widgetGroup.addView(this.imageView);
@@ -115,6 +116,7 @@ public class LiveClockWallpaper extends WallpaperService {
 
         @Override
         public void onDestroy() {
+            LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
             super.onDestroy();
             LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
         }
@@ -122,6 +124,7 @@ public class LiveClockWallpaper extends WallpaperService {
         @Override
         public void onVisibilityChanged(boolean z) {
             this.mVisible = z;
+            LiveClockWallpaper.this.imageViewBase.setAutoUpdate(z);
             if (z) {
                 drawFrame();
             } else {
@@ -146,6 +149,7 @@ public class LiveClockWallpaper extends WallpaperService {
         public void onSurfaceDestroyed(SurfaceHolder surfaceHolder) {
             super.onSurfaceDestroyed(surfaceHolder);
             this.mVisible = false;
+            LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
             LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
         }
 
@@ -212,8 +216,6 @@ public class LiveClockWallpaper extends WallpaperService {
             Clocks clocks = (Clocks) LiveClockWallpaper.this.tinyDB.getObject("clocks", Clocks.class);
             int i = LiveClockWallpaper.this.tinyDB.getInt("textClockPosition");
             if (LiveClockWallpaper.this.tinyDB.getBoolean("isImage")) {
-                Log.e("isImage", "yes");
-                Log.e("aa", "="+aa);
                 if (aa != null) {
                     LiveClockWallpaper.this.imageView.setImageBitmap(aa);
                 } else {
@@ -222,15 +224,14 @@ public class LiveClockWallpaper extends WallpaperService {
                 }
 
             } else if (LiveClockWallpaper.this.tinyDB.getBoolean("isCustomBg")) {
-                Log.e("isCustomBg", "yes");
                 LiveClockWallpaper.this.imageView.setImageResource(LiveClockWallpaper.this.tinyDB.getInt("customBg"));
             } else {
-                Log.e("else image", "yes");
                 LiveClockWallpaper.this.imageView.setImageResource(0);
                 LiveClockWallpaper.this.imageView.setBackgroundColor(LiveClockWallpaper.this.tinyDB.getInt("bgColor"));
             }
             LiveClockWallpaper.this.imageView.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
             if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 0) {
+                LiveClockWallpaper.this.imageViewBase.setAutoUpdate(this.mVisible);
                 LiveClockWallpaper.this.imageViewBase.setClock(clocks);
                 LiveClockWallpaper.this.imageViewBase.setClockSize((float) LiveClockWallpaper.this.mClockSize);
                 LiveClockWallpaper.this.imageViewBase.setPosition(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY);
@@ -239,6 +240,7 @@ public class LiveClockWallpaper extends WallpaperService {
                 LiveClockWallpaper.this.smartClockPreview.setVisibility(View.GONE);
                 LiveClockWallpaper.this.cat1Clock.setVisibility(View.GONE);
             } else if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 1) {
+                LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
                 LiveClockWallpaper.this.smartClockPreview.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
                 LiveClockWallpaper.this.smartClockPreview.setTextClockPosition(i);
                 LiveClockWallpaper.this.smartClockPreview.config(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY, LiveClockWallpaper.this.mClockSize * 2);
@@ -246,6 +248,7 @@ public class LiveClockWallpaper extends WallpaperService {
                 LiveClockWallpaper.this.smartClockPreview.setVisibility(View.VISIBLE);
                 LiveClockWallpaper.this.cat1Clock.setVisibility(View.GONE);
             } else if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 2) {
+                LiveClockWallpaper.this.imageViewBase.setAutoUpdate(false);
                 LiveClockWallpaper.this.cat1Clock.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
                 LiveClockWallpaper.this.cat1Clock.setTextClockPosition(i);
                 LiveClockWallpaper.this.cat1Clock.setColors(LiveClockWallpaper.this.tinyDB.getInt("textColor1", -1), LiveClockWallpaper.this.tinyDB.getInt("textColor2", InputDeviceCompat.SOURCE_ANY));
