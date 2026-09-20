@@ -41,7 +41,10 @@ public final class AppForegroundWatcher implements Application.ActivityLifecycle
         if (startedActivities > 0) {
             startedActivities--;
         }
-        if (startedActivities == 0) {
+        // A rotation (or any configuration change) stops and immediately restarts the same screen:
+        // that is not "leaving the app", so it must neither arm the background flag nor pop an app
+        // open ad when the new instance starts. Only a real trip to the background qualifies.
+        if (startedActivities == 0 && !activity.isChangingConfigurations()) {
             hasBeenBackgrounded = true;
             // Have one ready for the next foreground instead of requesting it in front of the user.
             AdsManager.get().preloadAppOpen(activity.getApplication());

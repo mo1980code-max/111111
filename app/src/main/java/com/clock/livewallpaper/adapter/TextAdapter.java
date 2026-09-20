@@ -77,11 +77,16 @@ public class TextAdapter extends RecyclerView.Adapter<TextAdapter.ViewHolder> {
             // A bad colour string must not break the list.
         }
         LockOverlay.loadPreview(holder.art, item.getPreviewAsset(), context);
+        // NOTE: report the bound content position, not holder.getAdapterPosition(). This adapter is
+        // wrapped by AdInsertingAdapter, so the holder's adapter position is the *wrapper* position
+        // (shifted by ad rows, or NO_POSITION after a rebind), while `position` is this item's true
+        // index in the clock list.
+        final int contentPosition = position;
         tile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (TextAdapter.this.clickListener != null) {
-                    TextAdapter.this.clickListener.setClick(holder.getAdapterPosition(), item);
+                    TextAdapter.this.clickListener.setClick(contentPosition, item);
                 }
             }
         });

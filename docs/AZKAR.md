@@ -42,31 +42,57 @@ tail order).
 ## Data & offline behaviour
 
 * `app/src/main/assets/azkar.json` — the whole feature content; the app works fully offline.
-* `azkar/AzkarRepository.java` — parses the asset once, merges persisted counters into fresh
-  `AzkarItem`s. Totals come from the parsed arrays; no total is hard-coded anywhere.
+* `azkar/AzkarRepository.java` — parses the asset once, builds **fresh** `AzkarItem`s on
+  every call. Totals come from the parsed arrays; no total is hard-coded anywhere.
 * `azkar/AzkarItem.java` — `id, category, order, arabicText, repeatCount, virtue` (imported,
-  immutable) + `currentCount` (persisted). `isCompleted()` ⟺ `currentCount == repeatCount`.
-* `azkar/AzkarProgressStore.java` — `SharedPreferences` file `azkar_prefs`, keys
-  `azkar_count_<category>_<id>`. Every tap persists immediately (`apply()`), so progress
-  survives closing the app or leaving the page. There is intentionally **no daily reset**:
-  counts stay until the user taps **Reset** on the item.
-* `azkar/AzkarFonts.java` — reuses the bundled Amiri Quran font for the dhikr text (OFL,
-  already shipped for the Quran reader).
+  immutable) + `remaining` (session-only). `isCompleted()` ⟺ `remaining == 0`.
+* `azkar/AzkarFontStore.java` — the persisted **display settings** (`SharedPreferences`
+  file `azkar_prefs`): `dhikr_font_size` (float, sp), `dhikr_font_family`
+  (`default`/`amiri`/`cairo`/`tajawal`) and `azkar_night_mode` (boolean). Counters are
+  never stored: every open rebuilds the items, so each counter restarts from its
+  original number.
+* `azkar/AzkarFonts.java` — loads the bundled Arabic faces from `assets/fonts/`
+  (Amiri Quran for the reader + Azkar default, Cairo, Tajawal; all SIL OFL).
+* `azkar/AzkarSettingsSheet.java` — the display-settings bottom sheet opened from the
+  settings icon of either Azkar screen; every control applies instantly and persists
+  at once, without touching any counter.
 
-## Counter behaviour (per item)
+## Counter behaviour (per item, countdown, session-only)
 
-* Tap the large counter button → `currentCount + 1`, clamped at that item's own
-  `repeatCount` (never beyond). Further taps on a completed item are ignored.
-* Reaching the target flips the card to the subtle green tint + emerald stroke and the
-  counter to solid emerald with **✓ Completed** (one short button pulse, nothing more).
-* **Reset** (visible whenever `currentCount > 0`) returns the item to `0 / N`.
+* Each counter starts from its own original `repeatCount` (e.g. 3) on every open.
+* Tap the large counter button → `remaining - 1`, clamped at zero (never below).
+  Further taps on a completed item are ignored.
+* Reaching zero flips the card to the subtle green tint + emerald stroke and the
+  counter to solid emerald with **✓ Completed** (one short button pulse, nothing more),
+  and shows a short **"تم"** toast once.
+* There is intentionally **no reset control and no stored progress**: the counter
+  restarts only by reopening the screen, which rebuilds every item from its target.
 * Only the counter button counts — the rest of the card is inert while scrolling.
+
+## Display settings (bottom sheet, persisted)
+
+Both Azkar screens have a small tune icon in the header opening one bottom sheet
+(`azkar_settings_sheet.xml`) with three instant-apply sections:
+
+* **Text size** — **A− / current / A+** steps the dhikr text (14–32 sp, default
+  20 sp); titles, buttons and the counter keep fixed sizes. Every tap persists
+  `dhikr_font_size` immediately (`apply()`) and repaints all cards.
+* **Font** — Default (platform) / Amiri / Cairo / Tajawal, persisted as
+  `dhikr_font_family`. Amiri is the historical default; Cairo and Tajawal ship in
+  `assets/fonts/` (OFL, see `docs/licenses/`).
+* **Night mode** — a switch for the Azkar section only, persisted as
+  `azkar_night_mode`. Dark green-charcoal surfaces, warm off-white ink and a
+  brighter emerald accent; turning it off restores the original design pixel for
+  pixel. Nothing outside the Azkar section is affected.
+
+On open, each screen reads only these saved settings; counters always restart from
+their targets, and changing any setting never resets a count.
 
 ## Progress
 
 * Category header: `"X / N Completed"` + progress bar, computed from the live items.
 * All complete → emerald **"All Azkar Completed ✓"** banner.
-* Azkar home cards show the same per-category progress, refreshed in `onResume()`.
+* Azkar home cards show `0 / N` (counters are session-only), refreshed in `onResume()`.
 
 ## Design
 
@@ -80,13 +106,15 @@ tail order).
 
 ```
 app/src/main/assets/azkar.json
-app/src/main/java/com/clock/livewallpaper/azkar/*.java (4 files)
+app/src/main/java/com/clock/livewallpaper/azkar/*.java (6 files)
 app/src/main/java/com/clock/livewallpaper/activity/AzkarHomeActivity.java
 app/src/main/java/com/clock/livewallpaper/activity/AzkarListActivity.java
 app/src/main/java/com/clock/livewallpaper/adapter/AzkarAdapter.java
 app/src/main/res/layout/activity_azkar_home.xml
 app/src/main/res/layout/activity_azkar_list.xml
 app/src/main/res/layout/item_azkar.xml
+app/src/main/res/layout/azkar_settings_sheet.xml
+app/src/main/assets/fonts/cairo_regular.ttf, tajawal_regular.ttf (OFL)
 app/src/main/res/values/azkar.xml
 app/src/main/res/drawable/ic_azkar*.xml, bg_azkar_*.xml, azkar_progress.xml
 ```

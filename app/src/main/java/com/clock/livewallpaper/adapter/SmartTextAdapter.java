@@ -68,11 +68,16 @@ public class SmartTextAdapter extends RecyclerView.Adapter<SmartTextAdapter.View
         final Context context = tile.getContext();
         LockOverlay.apply(tile, null, !LockOverlay.isAvailable(context, item));
         LockOverlay.loadPreview(holder.art, item.getPreviewAsset(), context);
+        // NOTE: report the bound content position, not holder.getAdapterPosition(). This adapter is
+        // wrapped by AdInsertingAdapter, so the holder's adapter position is the *wrapper* position
+        // (shifted by ad rows, or NO_POSITION after a rebind), while `position` is this item's true
+        // index in the clock list.
+        final int contentPosition = position;
         tile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (SmartTextAdapter.this.clickListener != null) {
-                    SmartTextAdapter.this.clickListener.setClick(holder.getAdapterPosition(), item);
+                    SmartTextAdapter.this.clickListener.setClick(contentPosition, item);
                 }
             }
         });

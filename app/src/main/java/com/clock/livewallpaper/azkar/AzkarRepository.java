@@ -30,9 +30,12 @@ import java.util.Map;
  * The JSON was transcribed from these pages preserving the Arabic text, the Azkar order, the
  * Azkar numbers and the exact repetition count of every single Azkar.
  *
- * <p>Parsed content is cached per category; the live counters come from
- * {@link AzkarProgressStore} and are merged into fresh {@link AzkarItem} copies on every call,
- * so screens always see the persisted state.
+ * <h2>Session-only counters</h2>
+ * <p>Parsed content is cached per category; {@link #items(AzkarCategory)} builds <b>fresh</b>
+ * {@link AzkarItem} copies on every call, and each copy starts its countdown from its own
+ * original {@code repeatCount}. Nothing counter-related is read from or written to storage —
+ * closing the app and reopening the screen always restarts every counter from its target.
+ * The only persisted Azkar setting is the text size ({@link AzkarFontStore}).
  */
 public final class AzkarRepository {
 
@@ -52,8 +55,7 @@ public final class AzkarRepository {
     private static volatile AzkarRepository instance;
 
     private final Context appContext;
-    private final AzkarProgressStore progressStore;
-    /** Parsed, counter-free content per category; guarded by {@code contentLock}. */
+    /** Parsed content per category; guarded by {@code contentLock}. */
     private final Map<AzkarCategory, List<AzkarItem>> contentCache =
             new EnumMap<>(AzkarCategory.class);
     private final Object contentLock = new Object();
@@ -61,7 +63,6 @@ public final class AzkarRepository {
 
     private AzkarRepository(Context context) {
         appContext = context.getApplicationContext();
-        progressStore = AzkarProgressStore.get(appContext);
     }
 
     /** @return the process-wide instance, creating it on first use */
@@ -81,45 +82,38 @@ public final class AzkarRepository {
     }
 
     /**
-     * @return the items of {@code category} in source order with persisted counters applied;
-     *         an empty list when the asset is missing or damaged (callers show the error state)
+     * @return the items of {@code category} in source order, each with a fresh counter starting
+     *         from its own original {@code repeatCount}; an empty list when the asset is missing
+     *         or damaged (callers show the error state)
      */
     @NonNull
     public List<AzkarItem> items(@NonNull AzkarCategory category) {
         List<AzkarItem> content = content(category);
         List<AzkarItem> items = new ArrayList<>(content.size());
         for (AzkarItem template : content) {
+            // نسخة جديدة في كل مرة: العدّاد يبدأ من العدد الأصلي دائماً، ولا يُقرأ من التخزين.
             items.add(new AzkarItem(
                     template.id(),
                     template.category(),
                     template.order(),
                     template.arabicText(),
                     template.repeatCount(),
-                    template.virtue(),
-                    progressStore.getCount(category, template.id())));
+                    template.virtue()));
         }
         return items;
     }
 
-    /** @return how many items of {@code category} are complete from the saved counters */
+    /**
+     * Home-screen progress. Counters live only inside the open category screen, so from the
+     * home screen's point of view nothing is ever banked: always {@code 0}.
+     */
     public int completedCount(@NonNull AzkarCategory category) {
-        return progressStore.completedCount(category, content(category));
+        return 0;
     }
 
     /** @return the total number of imported items in {@code category} (never hard-coded) */
     public int totalCount(@NonNull AzkarCategory category) {
         return content(category).size();
-    }
-
-    /** Persists one tap: call after {@link AzkarItem#countUp()} on an item from {@link #items}. */
-    public void save(@NonNull AzkarItem item) {
-        progressStore.setCount(item.category(), item.id(), item.currentCount());
-    }
-
-    /** Resets one item to zero, both in memory and in storage. */
-    public void reset(@NonNull AzkarItem item) {
-        item.reset();
-        progressStore.reset(item.category(), item.id());
     }
 
     @NonNull
@@ -175,8 +169,7 @@ public final class AzkarRepository {
                             o.optInt("order", i + 1),
                             o.optString("text", ""),
                             Math.max(1, o.optInt("repeat", 1)),
-                            o.optString("virtue", ""),
-                            0));
+                            o.optString("virtue", "")));
                 }
             }
             contentCache.put(category, Collections.unmodifiableList(items));

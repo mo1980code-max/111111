@@ -3,7 +3,7 @@
   Azkar home screen: the standalone entry point reached from the home-screen Azkar icon.
 
   Regions, top to bottom:
-    1. Header  - back arrow, "Azkar" title + subtitle
+    1. Header  - back arrow, "Azkar" title + subtitle, settings button
     2. Divider - hairline
     3. Cards   - Morning Azkar, Evening Azkar, Tasbeeh; identical style, dimensions,
                  spacing and behaviour. Each card shows its icon, titles and live progress.
@@ -71,9 +71,21 @@
             android:layout_height="40dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_azkar" />
+
+        <ImageButton
+            android:id="@+id/azkar_home_settings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/azkar_settings_cd"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_tune"
+            android:tint="@color/azkar_muted" />
     </LinearLayout>
 
     <View
+        android:id="@+id/azkar_home_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/azkar_divider" />
@@ -125,6 +137,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/azkar_home_name_morning"
                         android:text="@string/azkar_morning_title"
                         android:textColor="@color/azkar_text"
                         android:textSize="18sp"
@@ -134,6 +147,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:id="@+id/azkar_home_sub_morning"
                         android:text="@string/azkar_morning_subtitle"
                         android:textColor="@color/azkar_muted"
                         android:textDirection="rtl"
@@ -191,6 +205,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/azkar_home_name_evening"
                         android:text="@string/azkar_evening_title"
                         android:textColor="@color/azkar_text"
                         android:textSize="18sp"
@@ -200,6 +215,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:id="@+id/azkar_home_sub_evening"
                         android:text="@string/azkar_evening_subtitle"
                         android:textColor="@color/azkar_muted"
                         android:textDirection="rtl"
@@ -257,6 +273,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/azkar_home_name_tasbeeh"
                         android:text="@string/azkar_tasbeeh_title"
                         android:textColor="@color/azkar_text"
                         android:textSize="18sp"
@@ -266,6 +283,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:id="@+id/azkar_home_sub_tasbeeh"
                         android:text="@string/azkar_tasbeeh_subtitle"
                         android:textColor="@color/azkar_muted"
                         android:textDirection="rtl"

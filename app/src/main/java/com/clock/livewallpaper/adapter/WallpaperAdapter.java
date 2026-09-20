@@ -70,11 +70,16 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
         holder.title.setText(entry.getTitle());
         LockOverlay.apply(tile, null, !LockOverlay.isAvailable(context, entry));
         LockOverlay.loadPreview(holder.image, entry.getAssetPath(), context);
+        // NOTE: report the bound content position, not holder.getAdapterPosition(). This adapter is
+        // wrapped by AdInsertingAdapter, so the holder's adapter position is the *wrapper* position
+        // (shifted by ad rows, or NO_POSITION after a rebind), while `position` is this item's true
+        // index in the wallpaper list.
+        final int contentPosition = position;
         tile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (WallpaperAdapter.this.clickListener != null) {
-                    WallpaperAdapter.this.clickListener.setClick(holder.getAdapterPosition(), entry);
+                    WallpaperAdapter.this.clickListener.setClick(contentPosition, entry);
                 }
             }
         });

@@ -4,8 +4,12 @@
   the virtue line from the source, and a large counter button.
 
   The card root is RTL so the Arabic content reads naturally; the counter button is
-  pinned LTR so "0 / 3" always renders in the familiar order. Only the counter button
-  advances the count — the rest of the card is safe to touch while scrolling.
+  pinned LTR so the remaining number always renders in the familiar order. Only the
+  counter button advances the count — the rest of the card is safe to touch while scrolling.
+
+  Countdown semantics: the button shows what is LEFT, starting from the item's own
+  repeatCount (e.g. 3) and decreasing to 0. There is no reset control: counters live
+  only while the screen is open and restart from their original numbers on reopen.
 
   Completed state (applied at bind time): bg_azkar_card_completed on the card and
   bg_azkar_counter_completed on the button, with white counter text.
@@ -25,7 +29,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Number, required repetitions, reset -->
+    <!-- Number and required repetitions (no reset: counters restart on reopen) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -60,28 +64,6 @@
             android:textSize="12sp"
             tools:text="Repeat 3x" />
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <TextView
-            android:id="@+id/azkar_reset"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:minWidth="48dp"
-            android:minHeight="48dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:text="@string/azkar_reset"
-            android:textColor="@color/azkar_muted"
-            android:textSize="13sp"
-            android:visibility="gone"
-            tools:visibility="visible" />
     </LinearLayout>
 
     <!-- The dhikr itself, verbatim from the source -->
@@ -137,7 +119,7 @@
             android:textColor="@color/azkar_primary"
             android:textSize="22sp"
             android:textStyle="bold"
-            tools:text="0 / 3" />
+            tools:text="3" />
 
         <TextView
             android:id="@+id/azkar_counter_hint"

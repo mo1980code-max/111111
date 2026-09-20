@@ -1,4 +1,4 @@
-"""Azkar feature contract checks: data, sources, counters, persistence and wiring.
+"""Azkar feature contract checks: data, sources, counters, display settings and wiring.
 
 There is no JDK or Android SDK in this workspace, so nothing here compiles the app. These
 checks instead verify the parts of the Azkar feature that are pure data and pure structure:
@@ -6,8 +6,10 @@ checks instead verify the parts of the Azkar feature that are pure data and pure
 * assets/azkar.json holds the exact per-item repetition counts from the mandatory sources,
   in source order, with non-empty Arabic text;
 * the three source URLs stay attached to the implementation (JSON, repository, values XML);
-* the counter/persistence logic keeps its contract (clamped count-up, immediate save,
-  per-item preferences keys, computed totals);
+* the counter logic keeps its contract (session-only countdown from each item's own
+  repeatCount, clamped at zero, derived completion, "done" toast, computed totals);
+* counters are NEVER persisted: only the display settings (text size, font family,
+  Azkar-only night mode) are stored;
 * every resource the Azkar screens reference resolves against res/ and the manifest.
 
 Run with:
@@ -30,9 +32,10 @@ ASSET = MAIN / "assets/azkar.json"
 AZKAR_JAVA = [
     AZKAR_PKG / "AzkarCategory.java",
     AZKAR_PKG / "AzkarItem.java",
-    AZKAR_PKG / "AzkarProgressStore.java",
+    AZKAR_PKG / "AzkarFontStore.java",
     AZKAR_PKG / "AzkarRepository.java",
     AZKAR_PKG / "AzkarFonts.java",
+    AZKAR_PKG / "AzkarSettingsSheet.java",
     JAVA / "activity/AzkarHomeActivity.java",
     JAVA / "activity/AzkarListActivity.java",
     JAVA / "adapter/AzkarAdapter.java",
@@ -44,6 +47,7 @@ AZKAR_XML = [
     RES / "layout/activity_azkar_home.xml",
     RES / "layout/activity_azkar_list.xml",
     RES / "layout/item_azkar.xml",
+    RES / "layout/azkar_settings_sheet.xml",
     RES / "values/azkar.xml",
     RES / "values/colors.xml",
     RES / "drawable/bg_azkar_button.xml",
@@ -192,31 +196,146 @@ class AzkarSourceAttachmentTests(unittest.TestCase):
 
 
 class AzkarLogicTests(unittest.TestCase):
-    def test_count_up_clamps_at_repeat_count(self):
+    def test_counter_starts_from_target_and_counts_down(self):
         source = (AZKAR_PKG / "AzkarItem.java").read_text(encoding="utf-8")
-        self.assertIn("currentCount >= repeatCount", source)
-        self.assertIn("Math.min(value, repeatCount)", source)
+        self.assertIn("this.remaining = this.repeatCount", source,
+                      "every counter must start from its own original number")
+        self.assertIn("public boolean countDown()", source)
+        self.assertIn("remaining <= 0", source)
+        self.assertIn("remaining--", source)
+        self.assertNotIn("countUp", source)
+        self.assertNotIn("currentCount", source)
 
     def test_completed_derived_not_stored(self):
         source = (AZKAR_PKG / "AzkarItem.java").read_text(encoding="utf-8")
-        self.assertRegex(source, r"boolean isCompleted\(\) \{\s*return currentCount >= repeatCount;")
+        self.assertRegex(source, r"boolean isCompleted\(\) \{\s*return remaining == 0;")
 
-    def test_reset_returns_to_zero(self):
-        source = (AZKAR_PKG / "AzkarItem.java").read_text(encoding="utf-8")
-        self.assertRegex(source, r"void reset\(\) \{\s*currentCount = 0;")
+    def test_counters_are_never_persisted(self):
+        """Reopening the screen restarts every counter: no counter may touch storage."""
+        self.assertFalse((AZKAR_PKG / "AzkarProgressStore.java").exists(),
+                         "the counter store must be gone; counters restart on reopen")
+        for name in ("AzkarItem.java", "AzkarRepository.java",
+                     "AzkarCategory.java", "AzkarFonts.java"):
+            source = (AZKAR_PKG / name).read_text(encoding="utf-8")
+            self.assertNotIn("getSharedPreferences", source, name)
+            self.assertNotIn("azkar_count_", source, name)
+        adapter = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
+        listing = (JAVA / "activity/AzkarListActivity.java").read_text(encoding="utf-8")
+        for source, where in ((adapter, "AzkarAdapter"), (listing, "AzkarListActivity")):
+            self.assertNotIn("azkar_count_", source, where)
+            self.assertNotIn("repository.save", source, where)
+            self.assertNotIn("repository.reset", source, where)
+        repository = (AZKAR_PKG / "AzkarRepository.java").read_text(encoding="utf-8")
+        self.assertNotIn("AzkarProgressStore", repository)
+        self.assertNotIn("public void save(", repository)
+        self.assertNotIn("public void reset(", repository)
 
-    def test_tap_persists_immediately(self):
-        source = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
-        self.assertIn("item.countUp()", source)
-        self.assertIn("repository.save(item)", source)
-        self.assertIn("repository.reset(item)", source)
+    def test_tap_counts_down_and_toasts_done(self):
+        adapter = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
+        self.assertIn("item.countDown()", adapter)
+        self.assertIn("onItemCompleted", adapter)
+        listing = (JAVA / "activity/AzkarListActivity.java").read_text(encoding="utf-8")
+        self.assertIn("onItemCompleted", listing)
+        self.assertIn("R.string.azkar_done_toast", listing)
+        values = (RES / "values/azkar.xml").read_text(encoding="utf-8")
+        self.assertIn('<string name="azkar_done_toast"', values)
+        self.assertIn(">تم<", values)
 
-    def test_progress_store_keys_are_per_item(self):
-        source = (AZKAR_PKG / "AzkarProgressStore.java").read_text(encoding="utf-8")
+    def test_display_settings_are_persisted(self):
+        """Size, font family and night mode are stored; counters never are."""
+        source = (AZKAR_PKG / "AzkarFontStore.java").read_text(encoding="utf-8")
         self.assertIn('"azkar_prefs"', source)
-        self.assertIn('"azkar_count_"', source)
-        self.assertIn('KEY_PREFIX + category.key() + "_" + id', source)
+        self.assertIn('"dhikr_font_size"', source)
+        self.assertIn('"dhikr_font_family"', source)
+        self.assertIn('"azkar_night_mode"', source)
+        self.assertIn("putFloat", source)
+        self.assertIn("putString", source)
+        self.assertIn("putBoolean", source)
         self.assertIn(".apply()", source)
+        for family in ("default", "amiri", "cairo", "tajawal"):
+            self.assertIn(f'"{family}"', source)
+        # Only the font store may use SharedPreferences anywhere in the Azkar code.
+        for path in AZKAR_JAVA:
+            if path.name in ("AzkarFontStore.java", "MainActivity.java"):
+                continue
+            self.assertNotIn("getSharedPreferences", path.read_text(encoding="utf-8"),
+                             f"{path.name} must not touch storage")
+
+    def test_font_files_ship_with_arabic_faces(self):
+        """Cairo + Tajawal ride in assets/fonts next to the Amiri reader face."""
+        for asset in ("fonts/quran_font.ttf", "fonts/cairo_regular.ttf",
+                      "fonts/tajawal_regular.ttf"):
+            path = ASSET.parent / asset
+            self.assertTrue(path.is_file(), f"assets/{asset} is missing")
+            self.assertGreater(path.stat().st_size, 10_000, asset)
+        fonts = (AZKAR_PKG / "AzkarFonts.java").read_text(encoding="utf-8")
+        for asset in ("fonts/quran_font.ttf", "fonts/cairo_regular.ttf",
+                      "fonts/tajawal_regular.ttf"):
+            self.assertIn(f'"{asset}"', fonts)
+        self.assertIn("typefaceFor", fonts)
+        adapter = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
+        self.assertIn("setTypeface", adapter)
+        self.assertIn("setTextSize", adapter)
+
+    def test_night_mode_is_azkar_only_and_reversible(self):
+        """Night palette + drawables exist; off means the original design, untouched."""
+        colours = {n.get("name"): (n.text or "").strip()
+                   for n in ET.parse(RES / "values/colors.xml").getroot() if n.tag == "color"}
+        for name in ("azkar_night_background", "azkar_night_card", "azkar_night_counter",
+                     "azkar_night_text", "azkar_night_muted", "azkar_night_primary",
+                     "azkar_night_completed_bg", "azkar_night_divider", "azkar_night_track"):
+            self.assertIn(name, colours)
+            self.assertRegex(colours[name], r"^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$")
+        for drawable in ("bg_azkar_card_night", "bg_azkar_card_completed_night",
+                         "bg_azkar_counter_night", "bg_azkar_counter_completed_night",
+                         "bg_azkar_home_card_night", "azkar_progress_night"):
+            self.assertTrue((RES / f"drawable/{drawable}.xml").is_file(), drawable)
+        adapter = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
+        self.assertIn("setNightMode", adapter)
+        self.assertIn("R.drawable.bg_azkar_card_night", adapter)
+        # The day resources are still the defaults: night is purely additive.
+        self.assertIn("R.drawable.bg_azkar_card)", adapter)
+        listing = (JAVA / "activity/AzkarListActivity.java").read_text(encoding="utf-8")
+        self.assertIn("isNightMode()", listing)
+        self.assertIn("R.color.azkar_background", listing)
+
+    def test_screen_loads_only_display_settings_on_open(self):
+        """On open the screen reads the saved display settings; counters restart full."""
+        listing = (JAVA / "activity/AzkarListActivity.java").read_text(encoding="utf-8")
+        self.assertIn("AzkarFontStore.get(this)", listing)
+        self.assertIn("fontStore.getSp()", listing)
+        self.assertIn("getFontFamily()", listing)
+        self.assertIn("isNightMode()", listing)
+        self.assertIn("repository.items(category)", listing)
+        adapter = (JAVA / "adapter/AzkarAdapter.java").read_text(encoding="utf-8")
+        self.assertIn("setFontSize", adapter)
+        self.assertIn("setTextSize", adapter)
+        # Sizing applies to the dhikr text, never to titles, buttons or the counter.
+        self.assertIn("COMPLEX_UNIT_SP, fontSp", adapter)
+        self.assertNotIn("counterTextView.setTextSize", adapter)
+        self.assertNotIn("counterHintView.setTextSize", adapter)
+
+    def test_settings_sheet_holds_all_display_options(self):
+        """One settings icon per Azkar screen opens the sheet with size/font/night."""
+        sheet = (RES / "layout/azkar_settings_sheet.xml").read_text(encoding="utf-8")
+        for view_id in ("azkar_sheet_root", "azkar_sheet_title", "azkar_font_minus",
+                        "azkar_font_plus", "azkar_font_size_value", "azkar_font_group",
+                        "azkar_font_default", "azkar_font_amiri", "azkar_font_cairo",
+                        "azkar_font_tajawal", "azkar_night_label", "azkar_night_switch"):
+            self.assertIn("@+id/" + view_id, sheet)
+        code = (AZKAR_PKG / "AzkarSettingsSheet.java").read_text(encoding="utf-8")
+        self.assertIn("BottomSheetDialog", code)
+        self.assertIn("R.layout.azkar_settings_sheet", code)
+        self.assertIn("onDisplayChanged", code)
+        for activity in ("AzkarListActivity.java", "AzkarHomeActivity.java"):
+            source = (JAVA / "activity" / activity).read_text(encoding="utf-8")
+            self.assertIn("AzkarSettingsSheet.show(", source)
+            self.assertIn("applyDisplaySettings", source)
+        listing_layout = (RES / "layout/activity_azkar_list.xml").read_text(encoding="utf-8")
+        self.assertIn("@+id/azkar_list_settings", listing_layout)
+        home_layout = (RES / "layout/activity_azkar_home.xml").read_text(encoding="utf-8")
+        self.assertIn("@+id/azkar_home_settings", home_layout)
+        self.assertTrue((RES / "drawable/ic_tune.xml").is_file())
 
     def test_totals_computed_never_hardcoded(self):
         home = (JAVA / "activity/AzkarHomeActivity.java").read_text(encoding="utf-8")
@@ -236,9 +355,9 @@ class AzkarLogicTests(unittest.TestCase):
         self.assertIn("getAdapterPosition()", code)
         self.assertIn("RecyclerView.NO_POSITION", code)
 
-    def test_no_daily_reset(self):
-        """Progress persists until the user resets; grep for accidental schedulers."""
-        for name in ("AzkarProgressStore.java", "AzkarRepository.java"):
+    def test_no_scheduler_touches_azkar(self):
+        """No schedulers anywhere near the Azkar code; grep for accidental ones."""
+        for name in ("AzkarFontStore.java", "AzkarRepository.java", "AzkarItem.java"):
             source = (AZKAR_PKG / name).read_text(encoding="utf-8")
             self.assertNotIn("AlarmManager", source)
             self.assertNotIn("WorkManager", source)
@@ -336,10 +455,13 @@ class AzkarWiringTests(unittest.TestCase):
         self.assertEqual(elevations, {"3dp"})
         self.assertEqual(backgrounds, {"@drawable/bg_azkar_home_card"})
 
-    def test_card_layout_has_counter_and_reset(self):
+    def test_card_layout_has_counter_without_reset(self):
+        """No reset control: counters restart only by reopening the screen."""
+        xml = (RES / "layout/item_azkar.xml").read_text(encoding="utf-8")
+        self.assertNotIn("azkar_reset", xml)
         root = ET.parse(RES / "layout/item_azkar.xml").getroot()
         ids = {n.get(f"{ANDROID}id", "").replace("@+id/", "") for n in root.iter()}
-        for required in ("azkar_card", "azkar_number", "azkar_repeat", "azkar_reset",
+        for required in ("azkar_card", "azkar_number", "azkar_repeat",
                          "azkar_text", "azkar_virtue", "azkar_counter",
                          "azkar_counter_text", "azkar_counter_hint"):
             self.assertIn(required, ids)

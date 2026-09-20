@@ -36,7 +36,7 @@ public enum AzkarCategory {
             AzkarRepository.SOURCE_TASBEEH,
             "islamiokul.com · تسابيح");
 
-    /** Key of the category array inside {@code assets/azkar.json}; also the prefs key prefix. */
+    /** Key of the category array inside {@code assets/azkar.json}. */
     private final String key;
     private final int titleRes;
     private final int subtitleRes;
@@ -58,7 +58,7 @@ public enum AzkarCategory {
         this.sourceLabel = sourceLabel;
     }
 
-    /** @return the JSON key / prefs prefix, e.g. {@code "morning"} */
+    /** @return the JSON key, e.g. {@code "morning"} */
     @NonNull
     public String key() {
         return key;

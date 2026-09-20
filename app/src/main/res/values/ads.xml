@@ -9,7 +9,8 @@
   Hard requirements encoded in these strings:
     * the ad label says "إعلان" so a native ad can never look like content;
     * the rewarded dialog is a *choice* ("مشاهدة إعلان لفتح هذه الساعة") with a decline button;
-    * the failure texts always reassure that free content and already-unlocked content still work.
+    * a missing rewarded ad answers with a short retry prompt, while the offline text reassures that
+      free content and already-unlocked content keep working.
 -->
 <resources>
 
@@ -30,7 +31,7 @@
     <string name="ad_preparing">جارٍ تجهيز الإعلان…</string>
     <string name="ad_unlocked">تم الفتح — أصبحت متاحة دائمًا على هذا الجهاز.</string>
     <string name="ad_offline_message">لا يوجد اتصال بالإنترنت. الساعات والخلفيات المجانية، والتي سبق فتحها، تعمل كالمعتاد.</string>
-    <string name="ad_unavailable_message">لم يتوفّر إعلان الآن. جرّب مرة أخرى لاحقًا.</string>
+    <string name="ad_unavailable_message">الإعلان غير متوفر حالياً، حاول بعد قليل</string>
     <string name="ad_busy_message">يوجد إعلان معروض حاليًا. حاول بعد قليل.</string>
 
     <!-- Card badges. -->
