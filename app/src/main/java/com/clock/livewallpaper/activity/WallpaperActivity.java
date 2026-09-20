@@ -47,10 +47,8 @@ public class WallpaperActivity extends AppCompatActivity {
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_wallpaper);
-        String sectionId = getIntent().getStringExtra(WallpaperCategoryActivity.EXTRA_SECTION);
-        if (sectionId == null) {
-            sectionId = WallpaperCatalog.SECTION_ALL;
-        }
+        String extraSection = getIntent().getStringExtra(WallpaperCategoryActivity.EXTRA_SECTION);
+        final String sectionId = extraSection != null ? extraSection : WallpaperCatalog.SECTION_ALL;
         TextView txtTitle = (TextView) findViewById(R.id.txtTitle);
         TextView txtHint = (TextView) findViewById(R.id.txtHint);
         txtTitle.setText(WallpaperCatalog.title(this, sectionId));
