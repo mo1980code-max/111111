@@ -12,10 +12,12 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // jitpack serves com.github.QuadFlask:colorpicker; everything else is on the two above.
         maven { url 'https://jitpack.io' }
-        // Legacy Clock/Wallpaper dependencies may still require this repository.
-        // Prefer Maven Central; migrate these dependencies before removing the fallback.
-        maven { url 'https://jcenter.bintray.com' }
+        // jcenter was removed: JFrog sunset it (read-only, then 403/expired certs), so leaving it
+        // in the list only added a doomed network round trip to every dependency resolution and
+        // turned an outage there into a build failure here. No dependency resolves from it --
+        // colorpicker comes from jitpack, the rest from google()/mavenCentral().
     }
 }
 

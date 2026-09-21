@@ -16,9 +16,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    buildFeatures {
-        dataBinding true
-    }
+    // dataBinding is deliberately NOT enabled. It was on while no layout used it: there is no
+    // <layout> root, no <data>/<variable> block, no @{...} expression and no DataBindingUtil /
+    // BindingAdapter / BaseObservable anywhere in src/main/java. Enabling it still made AGP run
+    // its StAX layout parser over every file in res/layout on each build, and that parser reports
+    // a missing attribute as a bare NullPointerException ("Cannot invoke
+    // javax.xml.stream.events.Attribute.getValue() because ... getAttributeByName(...) is null")
+    // with no file or line, instead of an AAPT2 error pointing at the offending tag.
+    // Re-add `buildFeatures { dataBinding true }` when a layout actually gains a <layout> root.
     bundle {
         density {
             enableSplit true
