@@ -1,5 +1,7 @@
 package com.clock.livewallpaper.activity;
 
+import android.app.WallpaperManager;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +15,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSeekBar;
@@ -24,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
 import com.clock.livewallpaper.ads.AdPolicy;
+import com.clock.livewallpaper.clock.ClockPreferences;
 import com.clock.livewallpaper.image.LocalImage;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.OnColorSelectedListener;
@@ -154,6 +158,16 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor2.setOnClickListener(this);
         this.icDone.setOnClickListener(this);
         this.btnOk.setOnClickListener(this);
+        View liveWallpaperButton = findViewById(R.id.btnSetLiveWallpaper);
+        if (liveWallpaperButton != null) {
+            liveWallpaperButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    saveUserSettings();
+                    launchLiveWallpaper();
+                }
+            });
+        }
         BgAdapter bgAdapter = new BgAdapter();
         this.bgAdapter = bgAdapter;
         this.bgRecyclerView.setAdapter(bgAdapter);
@@ -212,18 +226,18 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnColor1:
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(R.string.clock_studio_choose_color).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(R.string.clock_studio_ok, new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
                         EditorActivity.this.color1 = i;
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.clock_studio_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -231,18 +245,18 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 }).build().show();
                 return;
             case R.id.btnColor2:
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(R.string.clock_studio_choose_color).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(R.string.clock_studio_ok, new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
                         EditorActivity.this.color2 = i;
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.clock_studio_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -250,24 +264,17 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 }).build().show();
                 return;
             case R.id.btn_ok:
-
-                EditorActivity editorActivity = EditorActivity.this;
-                EditorActivity.this.bgRecyclerView.setVisibility(View.GONE);
-                EditorActivity.this.seekBar.setVisibility(View.GONE);
-                EditorActivity.this.layoutColor.setVisibility(View.VISIBLE);
-                EditorActivity.this.saveUserSettings();
+                this.bgRecyclerView.setVisibility(View.GONE);
+                this.seekBar.setVisibility(View.GONE);
+                this.layoutColor.setVisibility(View.VISIBLE);
+                saveUserSettings();
                 EditorActivity.isDone = true;
-                // Going to the system wallpaper picker must not be answered with an ad on the way back.
-                AdPolicy.markSystemHandoff();
-                Intent intent = new Intent("android.service.wallpaper.CHANGE_LIVE_WALLPAPER");
-                intent.putExtra("android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT", new ComponentName(EditorActivity.this, LiveClockWallpaper.class));
-                EditorActivity.this.startActivity(intent);
-                EditorActivity.this.finish();
-
+                launchLiveWallpaper();
                 return;
             case R.id.icDone:
                 this.tinyDB.putInt("textColor1", this.color1);
                 this.tinyDB.putInt("textColor2", this.color2);
+                saveUserSettings();
                 this.bgRecyclerView.setVisibility(View.GONE);
                 this.seekBar.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
@@ -289,11 +296,11 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 this.bgRecyclerView.setVisibility(View.GONE);
                 this.seekBar.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(R.string.clock_studio_choose_color).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(R.string.clock_studio_ok, new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
@@ -302,7 +309,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                         EditorActivity.this.tinyDB.putInt("bgColor", i);
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.clock_studio_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -332,12 +339,15 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void saveUserSettings() {
-        float f = this.mClockPosX + 0.01f;
-        this.mClockPosX = f;
-        this.tinyDB.putFloat("prefClockPosX", f);
+        this.tinyDB.putFloat("prefClockPosX", this.mClockPosX);
         this.tinyDB.putFloat("prefClockPosY", this.mClockPosY);
         this.tinyDB.putInt("prefSize", this.mClockSize);
         this.tinyDB.putInt("textClockPosition", this.textClockPosition);
+        this.tinyDB.putInt("textColor1", this.color1);
+        this.tinyDB.putInt("textColor2", this.color2);
+        ClockPreferences.get(this).saveEditorState(this.mClockPosX, this.mClockPosY,
+                this.mWidth, this.mHeight, this.mClockSize, this.textClockPosition,
+                this.color1, this.color2);
         updateClock();
     }
 
@@ -345,13 +355,17 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.mClockPosX = this.tinyDB.getFloat("prefClockPosX", ((float) this.mWidth) / 2.0f);
         this.mClockPosY = this.tinyDB.getFloat("prefClockPosY", ((float) this.mHeight) / 2.0f);
         int i = this.tinyDB.getInt("prefSize");
-        this.mClockSize = i;
-        if (i == 0) {
-            this.mClockSize = 500;
-        }
+        this.mClockSize = i == 0 ? 500 : Math.max(120, Math.min(1000, i));
         this.seekBar.setProgress(this.mClockSize);
-        this.textClockPosition = this.tinyDB.getInt("textClockPosition");
-        if (this.tinyDB.getInt("clockType") == 0) {
+        this.textClockPosition = Math.max(0, this.tinyDB.getInt("textClockPosition"));
+        this.color1 = this.tinyDB.getInt("textColor1", -1);
+        this.color2 = this.tinyDB.getInt("textColor2", InputDeviceCompat.SOURCE_ANY);
+        int clockType = this.tinyDB.getInt("clockType");
+        if (clockType < 0 || clockType > 2) {
+            clockType = 0;
+            this.tinyDB.putInt("clockType", clockType);
+        }
+        if (clockType == 0) {
             this.analogClock.setVisibility(View.VISIBLE);
             this.textClockPreview.setVisibility(View.GONE);
             this.smartClockPreview.setVisibility(View.GONE);
@@ -382,6 +396,12 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.textClockPreview.setTextClockPosition(this.textClockPosition);
             this.textClockPreview.setColors(this.color1, this.color2);
             this.textClockPreview.config(this.mClockPosX, this.mClockPosY, (int) (((float) this.mClockSize) * 2.0f));
+        } else {
+            // Corrupted preferences must never leave the editor or wallpaper without a renderer.
+            this.tinyDB.putInt("clockType", 0);
+            this.analogClock.setClock((Clocks) this.tinyDB.getObject("clocks", Clocks.class));
+            this.analogClock.setClockSize((float) this.mClockSize);
+            this.analogClock.setPosition(this.mClockPosX, this.mClockPosY);
         }
         this.mIvMainScreen.setScaleType(ImageView.ScaleType.CENTER_CROP);
         if (this.tinyDB.getBoolean("isImage")) {
@@ -393,6 +413,37 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         } else {
             this.mIvMainScreen.setImageResource(0);
             this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+        }
+    }
+
+    /**
+     * Hands the saved composition to Android's own wallpaper confirmation UI.  The Activity never
+     * calls WallpaperManager.setStream/setBitmap, so it cannot silently replace the user's wallpaper.
+     */
+    private void launchLiveWallpaper() {
+        ClockPreferences preferences = ClockPreferences.get(this);
+        // load() applies the same free/unlocked-name guard used by the service before anything leaves
+        // the app. A direct service launch therefore cannot turn a locked name into a wallpaper.
+        preferences.load();
+        ComponentName component = new ComponentName(this, LiveClockWallpaper.class);
+        Intent request = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
+        request.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component);
+        AdPolicy.markSystemHandoff();
+        try {
+            startActivity(request);
+            finish();
+        } catch (ActivityNotFoundException unavailable) {
+            // A few vendor builds omit the direct preview action. Their supported chooser can still
+            // show the normal confirmation flow; if it is missing, keep the user in the editor.
+            try {
+                Intent chooser = new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
+                chooser.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component);
+                startActivity(chooser);
+                finish();
+            } catch (ActivityNotFoundException ignored) {
+                Toast.makeText(this, R.string.clock_studio_wallpaper_unavailable,
+                        Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -424,7 +475,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             intent.setType("image/*");
             intent.setAction("android.intent.action.GET_CONTENT");
             AdPolicy.markSystemHandoff();
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
+            startActivityForResult(Intent.createChooser(intent, getString(R.string.clock_studio_select_picture)), 1);
         }
     }
 
@@ -441,12 +492,14 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
 
     public void onActivityResult(int i, int i2, Intent intent) {
         super.onActivityResult(i, i2, intent);
-        if (i == 1 && i2 == -1 && intent != null) {
+        if (i == 1 && i2 == -1 && intent != null && intent.getData() != null) {
             String realPath = RealPathUtil.getRealPath(this, intent.getData());
-            this.tinyDB.putBoolean("isImage", true);
-            this.tinyDB.putBoolean("isCustomBg", false);
-            this.tinyDB.putString("ImageString", String.valueOf(realPath));
-            updateClock();
+            if (realPath != null && !realPath.isEmpty()) {
+                this.tinyDB.putBoolean("isImage", true);
+                this.tinyDB.putBoolean("isCustomBg", false);
+                this.tinyDB.putString("ImageString", realPath);
+                updateClock();
+            }
         }
     }
 }

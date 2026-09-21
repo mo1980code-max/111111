@@ -1,5 +1,7 @@
 package com.clock.livewallpaper.ads;
 
+import com.clock.livewallpaper.BuildConfig;
+
 /**
  * The only place where monetisation is configured.
  *
@@ -38,6 +40,29 @@ public final class AdConfig {
     public static final String APP_OPEN_AD_UNIT_ID = "ca-app-pub-3940256099942544/9257395921";
     public static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
     public static final String NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110";
+
+    // Release values are intentionally isolated here. Replace these four placeholders together
+    // before publishing; debug builds can never generate production impressions.
+    public static final String RELEASE_ADMOB_APP_ID = "REPLACE_WITH_PRODUCTION_APP_ID";
+    public static final String RELEASE_APP_OPEN_AD_UNIT_ID = "REPLACE_WITH_PRODUCTION_APP_OPEN_ID";
+    public static final String RELEASE_REWARDED_AD_UNIT_ID = "REPLACE_WITH_PRODUCTION_REWARDED_ID";
+    public static final String RELEASE_NATIVE_AD_UNIT_ID = "REPLACE_WITH_PRODUCTION_NATIVE_ID";
+
+    public static String appId() {
+        return BuildConfig.DEBUG ? ADMOB_APP_ID : RELEASE_ADMOB_APP_ID;
+    }
+
+    public static String appOpenAdUnitId() {
+        return BuildConfig.DEBUG ? APP_OPEN_AD_UNIT_ID : RELEASE_APP_OPEN_AD_UNIT_ID;
+    }
+
+    public static String rewardedAdUnitId() {
+        return BuildConfig.DEBUG ? REWARDED_AD_UNIT_ID : RELEASE_REWARDED_AD_UNIT_ID;
+    }
+
+    public static String nativeAdUnitId() {
+        return BuildConfig.DEBUG ? NATIVE_AD_UNIT_ID : RELEASE_NATIVE_AD_UNIT_ID;
+    }
 
     // --- Native ads in the wallpaper / clock / home lists -------------------------------------
     /**

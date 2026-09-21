@@ -3,7 +3,6 @@ package com.clock.livewallpaper.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,6 +23,7 @@ import com.clock.livewallpaper.adapter.SmartTextAdapter;
 import com.clock.livewallpaper.adapter.TextAdapter;
 import com.clock.livewallpaper.catalog.ContentAccess;
 import com.clock.livewallpaper.catalog.Unlockable;
+import com.clock.livewallpaper.clock.ClockPreferences;
 import com.clock.livewallpaper.model.Clocks;
 import com.clock.livewallpaper.model.SmartClocks;
 import com.clock.livewallpaper.model.TextClocks;
@@ -204,36 +204,6 @@ public class ClockCardActivity extends AppCompatActivity {
         this.recyclerViewCategory.setLayoutManager(new GridLayoutManager(this, SPAN_COUNT));
         this.recyclerViewCategory.setAdapter(this.listAdapter);
 
-        // CONTENT_DEBUG: the full runtime state of the pipeline when the screen opens.
-        final RecyclerView recycler = this.recyclerViewCategory;
-        final Object layoutManager = recycler.getLayoutManager();
-        Log.d("CONTENT_DEBUG", "ClockCardActivity.open section=" + section
-                + " sourceSize=" + raw.getItemCount()
-                + " rawAdapter=" + raw.getClass().getSimpleName()
-                + " listAdapter=" + this.listAdapter.getClass().getSimpleName()
-                + " listCount=" + this.listAdapter.getItemCount()
-                + " layoutManager=" + (layoutManager == null ? "null" : layoutManager.getClass().getSimpleName())
-                + " recyclerVisibility=" + visibilityName(recycler.getVisibility()));
-        // The measured size is only known after the first layout pass, so report it from there.
-        recycler.post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("CONTENT_DEBUG", "ClockCardActivity.measured section=" + section
-                        + " recyclerSize=" + recycler.getWidth() + "x" + recycler.getHeight()
-                        + " recyclerVisibility=" + visibilityName(recycler.getVisibility()));
-            }
-        });
-    }
-
-    private static String visibilityName(int visibility) {
-        switch (visibility) {
-            case View.VISIBLE:
-                return "VISIBLE";
-            case View.INVISIBLE:
-                return "INVISIBLE";
-            default:
-                return "GONE";
-        }
     }
 
     // ---------------------------------------------------------------------
@@ -246,7 +216,9 @@ public class ClockCardActivity extends AppCompatActivity {
         this.tinyDB.putBoolean("isImage", false);
         this.tinyDB.putBoolean("isCustomBg", false);
         this.tinyDB.putInt("bgColor", Color.parseColor(clocks.getBgColor()));
-        startActivity(new Intent(this, EditorActivity.class));
+        ClockPreferences.get(this).selectClock(clocks.getId(), 0, 0,
+                Color.parseColor(clocks.getBgColor()), 0, false);
+        startActivity(new Intent(this, ClockStudioActivity.class));
     }
 
     private void openTextClock(@NonNull TextClocks textClocks) {
@@ -256,7 +228,9 @@ public class ClockCardActivity extends AppCompatActivity {
         this.tinyDB.putBoolean("isImage", false);
         this.tinyDB.putBoolean("isCustomBg", false);
         this.tinyDB.putInt("bgColor", Color.parseColor(textClocks.getBgColor()));
-        startActivity(new Intent(this, EditorActivity.class));
+        ClockPreferences.get(this).selectClock(textClocks.getId(), 2, textClocks.getStyle(),
+                Color.parseColor(textClocks.getBgColor()), 0, false);
+        startActivity(new Intent(this, ClockStudioActivity.class));
     }
 
     private void openSmartClock(@NonNull SmartClocks smartClocks) {
@@ -265,7 +239,9 @@ public class ClockCardActivity extends AppCompatActivity {
         this.tinyDB.putBoolean("isCustomBg", true);
         this.tinyDB.putInt("textClockPosition", smartClocks.getStyle());
         this.tinyDB.putInt("clockType", 1);
-        startActivity(new Intent(this, EditorActivity.class));
+        ClockPreferences.get(this).selectClock(smartClocks.getId(), 1, smartClocks.getStyle(),
+                Color.BLACK, smartClocks.getBgColor(), true);
+        startActivity(new Intent(this, ClockStudioActivity.class));
     }
 
     /** Declined, no fill or offline: say what happened, keep the tile locked, keep using free clocks. */

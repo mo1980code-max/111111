@@ -127,7 +127,7 @@ public final class AdsManager {
     private void loadRewarded(@NonNull final Context context, @Nullable final Runnable then) {
         initialize(context);
         try {
-            RewardedAd.load(context.getApplicationContext(), AdConfig.REWARDED_AD_UNIT_ID,
+            RewardedAd.load(context.getApplicationContext(), AdConfig.rewardedAdUnitId(),
                     new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull RewardedAd ad) {
@@ -258,7 +258,7 @@ public final class AdsManager {
         }
         initialize(context);
         try {
-            AppOpenAd.load(context.getApplicationContext(), AdConfig.APP_OPEN_AD_UNIT_ID,
+            AppOpenAd.load(context.getApplicationContext(), AdConfig.appOpenAdUnitId(),
                     new AdRequest.Builder().build(), AdPolicy.requestedOrientation(),
                     new AppOpenAd.AppOpenAdLoadCallback() {
                         @Override
@@ -338,7 +338,8 @@ public final class AdsManager {
         }
         initialize(context);
         try {
-            AdLoader loader = new AdLoader.Builder(context.getApplicationContext(), AdConfig.NATIVE_AD_UNIT_ID)
+            // AdConfig.NATIVE_AD_UNIT_ID is the official debug id; the accessor swaps it centrally for release.
+            AdLoader loader = new AdLoader.Builder(context.getApplicationContext(), AdConfig.nativeAdUnitId())
                     .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
                         @Override
                         public void onNativeAdLoaded(@NonNull NativeAd ad) {

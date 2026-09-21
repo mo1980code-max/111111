@@ -1,10 +1,12 @@
 package com.clock.livewallpaper;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
+import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 import android.view.ViewGroup;
@@ -19,7 +21,7 @@ public class CustomWallpaper extends WallpaperService {
     private Context context;
     int height;
     protected ImageView imageView;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
     int width;
@@ -47,6 +49,7 @@ public class CustomWallpaper extends WallpaperService {
 
     @Override
     public void onDestroy() {
+        this.mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
@@ -66,8 +69,10 @@ public class CustomWallpaper extends WallpaperService {
         }
 
         @Override
-        protected void onLayout(boolean z, int i, int i2, int i3, int i4) {
-            layout(i, i2, i3, i4);
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            for (int index = 0; index < getChildCount(); index++) {
+                getChildAt(index).layout(0, 0, right - left, bottom - top);
+            }
         }
     }
 
@@ -81,6 +86,8 @@ public class CustomWallpaper extends WallpaperService {
             }
         };
         private boolean mVisible;
+        private Bitmap wallpaperBitmap;
+        private String loadedPath = "";
 
         ClockEngine() {
             super();
@@ -93,8 +100,13 @@ public class CustomWallpaper extends WallpaperService {
 
         @Override
         public void onDestroy() {
-            super.onDestroy();
+            this.mVisible = false;
             CustomWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            if (this.wallpaperBitmap != null && !this.wallpaperBitmap.isRecycled()) {
+                this.wallpaperBitmap.recycle();
+                this.wallpaperBitmap = null;
+            }
+            super.onDestroy();
         }
 
         @Override
@@ -112,7 +124,9 @@ public class CustomWallpaper extends WallpaperService {
             super.onSurfaceChanged(surfaceHolder, i, i2, i3);
             CustomWallpaper.this.width = i2;
             CustomWallpaper.this.height = i3;
-            drawFrame();
+            if (this.mVisible) {
+                drawFrame();
+            }
         }
 
         @Override
@@ -129,10 +143,16 @@ public class CustomWallpaper extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float f, float f2, float f3, float f4, int i, int i2) {
-            drawFrame();
+            if (this.mVisible) {
+                drawFrame();
+            }
         }
 
         void drawFrame() {
+            if (!this.mVisible || CustomWallpaper.this.width <= 0 || CustomWallpaper.this.height <= 0) {
+                CustomWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+                return;
+            }
             Throwable th;
             Canvas canvas;
             SurfaceHolder surfaceHolder = getSurfaceHolder();
@@ -179,7 +199,17 @@ public class CustomWallpaper extends WallpaperService {
 
         public void firstClock(Canvas canvas) {
             CustomWallpaper.this.widgetGroup.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
-            CustomWallpaper.this.imageView.setImageBitmap(BitmapFactory.decodeFile(CustomWallpaper.this.tinyDB.getString("isWallpaper")));
+            String path = CustomWallpaper.this.tinyDB.getString("isWallpaper");
+            if (!path.equals(this.loadedPath)) {
+                if (this.wallpaperBitmap != null && !this.wallpaperBitmap.isRecycled()) {
+                    this.wallpaperBitmap.recycle();
+                }
+                this.wallpaperBitmap = path.isEmpty() ? null : BitmapFactory.decodeFile(path);
+                this.loadedPath = path;
+            }
+            if (this.wallpaperBitmap != null) {
+                CustomWallpaper.this.imageView.setImageBitmap(this.wallpaperBitmap);
+            }
             CustomWallpaper.this.imageView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.widgetGroup.draw(canvas);
         }

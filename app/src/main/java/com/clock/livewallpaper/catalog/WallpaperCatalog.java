@@ -149,15 +149,8 @@ public final class WallpaperCatalog {
         } catch (Exception error) {
             // A damaged catalog must not take the app down: the browser simply shows an empty list.
             Log.w(TAG, "unable to read " + INDEX_ASSET, error);
-            Log.d("CONTENT_DEBUG", "WallpaperCatalog.parse FAILED: " + error);
             return sections;
         }
-        int totalItems = 0;
-        for (WallpaperSection section : sections) {
-            totalItems += section.getEntries().size();
-        }
-        Log.d("CONTENT_DEBUG", "WallpaperCatalog.parse sections=" + sections.size()
-                + " totalItems=" + totalItems);
         return sections;
     }
 

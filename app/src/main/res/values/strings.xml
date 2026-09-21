@@ -1,6 +1,15 @@
 <resources>
-
     <string name="app_name">clock live wallpaper</string>
 
-
+    <!-- Clock Studio actions. The two-line label keeps the English and Arabic action discoverable. -->
+    <string name="clock_studio_set_live_wallpaper">Set as Live Wallpaper
+تعيين كخلفية حية</string>
+    <string name="clock_studio_set_live_wallpaper_description">Set the saved clock composition as the Android live wallpaper</string>
+    <string name="clock_studio_wallpaper_unavailable">Live wallpaper preview is not available on this device.</string>
+    <string name="clock_studio_choose_color">Choose color</string>
+    <string name="clock_studio_ok">OK</string>
+    <string name="clock_studio_cancel">Cancel</string>
+    <string name="clock_studio_select_picture">Select picture</string>
+    <string name="clock_studio_color_one">Color 1</string>
+    <string name="clock_studio_color_two">Color 2</string>
 </resources>

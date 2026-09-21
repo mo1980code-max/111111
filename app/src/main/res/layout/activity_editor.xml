@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color1" />
+                android:text="@string/clock_studio_color_one" />
         </LinearLayout>
 
         <LinearLayout
@@ -81,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color2" />
+                android:text="@string/clock_studio_color_two" />
         </LinearLayout>
 
         <LinearLayout
@@ -98,6 +98,25 @@
                 android:src="@drawable/ic_done" />
         </LinearLayout>
     </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSetLiveWallpaper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/layoutBottom"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/rounded_btn"
+        android:elevation="4dp"
+        android:contentDescription="@string/clock_studio_set_live_wallpaper_description"
+        android:minHeight="48dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/clock_studio_set_live_wallpaper"
+        android:textAllCaps="false"
+        android:textColor="@color/colorWhite"
+        android:textSize="12sp" />
 
     <LinearLayout
         android:id="@+id/layoutBottom"
