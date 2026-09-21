@@ -12,6 +12,7 @@
     <string name="clock_studio_select_picture">Select picture</string>
     <string name="clock_studio_color_one">Color 1</string>
     <string name="clock_studio_color_two">Color 2</string>
+    <string name="clock_studio_title">ساعات مخصصة</string>
     <string name="clock_studio_settings">إعدادات التاريخ والوقت</string>
     <string name="clock_studio_settings_description">Configure date, time and theme options</string>
     <string name="clock_studio_theme">المظهر الإسلامي</string>

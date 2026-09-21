@@ -17,7 +17,7 @@ import com.clock.livewallpaper.ads.AdsManager;
 import com.clock.livewallpaper.ads.NativePlacement;
 
 /**
- * Home screen: the section buttons (Clocks, Wallpapers, Names, Quran, Azkar) plus share / rate.
+ * Home screen: the section buttons (Clocks, Clock Studio, Names, Quran, Azkar) plus share / rate.
  *
  * <p>The bottom banner that used to live here is gone. The single ad allowed on this screen is one
  * in-feed native card below the buttons, clearly separated from them by margins and by its own paper
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         FrameLayout frameClock = (FrameLayout) findViewById(R.id.frameClock);
-        FrameLayout frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
+        FrameLayout frameStudio = (FrameLayout) findViewById(R.id.frameStudio);
         FrameLayout frameNames = (FrameLayout) findViewById(R.id.frameNames);
         FrameLayout frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
         FrameLayout frameAzkar = (FrameLayout) findViewById(R.id.frameAzkar);
@@ -87,10 +87,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
             }
         });
-        frameWallpaper.setOnClickListener(new View.OnClickListener() {
+        frameStudio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
+                startActivity(new Intent(MainActivity.this, ClockStudioActivity.class));
             }
         });
         frameNames.setOnClickListener(new View.OnClickListener() {

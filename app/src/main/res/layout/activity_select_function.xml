@@ -111,8 +111,9 @@
             </LinearLayout>
         </FrameLayout>
 
+        <!-- Clock Studio: opens the configurable clock preview and live-wallpaper confirmation. -->
         <FrameLayout
-            android:id="@+id/frameWallpaper"
+            android:id="@+id/frameStudio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="35dp"
@@ -135,29 +136,23 @@
 
                 <TextView
                     android:layout_width="150dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginLeft="15dp"
                     android:layout_marginRight="15dp"
                     android:layout_weight="1"
                     android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Wallpaper"
+                    android:text="@string/clock_studio_title"
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
-
-                    <ImageView
-                        android:layout_width="120dp"
-                        android:layout_height="120dp"
-                        android:adjustViewBounds="true"
-                        android:contentDescription="@null"
-                        android:padding="15dp"
-                        android:src="@drawable/wallpaper_logo" />
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:contentDescription="@null"
+                    android:padding="15dp"
+                    android:src="@drawable/clock_logo" />
             </LinearLayout>
         </FrameLayout>
 
