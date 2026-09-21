@@ -1,6 +1,38 @@
 <resources>
-
     <string name="app_name">clock live wallpaper</string>
 
+    <!-- Clock Studio actions. The two-line label keeps the English and Arabic action discoverable. -->
+    <string name="clock_studio_set_live_wallpaper">Set as Live Wallpaper
+تعيين كخلفية حية</string>
+    <string name="clock_studio_set_live_wallpaper_description">Set the saved clock composition as the Android live wallpaper</string>
+    <string name="clock_studio_wallpaper_unavailable">Live wallpaper preview is not available on this device.</string>
+    <string name="clock_studio_choose_color">Choose color</string>
+    <string name="clock_studio_ok">OK</string>
+    <string name="clock_studio_cancel">Cancel</string>
+    <string name="clock_studio_select_picture">Select picture</string>
+    <string name="clock_studio_color_one">Color 1</string>
+    <string name="clock_studio_color_two">Color 2</string>
+    <string name="clock_studio_title">ساعات مخصصة</string>
+    <string name="clock_studio_settings">إعدادات التاريخ والوقت</string>
+    <string name="clock_studio_settings_description">Configure date, time and theme options</string>
+    <string name="clock_studio_theme">المظهر الإسلامي</string>
+    <string name="clock_studio_24_hour">نظام 24 ساعة</string>
+    <string name="clock_studio_seconds">إظهار الثواني</string>
+    <string name="clock_studio_hijri">إظهار التاريخ الهجري</string>
+    <string name="clock_studio_gregorian">إظهار التاريخ الميلادي</string>
+    <string name="clock_studio_day_name">إظهار اسم اليوم</string>
+    <string name="clock_studio_hijri_adjustment">تعديل التاريخ الهجري: %1$d</string>
+    <string name="clock_studio_save">حفظ</string>
 
+    <string name="back">رجوع</string>
+    <string name="allah_names_title">أسماء الله الحسنى · 99 Names</string>
+    <string name="allah_names_subtitle">اختر اسمًا لتصميم الساعة</string>
+    <string name="allah_name_number">الاسم %1$d</string>
+    <string name="allah_name_locked">مقفلة</string>
+    <string name="allah_name_open_description">فتح الاسم %1$d في Clock Studio</string>
+    <string name="allah_name_locked_description">الاسم %1$d مقفل</string>
+    <string name="allah_name_locked_message">افتح هذا الاسم أولًا لاستخدامه في الخلفية.</string>
+    <string name="unlock_name_title">اسم من أسماء الله الحسنى مقفل</string>
+    <string name="unlock_name_message">شاهد إعلانًا قصيرًا واحدًا لفتح هذا الاسم نهائيًا على هذا الجهاز.</string>
+    <string name="unlock_name_cta">مشاهدة إعلان لفتح الاسم</string>
 </resources>

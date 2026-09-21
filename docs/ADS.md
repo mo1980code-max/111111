@@ -46,9 +46,12 @@ All numbers live in `ads/AdConfig.java` — nothing else declares an ad unit id 
 | `FREE_CLOCKS_PER_SECTION` | `9` | free clocks in Analog / Digital / Smart |
 | `FREE_WALLPAPERS_PER_SECTION` | `3` | free images in every wallpaper section |
 
-Before release, replace the three demo ids with the ad units created in the AdMob console, keep
-`com.google.android.gms.ads.APPLICATION_ID` in `AndroidManifest.xml` equal to `ADMOB_APP_ID`
-(`ca-app-pub-3940256099942544~3347511713` while testing), and register the test devices.
+Debug builds always use the three official demo unit ids above. `AdConfig` is the single switch point:
+`appOpenAdUnitId()`, `rewardedAdUnitId()` and `nativeAdUnitId()` return those ids when
+`BuildConfig.DEBUG` is true, and the centrally colocated `RELEASE_*` placeholders in the same file for
+a release build. Replace the placeholders together with the production units before publishing; no ad
+unit id is scattered through an Activity or adapter. Keep `com.google.android.gms.ads.APPLICATION_ID`
+in `AndroidManifest.xml` equal to the app id in `AdConfig` and register development test devices.
 
 ## Native ads
 

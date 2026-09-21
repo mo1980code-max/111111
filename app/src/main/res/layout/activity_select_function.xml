@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Home screen: the four section buttons plus share / rate, and one native ad card at the bottom.
+  Home screen: the section buttons plus share / rate, and one native ad card at the bottom.
 
   The whole thing sits in a ScrollView with fillViewport: content stays vertically centred on a tall
   screen, and on a short one it scrolls instead of pushing the Azkar button (or the ad) off the bottom
@@ -111,8 +111,9 @@
             </LinearLayout>
         </FrameLayout>
 
+        <!-- Clock Studio: opens the configurable clock preview and live-wallpaper confirmation. -->
         <FrameLayout
-            android:id="@+id/frameWallpaper"
+            android:id="@+id/frameStudio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="35dp"
@@ -135,29 +136,57 @@
 
                 <TextView
                     android:layout_width="150dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginLeft="15dp"
                     android:layout_marginRight="15dp"
                     android:layout_weight="1"
                     android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Wallpaper"
+                    android:text="@string/clock_studio_title"
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:contentDescription="@null"
+                    android:padding="15dp"
+                    android:src="@drawable/clock_logo" />
+            </LinearLayout>
+        </FrameLayout>
 
-                    <ImageView
-                        android:layout_width="120dp"
-                        android:layout_height="120dp"
-                        android:adjustViewBounds="true"
-                        android:contentDescription="@null"
-                        android:padding="15dp"
-                        android:src="@drawable/wallpaper_logo" />
-                </LinearLayout>
+        <!-- 99 Names: opens the local Names gallery and Clock Studio. -->
+        <FrameLayout
+            android:id="@+id/frameNames"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="35dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginRight="35dp"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_allah_names_button"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_moon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:fontFamily="@font/myfont"
+                    android:text="@string/allah_names_title"
+                    android:textColor="@color/azkar_on_primary"
+                    android:textSize="18sp" />
             </LinearLayout>
         </FrameLayout>
 

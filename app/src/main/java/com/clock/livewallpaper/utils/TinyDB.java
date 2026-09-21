@@ -63,8 +63,25 @@ public class TinyDB {
 
 
     public Object getObject(String str, Class<?> cls, Gson gson) {
-        Object fromJson = gson.fromJson(getString(str), (Class<Object>) cls);
-        return fromJson == null ? new GetClocks().getClocks().get(0) : fromJson;
+        try {
+            String json = getString(str);
+            if (TextUtils.isEmpty(json)) {
+                return safeObjectDefault(cls);
+            }
+            Object fromJson = gson.fromJson(json, (Class<Object>) cls);
+            return fromJson == null ? safeObjectDefault(cls) : fromJson;
+        } catch (RuntimeException ignored) {
+            // Preferences can outlive a renamed model field or a partially written process. A bad
+            // saved clock must fall back to the first catalog entry, never crash Clock Studio.
+            return safeObjectDefault(cls);
+        }
+    }
+
+    private Object safeObjectDefault(Class<?> cls) {
+        if (cls == com.clock.livewallpaper.model.Clocks.class) {
+            return new GetClocks().getClocks().get(0);
+        }
+        return null;
     }
 
 

@@ -2,7 +2,6 @@ package com.clock.livewallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -68,37 +67,6 @@ public class WallpaperCategoryActivity extends AppCompatActivity {
         this.listAdapter = new AdInsertingAdapter(raw, new NativePlacement());
         recyclerView.setAdapter(this.listAdapter);
 
-        // CONTENT_DEBUG: the full runtime state of the pipeline when the screen opens.
-        final Object layoutManager = recyclerView.getLayoutManager();
-        Log.d("CONTENT_DEBUG", "WallpaperCategoryActivity.open catalogSections="
-                + WallpaperCatalog.sections(this).size()
-                + " gridSectionsWithAll=" + sections.size()
-                + " catalogItems=" + WallpaperCatalog.allEntries(this).size()
-                + " rawAdapter=" + raw.getClass().getSimpleName()
-                + " listAdapter=" + this.listAdapter.getClass().getSimpleName()
-                + " listCount=" + this.listAdapter.getItemCount()
-                + " layoutManager=" + (layoutManager == null ? "null" : layoutManager.getClass().getSimpleName())
-                + " recyclerVisibility=" + visibilityName(recyclerView.getVisibility()));
-        // The measured size is only known after the first layout pass, so report it from there.
-        recyclerView.post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("CONTENT_DEBUG", "WallpaperCategoryActivity.measured"
-                        + " recyclerSize=" + recyclerView.getWidth() + "x" + recyclerView.getHeight()
-                        + " recyclerVisibility=" + visibilityName(recyclerView.getVisibility()));
-            }
-        });
-    }
-
-    private static String visibilityName(int visibility) {
-        switch (visibility) {
-            case View.VISIBLE:
-                return "VISIBLE";
-            case View.INVISIBLE:
-                return "INVISIBLE";
-            default:
-                return "GONE";
-        }
     }
 
     @Override

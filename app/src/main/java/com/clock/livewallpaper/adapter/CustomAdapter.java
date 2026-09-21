@@ -1,7 +1,6 @@
 package com.clock.livewallpaper.adapter;
 
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -109,13 +108,6 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
                 }
             }
         });
-        if (position < 3) {
-            Log.d("CONTENT_DEBUG", "CustomAdapter.onBindViewHolder position=" + position
-                    + " id=" + clock.getId() + " available=" + available
-                    + " clockVisible=" + (holder.clock.getVisibility() == View.VISIBLE)
-                    + " previewVisible=" + (holder.preview.getVisibility() == View.VISIBLE)
-                    + " cardSize=" + holder.layout.getWidth() + "x" + holder.layout.getHeight());
-        }
     }
 
     /** The clock is drawn at a fraction of the card, which is only known after the first layout. */

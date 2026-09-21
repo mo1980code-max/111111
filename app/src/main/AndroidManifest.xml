@@ -48,12 +48,22 @@
             android:label="@string/azkar_title"
             android:theme="@style/AzkarTheme" />
 
+        <activity
+            android:name="com.clock.livewallpaper.activity.AllahNamesActivity"
+            android:exported="false"
+            android:label="@string/allah_names_title"
+            android:theme="@style/AppTheme" />
+
         <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
         <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
         <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperActivity" />
         <activity android:name="com.clock.livewallpaper.activity.EditorActivity" />
+        <activity
+            android:name="com.clock.livewallpaper.activity.ClockStudioActivity"
+            android:exported="false"
+            android:label="@string/app_name" />
         <activity
             android:name="com.clock.livewallpaper.activity.MainActivity"
             android:exported="true"
