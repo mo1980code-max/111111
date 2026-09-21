@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -51,6 +52,20 @@ public class AnalogClock extends View {
     public float mClockPosY = 250.0f;
     private boolean isTouchEnable = false;
     private String[] stringsDays = {"Sun", "Mon", "Tue", "Wed", "thu", "Fri", "Sat"};
+
+    /**
+     * One handler and one runnable per view, both final, so a tick can always be cancelled.
+     * Bound to the main looper explicitly: {@code setAutoUpdate} is also called from adapter and
+     * wallpaper code, and {@code new Handler()} would have adopted whatever looper happened to be
+     * current (and thrown if there was none).
+     */
+    private final Handler tickHandler = new Handler(Looper.getMainLooper());
+    private final Runnable tickRunnable = new Runnable() {
+        @Override
+        public void run() {
+            AnalogClock.this.setTime(Calendar.getInstance());
+        }
+    };
 
     public void setTouchEnable(boolean z) {
         this.isTouchEnable = z;
@@ -136,19 +151,48 @@ public class AnalogClock extends View {
     public void setTime(Calendar calendar) {
         this.mCalendar = calendar;
         invalidate();
-        if (this.autoUpdate) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    AnalogClock.this.setTime(Calendar.getInstance());
-                }
-            }, 800);
+        scheduleTick();
+    }
+
+    /**
+     * Queues the next tick on the single owned handler.
+     *
+     * <p>Every pending tick is cancelled first, so there is exactly one callback in flight for this
+     * view no matter how often {@code setTime}/{@code setAutoUpdate} are called. The previous code
+     * allocated {@code new Handler()} inside {@code setTime} and the posted runnable called
+     * {@code setTime} again, so each call started an <b>independent, permanent chain</b>: a
+     * RecyclerView rebinding a tile (every scroll) added another ticking chain on top of the ones
+     * already running, and none of them could ever be cancelled because no reference was kept.
+     * The chains also kept the View -- and through it the Activity -- reachable after the screen
+     * was gone, and they re-posted while the view was detached.
+     */
+    private void scheduleTick() {
+        this.tickHandler.removeCallbacks(this.tickRunnable);
+        // Only tick while the view is actually attached to a window: a recycled or destroyed tile
+        // must not keep waking the main thread up.
+        if (this.autoUpdate && isAttachedToWindow()) {
+            this.tickHandler.postDelayed(this.tickRunnable, 800);
         }
     }
 
     public void setAutoUpdate(boolean z) {
         this.autoUpdate = z;
         setTime(Calendar.getInstance());
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // A reused tile starts ticking again when it comes back on screen.
+        scheduleTick();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        // Scrolled off, or the Activity is going away: drop the pending callback instead of
+        // leaking it (and this View) until the process dies.
+        this.tickHandler.removeCallbacks(this.tickRunnable);
+        super.onDetachedFromWindow();
     }
 
     public void setTimezone(TimeZone timeZone) {
