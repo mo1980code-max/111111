@@ -43,6 +43,12 @@ public final class UnlockPrompt {
                 R.string.unlock_wallpaper_cta, unlockKey, result);
     }
 
+    public static void showName(@NonNull Activity activity, @NonNull String unlockKey,
+                                @NonNull Result result) {
+        show(activity, R.string.unlock_name_title, R.string.unlock_name_message,
+                R.string.unlock_name_cta, unlockKey, result);
+    }
+
     public static void show(@NonNull final Activity activity, @StringRes int titleRes,
                              @StringRes int messageRes, @StringRes int ctaRes,
                              @NonNull final String unlockKey, @NonNull final Result result) {

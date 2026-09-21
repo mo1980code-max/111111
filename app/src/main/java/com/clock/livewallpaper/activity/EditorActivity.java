@@ -14,9 +14,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.core.app.ActivityCompat;
@@ -27,7 +32,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.clock.livewallpaper.R;
 import com.clock.livewallpaper.ads.AdPolicy;
+import com.clock.livewallpaper.clock.AllahNameCatalog;
 import com.clock.livewallpaper.clock.ClockPreferences;
+import com.clock.livewallpaper.clock.ClockStudioConfig;
 import com.clock.livewallpaper.image.LocalImage;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.OnColorSelectedListener;
@@ -74,6 +81,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     private AppCompatSeekBar seekBar;
     private SmartClockPreview smartClockPreview;
     private TextClockPreview textClockPreview;
+    private TextView selectedNameLabel;
     TinyDB tinyDB;
     String[] permissions = {"android.permission.READ_EXTERNAL_STORAGE"};
     private float mClockPosX = 100.0f;
@@ -124,6 +132,14 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         getWindow().getDecorView().setSystemUiVisibility(5894);
     }
 
+    private void updateSelectedNameLabel() {
+        if (this.selectedNameLabel == null) {
+            return;
+        }
+        ClockStudioConfig config = ClockPreferences.get(this).load();
+        this.selectedNameLabel.setText(AllahNameCatalog.getArabicName(config.nameId));
+    }
+
     private void initView() {
         this.analogClock = (AnalogClock) findViewById(R.id.analogClock);
         this.textClockPreview = (TextClockPreview) findViewById(R.id.textClockPreview);
@@ -144,6 +160,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor1 = (Button) findViewById(R.id.btnColor1);
         this.btnColor2 = (Button) findViewById(R.id.btnColor2);
         this.seekBar = (AppCompatSeekBar) findViewById(R.id.seekBar);
+        this.selectedNameLabel = findViewById(R.id.txtSelectedAllahName);
         this.analogClock.setAutoUpdate(true);
         this.bgRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
         getUserSettings();
@@ -165,6 +182,15 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 public void onClick(View view) {
                     saveUserSettings();
                     launchLiveWallpaper();
+                }
+            });
+        }
+        View settingsButton = findViewById(R.id.btnStudioSettings);
+        if (settingsButton != null) {
+            settingsButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    showStudioSettings();
                 }
             });
         }
@@ -380,6 +406,9 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.textClockPreview.setVisibility(View.VISIBLE);
             this.smartClockPreview.setVisibility(View.GONE);
         }
+        ClockStudioConfig loadedConfig = ClockPreferences.get(this).load();
+        AnalogClock.is24 = loadedConfig.is24Hour;
+        updateSelectedNameLabel();
         saveUserSettings();
     }
 
@@ -414,6 +443,95 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.mIvMainScreen.setImageResource(0);
             this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
         }
+    }
+
+    private void showStudioSettings() {
+        final ClockPreferences preferences = ClockPreferences.get(this);
+        final ClockStudioConfig current = preferences.load();
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        int padding = (int) (getResources().getDisplayMetrics().density * 20.0f);
+        panel.setPadding(padding, 0, padding, 0);
+
+        final Switch format24 = new Switch(this);
+        format24.setText(R.string.clock_studio_24_hour);
+        format24.setChecked(current.is24Hour);
+        panel.addView(format24);
+
+        final Switch seconds = new Switch(this);
+        seconds.setText(R.string.clock_studio_seconds);
+        seconds.setChecked(current.showSeconds);
+        panel.addView(seconds);
+
+        final Switch hijri = new Switch(this);
+        hijri.setText(R.string.clock_studio_hijri);
+        hijri.setChecked(current.showHijriDate);
+        panel.addView(hijri);
+
+        final Switch gregorian = new Switch(this);
+        gregorian.setText(R.string.clock_studio_gregorian);
+        gregorian.setChecked(current.showGregorianDate);
+        panel.addView(gregorian);
+
+        final Switch dayName = new Switch(this);
+        dayName.setText(R.string.clock_studio_day_name);
+        dayName.setChecked(current.showDayName);
+        panel.addView(dayName);
+
+        TextView themeTitle = new TextView(this);
+        themeTitle.setText(R.string.clock_studio_theme);
+        themeTitle.setPadding(0, padding / 2, 0, padding / 4);
+        panel.addView(themeTitle);
+
+        final Spinner theme = new Spinner(this);
+        String[] themes = {"Theme 1", "Theme 2", "Theme 3", "Theme 4", "Theme 5", "Theme 6"};
+        theme.setAdapter(new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_dropdown_item, themes));
+        theme.setSelection(ClockStudioConfig.clamp(current.themeId, 1, themes.length) - 1);
+        panel.addView(theme);
+
+        final TextView adjustment = new TextView(this);
+        panel.addView(adjustment);
+        final SeekBar adjustmentBar = new SeekBar(this);
+        adjustmentBar.setMax(4);
+        adjustmentBar.setProgress(ClockStudioConfig.clamp(current.hijriAdjustment + 2, 0, 4));
+        adjustment.setText(getString(R.string.clock_studio_hijri_adjustment,
+                current.hijriAdjustment));
+        adjustmentBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                adjustment.setText(getString(R.string.clock_studio_hijri_adjustment,
+                        progress - 2));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        panel.addView(adjustmentBar);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.clock_studio_settings)
+                .setView(panel)
+                .setNegativeButton(R.string.clock_studio_cancel, null)
+                .setPositiveButton(R.string.clock_studio_save, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int selectedTheme = theme.getSelectedItemPosition() + 1;
+                        int selectedAdjustment = adjustmentBar.getProgress() - 2;
+                        preferences.saveDisplaySettings(selectedTheme, format24.isChecked(),
+                                seconds.isChecked(), hijri.isChecked(), gregorian.isChecked(),
+                                dayName.isChecked(), selectedAdjustment);
+                        AnalogClock.is24 = format24.isChecked();
+                        updateSelectedNameLabel();
+                        updateClock();
+                    }
+                })
+                .show();
     }
 
     /**

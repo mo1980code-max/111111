@@ -17,7 +17,7 @@ import com.clock.livewallpaper.ads.AdsManager;
 import com.clock.livewallpaper.ads.NativePlacement;
 
 /**
- * Home screen: the four section buttons (Clocks, Wallpapers, Quran, Azkar) plus share / rate.
+ * Home screen: the section buttons (Clocks, Wallpapers, Names, Quran, Azkar) plus share / rate.
  *
  * <p>The bottom banner that used to live here is gone. The single ad allowed on this screen is one
  * in-feed native card below the buttons, clearly separated from them by margins and by its own paper
@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         FrameLayout frameClock = (FrameLayout) findViewById(R.id.frameClock);
         FrameLayout frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
+        FrameLayout frameNames = (FrameLayout) findViewById(R.id.frameNames);
         FrameLayout frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
         FrameLayout frameAzkar = (FrameLayout) findViewById(R.id.frameAzkar);
         this.rate = findViewById(R.id.rateus);
@@ -90,6 +91,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
+            }
+        });
+        frameNames.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, AllahNamesActivity.class));
             }
         });
         // Quran icon: open the offline Surah index, which launches QuranActivity with a surah_id.

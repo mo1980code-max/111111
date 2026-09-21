@@ -184,6 +184,19 @@ public final class ClockPreferences {
                 imageBackground, customBackground, textColor1, textColor2));
     }
 
+    /** Saves the presentation switches without replacing the selected clock or background. */
+    public void saveDisplaySettings(int themeId, boolean is24Hour, boolean showSeconds,
+                                    boolean showHijriDate, boolean showGregorianDate,
+                                    boolean showDayName, int hijriAdjustment) {
+        ClockStudioConfig old = load();
+        save(new ClockStudioConfig(old.nameId, themeId, old.clockStyleId, old.clockType,
+                old.clockStyleIndex, old.positionX, old.positionY, old.sizeFraction,
+                old.clockColor, old.opacity, is24Hour, showSeconds, showHijriDate,
+                showGregorianDate, showDayName, hijriAdjustment, old.backgroundColor,
+                old.backgroundResource, old.backgroundPath, old.imageBackground,
+                old.customBackground, old.textColor1, old.textColor2));
+    }
+
     /** Selects a Name only when it is free or already permanently unlocked. */
     public boolean selectName(int requestedId) {
         if (!AllahNameCatalog.isValid(requestedId)

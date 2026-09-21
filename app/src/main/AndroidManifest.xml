@@ -48,6 +48,12 @@
             android:label="@string/azkar_title"
             android:theme="@style/AzkarTheme" />
 
+        <activity
+            android:name="com.clock.livewallpaper.activity.AllahNamesActivity"
+            android:exported="false"
+            android:label="@string/allah_names_title"
+            android:theme="@style/AppTheme" />
+
         <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
         <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
