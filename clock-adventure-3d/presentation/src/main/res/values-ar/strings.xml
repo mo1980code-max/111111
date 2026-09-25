@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arabic translation of every string in values/strings.xml (RTL ready). -->
+<resources>
+    <string name="app_name">مغامرة الساعة</string>
+
+    <!-- Home -->
+    <string name="home_play">العب</string>
+    <string name="home_lessons">الدروس</string>
+    <string name="home_challenges">التحديات</string>
+    <string name="home_games">الألعاب</string>
+    <string name="home_progress">تقدمي</string>
+    <string name="home_rewards">الجوائز</string>
+    <string name="home_settings">الإعدادات</string>
+    <string name="home_parent">منطقة الأهل</string>
+    <string name="home_greeting">مرحباً يا مكتشف الوقت!</string>
+    <string name="home_subtitle">هيا نتعلم الساعة معاً</string>
+    <string name="home_continue">تابع المستوى %1$d</string>
+    <string name="home_start_learning">ابدأ التعلم</string>
+
+    <!-- Common -->
+    <string name="common_back">رجوع</string>
+    <string name="common_close">إغلاق</string>
+    <string name="common_ok">حسناً</string>
+    <string name="common_cancel">إلغاء</string>
+    <string name="common_continue">متابعة</string>
+    <string name="common_retry">حاول مرة أخرى</string>
+    <string name="common_next">التالي</string>
+    <string name="common_home">الرئيسية</string>
+    <string name="common_yes">نعم!</string>
+    <string name="common_no">لا!</string>
+    <string name="common_locked">مقفل</string>
+    <string name="common_stars_of">%1$d / 3 نجوم</string>
+    <string name="common_level">المستوى %1$d</string>
+
+    <!-- HUD -->
+    <string name="hud_coins">عملات</string>
+    <string name="hud_stars">نجوم</string>
+    <string name="hud_xp">خبرة</string>
+
+    <!-- Lessons -->
+    <string name="lessons_title">الدروس</string>
+    <string name="lessons_subtitle">عشر خطوات من الأرقام إلى بطل الوقت</string>
+    <string name="lessons_locked_hint">أنهِ المستوى السابق لفتح هذا المستوى</string>
+    <string name="lesson_teach_title">هيا نتعلم!</string>
+    <string name="lesson_start">ابدأ</string>
+    <string name="lesson_question_of">السؤال %1$d من %2$d</string>
+    <string name="lesson_check">تحقق</string>
+    <string name="lesson_hint">تلميح</string>
+    <string name="lesson_show_answer">أرني</string>
+    <string name="lesson_try_again">حاول مرة أخرى</string>
+    <string name="lesson_continue">متابعة</string>
+    <string name="lesson_finish">إنهاء</string>
+    <string name="lesson_exit">الخروج من الدرس</string>
+    <string name="lesson_exit_body">نجومك محفوظة. هل تريد العودة؟</string>
+
+    <!-- Session result -->
+    <string name="result_title">أحسنت!</string>
+    <string name="result_title_practice">تدريب رائع!</string>
+    <string name="result_earned">حصلت على</string>
+    <string name="result_new_best">أفضل نتيجة جديدة!</string>
+    <string name="result_level_up">ترقية! أنت الآن في المستوى %1$d</string>
+    <string name="result_new_achievements">إنجازات جديدة</string>
+    <string name="result_new_unlocks">جديد في المتجر</string>
+    <string name="result_next_level">المستوى التالي</string>
+    <string name="result_replay">العب مرة أخرى</string>
+    <string name="result_home">الرئيسية</string>
+    <string name="result_time_up">انتهى الوقت!</string>
+    <string name="result_score">النتيجة</string>
+
+    <!-- Games -->
+    <string name="games_title">الألعاب</string>
+    <string name="games_subtitle">ست طرق للتدرب على قراءة الوقت</string>
+    <string name="game_best">الأفضل: %1$d</string>
+    <string name="game_start">العب</string>
+    <string name="game_time_left">%1$d ث</string>
+    <string name="game_match_hint">اضغط على الساعة ثم اضغط على الوقت المطابق</string>
+    <string name="game_race_hint">أجب عن أكبر عدد ممكن في 60 ثانية!</string>
+    <string name="game_routine_hint">متى يحدث هذا؟ اضبط الساعة!</string>
+    <string name="game_set_clock_hint">اسحب العقارب إلى الوقت الصحيح</string>
+    <string name="game_read_hint">اقرأ الساعة واختر الوقت</string>
+    <string name="game_true_false_hint">هل الساعة تطابق الوقت؟</string>
+    <string name="game_matched_pairs">%1$d / %2$d مطابق</string>
+
+    <!-- Progress -->
+    <string name="progress_title">تقدمي</string>
+    <string name="progress_subtitle">كل ما تعلمته حتى الآن</string>
+    <string name="progress_accuracy">الدقة</string>
+    <string name="progress_questions">الأسئلة</string>
+    <string name="progress_correct">صحيحة</string>
+    <string name="progress_wrong">خاطئة</string>
+    <string name="progress_time">وقت التعلم</string>
+    <string name="progress_per_level">حسب المستوى</string>
+    <string name="progress_minutes">%1$d دقيقة</string>
+    <string name="progress_hours_minutes">%1$d س %2$d د</string>
+    <string name="progress_empty">العب درسك الأول لترى تقدمك!</string>
+
+    <!-- Rewards -->
+    <string name="rewards_title">الجوائز</string>
+    <string name="rewards_subtitle">نجوم وعملات وأوسمة ومفاجآت</string>
+    <string name="rewards_daily_title">هدية اليوم</string>
+    <string name="rewards_daily_body">عد كل يوم لتحصل على عملات!</string>
+    <string name="rewards_daily_claim">استلم</string>
+    <string name="rewards_daily_claimed">تم الاستلام اليوم</string>
+    <string name="rewards_streak">%1$d أيام متتالية</string>
+    <string name="rewards_achievements">الإنجازات</string>
+    <string name="rewards_shop">المتجر</string>
+    <string name="rewards_shop_body">أنفق عملاتك على أشكال جديدة</string>
+    <string name="rewards_buy">احصل عليها</string>
+    <string name="rewards_owned">مملوكة</string>
+    <string name="rewards_equipped">مستخدمة</string>
+    <string name="rewards_equip">استخدم</string>
+    <string name="rewards_need_stars">تحتاج %1$d نجمة</string>
+    <string name="rewards_cost">%1$d عملة</string>
+    <string name="rewards_unlocked_title">تم الفتح!</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ar">العربية</string>
+    <string name="settings_sound">المؤثرات الصوتية</string>
+    <string name="settings_music">الموسيقى</string>
+    <string name="settings_voice">الصوت</string>
+    <string name="settings_voice_body">ينطق الوقت بصوت عالٍ</string>
+    <string name="settings_24h">نظام 24 ساعة</string>
+    <string name="settings_notifications">تذكير يومي</string>
+    <string name="settings_notifications_body">تنبيه لطيف للتدرب</string>
+    <string name="settings_clock_style">شكل الساعة</string>
+    <string name="settings_theme">السمة</string>
+    <string name="settings_character">الشخصية</string>
+    <string name="settings_difficulty">الصعوبة</string>
+    <string name="settings_difficulty_auto">تلقائي</string>
+    <string name="settings_difficulty_easy">سهل</string>
+    <string name="settings_difficulty_medium">متوسط</string>
+    <string name="settings_difficulty_hard">صعب</string>
+    <string name="settings_hints">التلميحات</string>
+    <string name="settings_hints_body">مساعدة إضافية عند الخطأ</string>
+    <string name="settings_reduce_motion">تقليل الحركة</string>
+    <string name="settings_about">حول التطبيق</string>
+    <string name="settings_about_body">تطبيق مغامرة الساعة يعمل بالكامل بدون إنترنت ولا يطلب أي بيانات شخصية.</string>
+    <string name="settings_permission_rationale">اسمح بالإشعارات لتصلك رسالة التذكير اليومية.</string>
+
+    <!-- Parent area -->
+    <string name="parent_gate_title">للكبار فقط</string>
+    <string name="parent_gate_body">حل هذه المسألة الصغيرة لفتح منطقة الأهل:</string>
+    <string name="parent_gate_wrong">ليس تماماً - جرب مسألة أخرى!</string>
+    <string name="parent_title">منطقة الأهل</string>
+    <string name="parent_today">اليوم</string>
+    <string name="parent_total">الإجمالي</string>
+    <string name="parent_accuracy">الدقة</string>
+    <string name="parent_lessons">دروس مكتملة</string>
+    <string name="parent_strong">نقاط القوة</string>
+    <string name="parent_weak">يحتاج تدريباً</string>
+    <string name="parent_empty">لا توجد إجابات كافية بعد - بعد بعض الدروس ستظهر النتائج هنا.</string>
+    <string name="parent_daily">الدقائق لكل يوم</string>
+    <string name="parent_limit">وقت التعلم اليومي</string>
+    <string name="parent_limit_off">بدون حد</string>
+    <string name="parent_limit_minutes">%1$d دقيقة</string>
+    <string name="parent_reset">إعادة تعيين التقدم</string>
+    <string name="parent_reset_title">إعادة تعيين كل شيء؟</string>
+    <string name="parent_reset_body">سيتم حذف النجوم والعملات والإنجازات والإحصائيات. لا يمكن التراجع عن ذلك.</string>
+    <string name="parent_reset_done">تم حذف التقدم</string>
+    <string name="parent_no_data">لا توجد بيانات تعلم بعد</string>
+
+    <!-- Clock -->
+    <string name="clock_drag_hour">اسحب العقرب القصير</string>
+    <string name="clock_drag_minute">اسحب العقرب الطويل</string>
+    <string name="clock_drag_both">اسحب العقارب لضبط الوقت</string>
+    <string name="clock_hour_hand">عقرب الساعات</string>
+    <string name="clock_minute_hand">عقرب الدقائق</string>
+    <string name="clock_hint_minutes">العقرب الطويل يدل على الدقائق</string>
+    <string name="clock_hint_hours">العقرب القصير يدل على الساعة</string>
+    <string name="clock_now">الآن</string>
+
+    <!-- Daily limit -->
+    <string name="limit_title">حان وقت الراحة!</string>
+    <string name="limit_body">لقد وصلت إلى وقت التعلم لهذا اليوم. عمل رائع - عد غداً أو اسأل أحد الكبار.</string>
+    <string name="limit_grown_up">اسأل أحد الكبار</string>
+
+    <!-- Mascot tips -->
+    <string name="tip_1">العقرب الطويل هو عقرب الدقائق!</string>
+    <string name="tip_2">كل رقم على الساعة يساوي 5 دقائق.</string>
+    <string name="tip_3">النصف يعني أن العقرب الطويل يشير إلى 6.</string>
+    <string name="tip_4">الربع: العقرب الطويل يشير إلى 3.</string>
+    <string name="tip_5">أنت تؤدي بشكل رائع - واصل!</string>
+    <string name="mascot_cheer">عمل رائع! واصل!</string>
+    <string name="mascot_think">لا مشكلة، هيا ننظر معاً.</string>
+    <string name="mascot_idle">أنا هنا إن احتجت مساعدة!</string>
+    <string name="limit_reached">وصلت إلى مدة اللعب اليومية. خذ استراحة وتمدّد قليلاً!</string>
+    <string name="loading">جارٍ التحميل…</string>
+    <string name="settings_gameplay">طريقة اللعب</string>
+</resources>

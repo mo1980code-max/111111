@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">مغامرة الساعة</string>
+    <string name="reminder_channel_name">تذكير للتعلّم</string>
+    <string name="reminder_channel_description">تذكير يومي لطيف للتدرّب على قراءة الساعة</string>
+    <string name="reminder_title">مغامرة الساعة في انتظارك!</string>
+    <string name="reminder_text">عشر دقائق من المرح مع الساعة - هيا نلعب!</string>
+    <string name="ads_app_id_placeholder_disabled">no-ads</string>
+</resources>

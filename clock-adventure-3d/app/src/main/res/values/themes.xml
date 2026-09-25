@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Transparent system bars: the Compose background paints the whole screen. -->
+    <style name="Theme.ClockAdventure" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+</resources>

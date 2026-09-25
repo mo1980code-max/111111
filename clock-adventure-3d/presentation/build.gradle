@@ -1,0 +1,70 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'com.google.devtools.ksp'
+    id 'com.google.dagger.hilt.android'
+}
+
+apply from: "$rootDir/dependencies.gradle"
+
+android {
+    namespace 'com.clockadventure.presentation'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        // All user facing strings and drawables live in this module, so the resource
+        // configurations have to be declared here too.
+        resConfigs rootProject.ext.supportedLocales.join(',')
+    }
+
+    compileOptions {
+        sourceCompatibility rootProject.ext.javaVersion
+        targetCompatibility rootProject.ext.javaVersion
+    }
+
+    kotlinOptions {
+        jvmTarget = rootProject.ext.javaVersion.toString()
+        freeCompilerArgs += [
+                "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+        ]
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+dependencies {
+    implementation project(':domain')
+
+    implementation rootProject.ext.versions.coreKtx
+    implementation rootProject.ext.versions.appCompat
+    implementation rootProject.ext.versions.kotlinxCoroutinesAndroid
+
+    implementation platform(rootProject.ext.versions.composeBom)
+    implementation rootProject.ext.versions.composeUi
+    implementation rootProject.ext.versions.composeUiGraphics
+    implementation rootProject.ext.versions.composeUiToolingPreview
+    implementation rootProject.ext.versions.composeMaterial3
+    debugImplementation rootProject.ext.versions.composeUiTooling
+
+    implementation rootProject.ext.versions.activityCompose
+    implementation rootProject.ext.versions.lifecycleRuntimeCompose
+    implementation rootProject.ext.versions.lifecycleViewModelCompose
+    implementation rootProject.ext.versions.navigationCompose
+
+    implementation rootProject.ext.versions.hiltAndroid
+    implementation rootProject.ext.versions.hiltNavigationCompose
+    ksp rootProject.ext.versions.hiltCompiler
+    implementation rootProject.ext.versions.javaxInject
+
+    testImplementation "junit:junit:4.13.2"
+}

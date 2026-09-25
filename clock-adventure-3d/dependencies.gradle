@@ -1,0 +1,65 @@
+// Single source of truth for every library version used by the Clock Adventure 3D modules.
+// Applied by the root build file (buildscript block) so `ext` is visible to all modules.
+
+ext {
+    // ---------------------------------------------------------------- SDK
+    compileSdkVersion = 35
+    targetSdkVersion = 35
+    minSdkVersion = 26          // Android 8.0 Oreo: covers ~99% of active devices.
+    javaVersion = JavaVersion.VERSION_17
+
+    appId = "com.clockadventure.app"
+    versionCodeValue = 1
+    versionNameValue = "1.0.0"
+
+    // ----------------------------------------------------------- languages
+    // Only these resource configurations are packaged (keeps the APK small and makes sure the
+    // Arabic RTL resources always survive resource shrinking).
+    supportedLocales = ["en", "ar"]
+
+    // ------------------------------------------------------------- versions
+    kotlinVersion = "2.0.21"
+    coroutinesVersion = "1.9.0"
+    composeBomVersion = "2024.12.01"
+    activityVersion = "1.9.3"
+    lifecycleVersion = "2.8.7"
+    navigationVersion = "2.8.5"
+    hiltVersion = "2.52"
+    hiltNavigationComposeVersion = "1.2.0"
+    roomVersion = "2.6.1"
+    datastoreVersion = "1.1.1"
+    coreKtxVersion = "1.13.1"
+    appCompatVersion = "1.7.0"
+    javaxInjectVersion = "1"
+}
+
+ext.versions = [
+        kotlinxCoroutinesCore   : "org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}",
+        kotlinxCoroutinesAndroid: "org.jetbrains.kotlinx:kotlinx-coroutines-android:${coroutinesVersion}",
+
+        composeBom              : "androidx.compose:compose-bom:${composeBomVersion}",
+        composeUi               : "androidx.compose.ui:ui",
+        composeUiGraphics       : "androidx.compose.ui:ui-graphics",
+        composeUiToolingPreview : "androidx.compose.ui:ui-tooling-preview",
+        composeUiTooling        : "androidx.compose.ui:ui-tooling",
+        composeMaterial3        : "androidx.compose.material3:material3",
+
+        activityCompose         : "androidx.activity:activity-compose:${activityVersion}",
+        lifecycleRuntimeCompose : "androidx.lifecycle:lifecycle-runtime-compose:${lifecycleVersion}",
+        lifecycleViewModelCompose: "androidx.lifecycle:lifecycle-viewmodel-compose:${lifecycleVersion}",
+        lifecycleViewModelKtx   : "androidx.lifecycle:lifecycle-viewmodel-ktx:${lifecycleVersion}",
+        navigationCompose       : "androidx.navigation:navigation-compose:${navigationVersion}",
+
+        hiltAndroid             : "com.google.dagger:hilt-android:${hiltVersion}",
+        hiltCompiler            : "com.google.dagger:hilt-android-compiler:${hiltVersion}",
+        hiltNavigationCompose   : "androidx.hilt:hilt-navigation-compose:${hiltNavigationComposeVersion}",
+
+        roomRuntime             : "androidx.room:room-runtime:${roomVersion}",
+        roomKtx                 : "androidx.room:room-ktx:${roomVersion}",
+        roomCompiler            : "androidx.room:room-compiler:${roomVersion}",
+
+        datastorePreferences    : "androidx.datastore:datastore-preferences:${datastoreVersion}",
+        coreKtx                 : "androidx.core:core-ktx:${coreKtxVersion}",
+        appCompat               : "androidx.appcompat:appcompat:${appCompatVersion}",
+        javaxInject             : "javax.inject:javax.inject:${javaxInjectVersion}",
+]

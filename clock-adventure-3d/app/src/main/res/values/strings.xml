@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clock Adventure 3D</string>
+    <string name="reminder_channel_name">Learning reminder</string>
+    <string name="reminder_channel_description">A gentle daily reminder to practise telling the time</string>
+    <string name="reminder_title">Clock Adventure is waiting!</string>
+    <string name="reminder_text">Ten minutes of fun with the clock - shall we play?</string>
+    <!-- No advertising SDK is bundled and no ads are shown. The meta data entry exists only so the
+         manifest documents the decision explicitly. -->
+    <string name="ads_app_id_placeholder_disabled">no-ads</string>
+</resources>
