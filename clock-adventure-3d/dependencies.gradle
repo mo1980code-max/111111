@@ -39,6 +39,8 @@ ext.versions = [
 
         composeBom              : "androidx.compose:compose-bom:${composeBomVersion}",
         composeUi               : "androidx.compose.ui:ui",
+        composeFoundation       : "androidx.compose.foundation:foundation",
+        composeAnimation        : "androidx.compose.animation:animation",
         composeUiGraphics       : "androidx.compose.ui:ui-graphics",
         composeUiToolingPreview : "androidx.compose.ui:ui-tooling-preview",
         composeUiTooling        : "androidx.compose.ui:ui-tooling",

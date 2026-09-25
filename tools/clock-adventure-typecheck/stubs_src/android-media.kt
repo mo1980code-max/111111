@@ -21,6 +21,7 @@ class SoundPool {
         fun build(): SoundPool = SoundPool()
     }
     fun load(fd: android.content.res.AssetFileDescriptor, priority: Int): Int = 1
+    fun load(path: String, priority: Int): Int = 1
     fun play(soundId: Int, leftVolume: Float, rightVolume: Float, priority: Int, loop: Int, rate: Float): Int = 1
     fun release() {}
     fun stop(soundId: Int) {}

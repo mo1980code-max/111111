@@ -68,20 +68,18 @@ class AppAudioController @Inject constructor(
         }
     }
 
+    /**
+     * Renders one sound effect to a WAV file in the cache directory (once per install) and loads
+     * it into the pool. SoundPool decodes the file, so it has to be a real WAV - a raw PCM buffer
+     * would be rejected.
+     */
     private fun loadTone(id: Int, freqs: DoubleArray, millisPerTone: Int) {
         runCatching {
-            val pcm = ToneGenerator.render(freqs, millisPerTone)
-            val stream = java.io.ByteArrayInputStream(pcm)
-            // SoundPool needs a file descriptor, so the tone is written to a temp file once.
-            val file = java.io.File(context.cacheDir, "tone_$id.pcm")
-            file.outputStream().use { it.write(pcm) }
-            val fd = android.content.res.AssetFileDescriptor(
-                android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY),
-                0,
-                pcm.size.toLong()
-            )
-            soundIds[id] = soundPool.load(fd, 1)
-            stream.close()
+            val file = java.io.File(context.cacheDir, "tone_$id.wav")
+            if (!file.exists()) {
+                file.writeBytes(ToneGenerator.renderEffect(freqs, millisPerTone))
+            }
+            soundIds[id] = soundPool.load(file.absolutePath, 1)
         }
     }
 
@@ -160,7 +158,7 @@ class AppAudioController @Inject constructor(
             stopMusic()
             val file = java.io.File(context.cacheDir, MUSIC_FILE)
             if (!file.exists()) {
-                file.outputStream().use { it.write(ToneGenerator.renderMusic()) }
+                file.writeBytes(ToneGenerator.renderMusic())
             }
             musicPlayer = MediaPlayer().apply {
                 setDataSource(file.absolutePath)
@@ -197,7 +195,7 @@ class AppAudioController @Inject constructor(
         private const val TONE_CELEBRATE = 4
         private const val TONE_COIN = 5
         private const val TONE_WHOOSH = 6
-        private const val MUSIC_FILE = "clock_adventure_music.pcm"
+        private const val MUSIC_FILE = "clock_adventure_music.wav"
 
         private val PRAISE = listOf("Well done!", "Great!", "Excellent!", "You did it!")
     }

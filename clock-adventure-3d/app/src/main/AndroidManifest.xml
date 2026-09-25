@@ -7,9 +7,8 @@
         rewards and sound - works completely offline. Nothing is uploaded, no account is needed and
         no personal data is collected.
     -->
+    <!-- The reminder uses an inexact repeating alarm, so no exact-alarm permission is needed. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
-        tools:ignore="ProtectedPermissions" />
 
     <supports-screens
         android:anyDensity="true"

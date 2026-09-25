@@ -16,7 +16,7 @@ android {
         minSdk rootProject.ext.minSdkVersion
         // All user facing strings and drawables live in this module, so the resource
         // configurations have to be declared here too.
-        resConfigs rootProject.ext.supportedLocales.join(',')
+        resConfigs(*rootProject.ext.supportedLocales)
     }
 
     compileOptions {
@@ -51,6 +51,8 @@ dependencies {
 
     implementation platform(rootProject.ext.versions.composeBom)
     implementation rootProject.ext.versions.composeUi
+    implementation rootProject.ext.versions.composeFoundation
+    implementation rootProject.ext.versions.composeAnimation
     implementation rootProject.ext.versions.composeUiGraphics
     implementation rootProject.ext.versions.composeUiToolingPreview
     implementation rootProject.ext.versions.composeMaterial3
@@ -58,6 +60,7 @@ dependencies {
 
     implementation rootProject.ext.versions.activityCompose
     implementation rootProject.ext.versions.lifecycleRuntimeCompose
+    implementation rootProject.ext.versions.lifecycleViewModelKtx
     implementation rootProject.ext.versions.lifecycleViewModelCompose
     implementation rootProject.ext.versions.navigationCompose
 

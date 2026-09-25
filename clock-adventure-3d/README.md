@@ -140,10 +140,16 @@ cd tools/clock-adventure-typecheck
 python3 build_stubs.py          # regenerates stubs/ and the R classes from the real res/ folders
 python3 check.py                # domain · data · presentation · app · tests
 python3 check.py domain         # or a single module
+
+python3 audit.py                # build readiness: dependencies, resources, Room SQL
+    audit_deps.py  every Kotlin import has a matching Gradle dependency; AGP config is valid
+    audit_res.py   every resource XML parses; every @string/@drawable/@mipmap/... reference resolves
+    audit_room.py  every table and column used in a Room @Query exists on its @Entity
 ```
 
 Current state: **all five source sets type-check clean** (domain, data, presentation, app and the
-domain unit tests). The unit tests in `domain/src/test` cover clock geometry, question generation,
-grading, the adaptive difficulty engine, reward maths, time formatting and achievement evaluation.
+domain unit tests) and **all three audits pass**. The unit tests in `domain/src/test` cover clock
+geometry, question generation, grading, the adaptive difficulty engine, reward maths, time
+formatting and achievement evaluation.
 
 Open the project in Android Studio for the Gradle build and the APK/AAB.
