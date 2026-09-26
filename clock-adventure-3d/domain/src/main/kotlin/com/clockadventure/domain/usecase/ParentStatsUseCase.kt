@@ -17,26 +17,7 @@ class ParentStatsUseCase @Inject constructor() {
         dailyStats: List<DailyStat>,
         today: DailyStat
     ): ParentReport {
-        val byLevel = lessons.associateBy { it.levelId }
-        val topics = LevelCatalog.levels
-            .map { spec ->
-                val lesson = byLevel[spec.id] ?: LessonProgress(levelId = spec.id)
-                TopicStat(
-                    levelId = spec.id,
-                    title = spec.title,
-                    stars = lesson.bestStars,
-                    answers = lesson.answers,
-                    accuracy = lesson.accuracy
-                )
-            }
-            .filter { it.answers >= 3 }
-
-        val strong = topics.filter { it.accuracy >= STRONG_THRESHOLD }
-            .sortedByDescending { it.accuracy }
-            .take(3)
-        val weak = topics.filter { it.accuracy < WEAK_THRESHOLD }
-            .sortedBy { it.accuracy }
-            .take(3)
+        val (strong, weak) = topicStats(lessons)
 
         val sessions = dailyStats.sumOf { it.sessions }
         val seconds = dailyStats.sumOf { it.secondsLearned }
@@ -60,8 +41,40 @@ class ParentStatsUseCase @Inject constructor() {
         )
     }
 
+    /**
+     * The strongest and the weakest three levels the child has actually practised.
+     *
+     * Kept public because the parent dashboard shows both lists and turns every weak topic into a
+     * one-tap shortcut back to that lesson.
+     */
+    fun topicStats(lessons: List<LessonProgress>): Pair<List<TopicStat>, List<TopicStat>> {
+        val byLevel = lessons.associateBy { it.levelId }
+        val topics = LevelCatalog.levels
+            .map { spec ->
+                val lesson = byLevel[spec.id] ?: LessonProgress(levelId = spec.id)
+                TopicStat(
+                    levelId = spec.id,
+                    title = spec.title,
+                    stars = lesson.bestStars,
+                    answers = lesson.answers,
+                    accuracy = lesson.accuracy
+                )
+            }
+            .filter { it.answers >= MIN_ANSWERS }
+
+        val strong = topics.filter { it.accuracy >= STRONG_THRESHOLD }
+            .sortedByDescending { it.accuracy }
+            .take(3)
+        val weak = topics.filter { it.accuracy < WEAK_THRESHOLD }
+            .sortedBy { it.accuracy }
+            .take(3)
+        return strong to weak
+    }
+
     companion object {
         const val STRONG_THRESHOLD = 0.8f
         const val WEAK_THRESHOLD = 0.7f
+        /** A level is judged only after the child answered at least this many questions. */
+        const val MIN_ANSWERS = 3
     }
 }

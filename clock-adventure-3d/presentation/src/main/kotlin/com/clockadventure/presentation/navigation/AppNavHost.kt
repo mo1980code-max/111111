@@ -105,7 +105,10 @@ fun AppNavHost(
         }
 
         composable(Routes.PARENT) {
-            ParentRoute(onBack = { navController.popBackStack() })
+            ParentRoute(
+                onBack = { navController.popBackStack() },
+                onPractise = { levelId -> navController.navigate(Routes.session(levelId = levelId)) }
+            )
         }
 
         composable(

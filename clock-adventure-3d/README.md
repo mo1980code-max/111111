@@ -111,6 +111,8 @@ effects and voice can each be switched off in Settings.
 Behind a little multiplication gate so a child cannot reach it by accident. It shows today’s and
 total learning time, accuracy, finished lessons, strong topics, topics that need practise, a
 7-day bar chart, a daily time limit (off / 15 / 20 / 30 / 45 / 60 minutes) and a reset button.
+Strong and weak topics are named in the language the app is set to, and every weak topic has a
+**Practise** button that drops straight into that lesson.
 
 ### When the daily limit is reached
 The limit is never enforced by throwing the child out. A session that runs into the limit is
@@ -152,7 +154,7 @@ UI never touches SQL or DataStore directly.
 
 | Where | What | How to run |
 |---|---|---|
-| `domain/src/test` | 10 test classes, 70 tests: clock geometry, question generation and its invariants, grading, adaptive difficulty, reward maths, time formatting, achievement evaluation, the parent-gate maths, and the level / game / challenge catalogues | `./gradlew :domain:test` |
+| `domain/src/test` | 11 test classes, 74 tests: clock geometry, question generation and its invariants, grading, adaptive difficulty, reward maths, time formatting, achievement evaluation, the parent-gate maths, the parent topic stats, and the level / game / challenge catalogues | `./gradlew :domain:test` |
 | `presentation/src/androidTest` | instrumented tests of the interactive clock: the clock is on screen, a drag reports a new time, the minutes obey the snap granularity of the level, a read-only clock ignores touches | `./gradlew :presentation:connectedAndroidTest` (needs a device) |
 
 ## Verification in this repository

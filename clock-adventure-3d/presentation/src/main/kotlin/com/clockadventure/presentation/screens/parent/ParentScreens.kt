@@ -125,6 +125,7 @@ fun ParentGateRoute(
 @Composable
 fun ParentRoute(
     onBack: () -> Unit,
+    onPractise: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ParentViewModel = hiltViewModel()
 ) {
@@ -132,6 +133,7 @@ fun ParentRoute(
     ParentScreen(
         state = state,
         onBack = onBack,
+        onPractise = onPractise,
         onLimitSelected = viewModel::setDailyLimit,
         onNotificationsChanged = viewModel::setNotifications,
         onReset = viewModel::resetProgress,
@@ -143,12 +145,14 @@ fun ParentRoute(
 internal fun ParentScreen(
     state: ParentUiState,
     onBack: () -> Unit,
+    onPractise: (Int) -> Unit,
     onLimitSelected: (Int) -> Unit,
     onNotificationsChanged: (Boolean) -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = state.progress
+    val lang = state.settings.language
     val todaySeconds = state.daily.lastOrNull()?.secondsLearned ?: 0
     val limitMinutes = state.settings.dailyLimitMinutes
     val limits = listOf(0, 15, 20, 30, 45, 60)
@@ -246,7 +250,10 @@ internal fun ParentScreen(
                                             color = Palette.Mint
                                         )
                                         state.strongTopics.forEach { topic ->
-                                            Text(text = "• $topic", style = MaterialTheme.typography.bodyMedium)
+                                            Text(
+                                                text = "• ${topic.title[lang]} — ${topic.accuracyPercent}%",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
                                         }
                                     }
                                     if (state.weakTopics.isNotEmpty()) {
@@ -258,7 +265,24 @@ internal fun ParentScreen(
                                             color = Palette.Orange
                                         )
                                         state.weakTopics.forEach { topic ->
-                                            Text(text = "• $topic", style = MaterialTheme.typography.bodyMedium)
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "• ${topic.title[lang]} — ${topic.accuracyPercent}%",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Spacer(modifier = Modifier.width(Dimens.gapSmall))
+                                                ArcadeButton(
+                                                    text = stringResource(R.string.parent_practise),
+                                                    onClick = { onPractise(topic.levelId) },
+                                                    height = 44.dp,
+                                                    topColor = Palette.Ocean,
+                                                    bottomColor = Palette.DeepBlue
+                                                )
+                                            }
                                         }
                                     }
                                 }

@@ -216,4 +216,5 @@
     <string name="limit_gate_hint">اطلب من شخص كبير حل هذه المسألة الصغيرة للحصول على 15 دقيقة إضافية:</string>
     <string name="limit_gate_cancel">ليس الآن</string>
     <string name="cd_clock_time">ساعة عقارب تُظهر %1$s</string>
+    <string name="parent_practise">تدرب</string>
 </resources>

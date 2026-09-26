@@ -3,14 +3,15 @@ package com.clockadventure.presentation.screens.parent
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clockadventure.domain.catalog.LevelCatalog
 import com.clockadventure.domain.model.GateQuestion
 import com.clockadventure.domain.model.AppSettings
 import com.clockadventure.domain.model.DailyStat
 import com.clockadventure.domain.model.LessonProgress
 import com.clockadventure.domain.model.QuestionKind
 import com.clockadventure.domain.model.UserProgress
+import com.clockadventure.domain.model.TopicStat
 import com.clockadventure.domain.usecase.CreateParentGateQuestionUseCase
+import com.clockadventure.domain.usecase.ParentStatsUseCase
 import com.clockadventure.domain.repository.ProgressRepository
 import com.clockadventure.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,8 +29,8 @@ data class ParentUiState(
     val progress: UserProgress = UserProgress(),
     val lessons: List<LessonProgress> = emptyList(),
     val daily: List<DailyStat> = emptyList(),
-    val strongTopics: List<String> = emptyList(),
-    val weakTopics: List<String> = emptyList(),
+    val strongTopics: List<TopicStat> = emptyList(),
+    val weakTopics: List<TopicStat> = emptyList(),
     val resetDone: Boolean = false
 )
 
@@ -60,7 +61,8 @@ class ParentGateViewModel @Inject constructor(
 class ParentViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val progressRepository: ProgressRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val parentStats: ParentStatsUseCase
 ) : ViewModel() {
 
     private val verified: Boolean = savedStateHandle.get<Boolean>("verified") ?: false
@@ -74,13 +76,14 @@ class ParentViewModel @Inject constructor(
         progressRepository.observeDailyStats(7),
         reset
     ) { settings, progress, lessons, daily, resetDone ->
+        val topics = parentStats.topicStats(lessons)
         ParentUiState(
             settings = settings,
             progress = progress,
             lessons = lessons,
             daily = daily,
-            strongTopics = strongTopics(lessons),
-            weakTopics = weakTopics(lessons),
+            strongTopics = topics.first,
+            weakTopics = topics.second,
             resetDone = resetDone
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ParentUiState())
@@ -109,19 +112,6 @@ class ParentViewModel @Inject constructor(
 
     companion object {
         /** Levels with the best accuracy, named by their level title. */
-        private fun strongTopics(lessons: List<LessonProgress>): List<String> = lessons
-            .filter { it.answers >= 4 && it.accuracy >= 0.8f }
-            .sortedByDescending { it.accuracy }
-            .take(3)
-            .map { LevelCatalog.byId(it.levelId).title.en }
-
-        /** Levels below 60 % accuracy - these deserve another try. */
-        private fun weakTopics(lessons: List<LessonProgress>): List<String> = lessons
-            .filter { it.answers >= 3 && it.accuracy < 0.6f }
-            .sortedBy { it.accuracy }
-            .take(3)
-            .map { LevelCatalog.byId(it.levelId).title.en }
-
         val ROUTINE_KINDS: List<QuestionKind> = listOf(
             QuestionKind.ROUTINE_CHOICE,
             QuestionKind.ROUTINE_SET_CLOCK

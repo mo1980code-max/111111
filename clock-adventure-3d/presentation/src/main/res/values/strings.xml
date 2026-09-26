@@ -220,4 +220,5 @@
     <string name="limit_gate_hint">Ask a grown-up to solve this little sum for 15 more minutes:</string>
     <string name="limit_gate_cancel">Not now</string>
     <string name="cd_clock_time">Analog clock showing %1$s</string>
+    <string name="parent_practise">Practise</string>
 </resources>
