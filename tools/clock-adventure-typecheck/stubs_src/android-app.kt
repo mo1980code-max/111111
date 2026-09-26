@@ -2,6 +2,7 @@ package android.app
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 
 open class Application : Context() {
@@ -10,11 +11,15 @@ open class Application : Context() {
 
 open class Activity : Context() {
     val window: android.view.Window = android.view.Window()
+    var requestedOrientation: Int = 0
     open fun onCreate(savedInstanceState: Bundle?) {}
     open fun onPause() {}
     open fun onResume() {}
     open fun onDestroy() {}
     open fun recreate() {}
+    open fun isInMultiWindowMode(): Boolean = false
+    open fun onConfigurationChanged(newConfig: Configuration) {}
+    open fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {}
     override fun startActivity(intent: Intent) {}
 }
 

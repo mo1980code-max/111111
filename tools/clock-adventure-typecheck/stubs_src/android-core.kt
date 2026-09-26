@@ -61,8 +61,18 @@ class Resources {
 
 class Configuration {
     val locales: android.os.LocaleList = android.os.LocaleList()
+    var screenWidthDp: Int = 0
+    var screenHeightDp: Int = 0
+    var smallestScreenWidthDp: Int = 0
+    var orientation: Int = ORIENTATION_PORTRAIT
     fun setLocale(locale: java.util.Locale) {}
     fun setLayoutDirection(locale: java.util.Locale) {}
+
+    companion object {
+        const val ORIENTATION_UNDEFINED = 0
+        const val ORIENTATION_PORTRAIT = 1
+        const val ORIENTATION_LANDSCAPE = 2
+    }
 }
 
 class AssetFileDescriptor(fd: android.os.ParcelFileDescriptor, startOffset: Long, length: Long) {
@@ -75,6 +85,13 @@ class PackageManager {
     companion object {
         const val PERMISSION_GRANTED = 0
     }
+}
+
+/** Only the orientation-lock constants the activity needs to switch between phone and tablet. */
+object ActivityInfo {
+    const val SCREEN_ORIENTATION_UNSPECIFIED = -1
+    const val SCREEN_ORIENTATION_PORTRAIT = 1
+    const val SCREEN_ORIENTATION_USER = 2
 }
 
 package android.util

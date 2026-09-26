@@ -30,15 +30,23 @@
         android:hardwareAccelerated="true"
         tools:targetApi="34">
 
+        <!--
+            No fixed android:screenOrientation here: MainActivity locks phones to portrait itself
+            (the right call for a one-handed child's game) but lifts that lock on tablets and the
+            moment the window is put into split screen / free-form multi-window, where Android does
+            not allow a fixed orientation anyway. android:resizeableActivity is true so the app can
+            be freely resized in multi-window instead of being letterboxed or restarted, and every
+            config change it cares about (orientation, screenSize, screenLayout, ...) is listed so
+            rotating or resizing never recreates the activity - see MainActivity.applyOrientationLock.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|density|locale|layoutDirection|fontScale|uiMode"
             android:windowSoftInputMode="adjustResize"
-            android:resizeableActivity="false"
+            android:resizeableActivity="true"
             android:theme="@style/Theme.ClockAdventure"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            tools:ignore="DiscouragedApi,SourceLockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

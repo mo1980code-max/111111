@@ -1,5 +1,7 @@
 package com.clockadventure.app
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -55,6 +57,7 @@ class MainActivity : ComponentActivity() {
 
         // Full screen portrait game: the content draws behind the system bars, which are hidden.
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        applyOrientationLock(resources.configuration)
 
         setContent {
             // null until the saved preferences have been read from disk: the navigation graph must
@@ -118,6 +121,35 @@ class MainActivity : ComponentActivity() {
         audio.resumeMusic()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyOrientationLock(newConfig)
+    }
+
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        applyOrientationLock(newConfig)
+    }
+
+    /**
+     * A child usually plays this one-handed on a phone, so phones stay locked to portrait - the
+     * lock a previous version hard-coded into the manifest. But a fixed manifest lock also fights
+     * the window manager on a tablet (which is free to rotate) and is outright rejected by Android
+     * the moment the activity is put into split screen or a free-form multi-window: the platform
+     * ignores - and, on some versions, logs a warning about - a fixed orientation there. So the
+     * lock now lives here instead, and is re-evaluated on every configuration change: it stays on
+     * for a phone in single-window, and is lifted (free rotation, follows the window/tablet) as
+     * soon as the smallest width crosses the tablet threshold or multi-window kicks in.
+     */
+    private fun applyOrientationLock(configuration: Configuration) {
+        val isLargeScreen = configuration.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP
+        requestedOrientation = if (isLargeScreen || isInMultiWindowMode()) {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
     private fun applyLanguage(language: AppLanguage) {
         val locale = if (language == AppLanguage.ARABIC) Locale("ar") else Locale.ENGLISH
         val current = resources.configuration.locales.get(0)
@@ -129,6 +161,11 @@ class MainActivity : ComponentActivity() {
         @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
         recreate()
+    }
+
+    private companion object {
+        /** Matches the sw600dp breakpoint Android itself uses to call a device a tablet. */
+        const val TABLET_SMALLEST_WIDTH_DP = 600
     }
 }
 
