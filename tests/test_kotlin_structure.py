@@ -217,6 +217,42 @@ class ImportResolutionTest(unittest.TestCase):
                 missing.append((os.path.relpath(path, REPO), target))
         self.assertEqual([], missing, f"imports that resolve to nothing: {missing}")
 
+    def test_library_symbols_are_imported(self):
+        """A library type used without its import (the classic `LocalContext` slip) fails here.
+
+        The index is built from the imports the project already uses, so it only knows about
+        libraries this codebase actually depends on - which is exactly the risky set.
+        """
+        index = {}
+        for path in kotlin_files():
+            for match in re.finditer(r"^import\s+([\w.]+)$", read(path), re.M):
+                fq = match.group(1)
+                name = fq.rsplit(".", 1)[-1]
+                if name[:1].isupper() and not fq.startswith(PACKAGE):
+                    index.setdefault(name, set()).add(fq)
+
+        offenders = []
+        for path in kotlin_files():
+            code = strip_comments(read(path))
+            imported = {
+                (m.group(2) or m.group(1).rsplit(".", 1)[-1])
+                for m in re.finditer(r"^import\s+([\w.]+)(?:\s+as\s+(\w+))?$", code, re.M)
+            }
+            body = "\n".join(
+                line for line in code.splitlines()
+                if not line.startswith("import ") and not line.startswith("package ")
+            )
+            declared = set(re.findall(r"\b(?:class|object|interface|typealias)\s+(\w+)", body))
+            declared |= set(re.findall(r"\bfun\s+(\w+)\(", body))
+            declared |= set(re.findall(r"\bval\s+(\w+)\b", body))
+            for name in sorted(index):
+                if name in imported or name in declared:
+                    continue
+                # Not preceded by a dot: `Role.Button` is a member access, not a use of `Button`.
+                if re.search(r"(?<![\w.])%s\b" % re.escape(name), body):
+                    offenders.append((os.path.relpath(path, REPO), name))
+        self.assertEqual([], offenders, f"used without an import: {offenders}")
+
     def test_no_unused_imports(self):
         """An import nobody uses is dead weight and hides a real dependency."""
         # `by remember { ... }` resolves getValue / setValue implicitly.
