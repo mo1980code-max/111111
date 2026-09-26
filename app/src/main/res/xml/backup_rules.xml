@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below. The user's own dhikr and settings are the only data worth restoring. -->
+<full-backup-content>
+    <include domain="database" path="dhikr.db" />
+    <include domain="sharedpref" path="." />
+    <include domain="file" path="datastore/" />
+</full-backup-content>

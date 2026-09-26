@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Text colour paired with drawable/bg_quran_nav_button.xml. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false" android:color="@color/quran_header" />
-    <item android:color="@color/quran_on_button" />
-</selector>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash mark: the original brand geometry (circle of remembrance + eight-point star). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F4EEE2"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M144,78 a66,66 0 1,0 0.01,0 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#C6A464"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M97.8,97.8 H190.2 V190.2 H97.8 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#C6A464"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M144,78.66 L209.34,144 L144,209.34 L78.66,144 Z" />
+    <path
+        android:fillColor="#C6A464"
+        android:pathData="M144,135.1 a8.9,8.9 0 1,0 0.01,0 Z" />
+</vector>

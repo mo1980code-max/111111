@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_background">#0F1B17</color>
+
+    <!-- Home-screen widgets (dark): charcoal with an emerald undertone, never pure black -->
+    <color name="widget_surface">#152420</color>
+    <color name="widget_surface_alt">#1C302A</color>
+    <color name="widget_ink">#F2EFE7</color>
+    <color name="widget_ink_muted">#9FB0A7</color>
+    <color name="widget_emerald">#7FC0A3</color>
+    <color name="widget_gold">#C9A96A</color>
+    <color name="widget_hairline">#26FFFFFF</color>
+</resources>

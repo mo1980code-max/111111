@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Repeat-count chip: deep emerald pill; text is warm white. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="@color/azkar_deep" />
-    <corners android:radius="12dp" />
-</shape>
