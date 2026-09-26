@@ -209,4 +209,11 @@
     <string name="onboarding_skip">تخطي</string>
     <string name="onboarding_no_account">لا يحتاج حساباً</string>
     <string name="onboarding_no_internet">يعمل بدون إنترنت</string>
+    <string name="limit_break_title">حان وقت استراحة قصيرة!</string>
+    <string name="limit_break_body">تعلمت %1$d دقيقة اليوم. تمدد قليلاً واشرب الماء، ثم عد للعب مرة أخرى!</string>
+    <string name="limit_break_done">انتهيت اليوم</string>
+    <string name="limit_break_ask">اسأل شخصاً كبيراً</string>
+    <string name="limit_gate_hint">اطلب من شخص كبير حل هذه المسألة الصغيرة للحصول على 15 دقيقة إضافية:</string>
+    <string name="limit_gate_cancel">ليس الآن</string>
+    <string name="cd_clock_time">ساعة عقارب تُظهر %1$s</string>
 </resources>

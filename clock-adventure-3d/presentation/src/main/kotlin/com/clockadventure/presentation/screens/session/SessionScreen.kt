@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import com.clockadventure.domain.engine.TimeFormatter
 import com.clockadventure.domain.model.AppSettings
 import com.clockadventure.domain.model.ClockHand
 import com.clockadventure.domain.model.ClockTime
+import com.clockadventure.domain.model.GateQuestion
 import com.clockadventure.domain.model.LocalizedText
 import com.clockadventure.domain.model.MascotId
 import com.clockadventure.domain.model.Question
@@ -105,6 +107,10 @@ fun SessionRoute(
         onMatchTimeSelected = viewModel::onMatchTimeSelected,
         digitalText = viewModel::digitalText,
         hintText = viewModel.hintText(),
+        onTakeBreak = viewModel::onTakeBreak,
+        onAskGrownUp = viewModel::onAskGrownUp,
+        onGateAnswer = viewModel::onGateAnswer,
+        onCancelGate = viewModel::onCancelGate,
         modifier = modifier
     )
 }
@@ -127,6 +133,10 @@ internal fun SessionScreen(
     onMatchTimeSelected: (String) -> Unit,
     digitalText: (ClockTime) -> String,
     hintText: LocalizedText,
+    onTakeBreak: () -> Unit,
+    onAskGrownUp: () -> Unit,
+    onGateAnswer: (Int) -> Unit,
+    onCancelGate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val settings = state.settings
@@ -202,6 +212,17 @@ internal fun SessionScreen(
 
         if (state.phase == SessionPhase.RESULT && (state.result?.stars ?: 0) >= 1) {
             ConfettiOverlay(visible = true, modifier = Modifier.fillMaxSize())
+        }
+
+        if (state.breakTime) {
+            BreakTimeDialog(
+                gateQuestion = state.gateQuestion,
+                minutes = state.settings.dailyLimitMinutes + state.grantedExtraMinutes,
+                onTakeBreak = onTakeBreak,
+                onAskGrownUp = onAskGrownUp,
+                onGateAnswer = onGateAnswer,
+                onCancelGate = onCancelGate
+            )
         }
     }
 }
@@ -307,6 +328,10 @@ private fun TeachPhase(
                 language = state.settings.language,
                 hintHand = ClockHand.HOUR,
                 reduceMotion = state.settings.reduceMotion,
+                contentDescription = stringResource(
+                    R.string.cd_clock_time,
+                    TimeFormatter.spoken(time, state.settings.language)
+                ),
                 onTimeChanged = { time = it },
                 modifier = Modifier.size(clockSize)
             )
@@ -408,6 +433,10 @@ private fun QuestionPhase(
                 ghostTime = if (state.revealAnswer) question.targetTime else null,
                 successPulse = finished,
                 reduceMotion = settings.reduceMotion,
+                contentDescription = stringResource(
+                    R.string.cd_clock_time,
+                    TimeFormatter.spoken(shownTime, settings.language)
+                ),
                 onTimeChanged = onClockChanged,
                 modifier = Modifier.size(clockSize)
             )
@@ -669,6 +698,98 @@ private fun MatchClockTile(
 }
 
 // ------------------------------------------------------------------ result
+
+/**
+ * The daily limit was reached. Nothing is taken away from the child - the session simply pauses
+ * behind this dialog, and a grown-up can grant fifteen more minutes by solving a little sum.
+ */
+@Composable
+private fun BreakTimeDialog(
+    gateQuestion: GateQuestion?,
+    minutes: Int,
+    onTakeBreak: () -> Unit,
+    onAskGrownUp: () -> Unit,
+    onGateAnswer: (Int) -> Unit,
+    onCancelGate: () -> Unit
+) {
+    Dialog(onDismissRequest = {}) {
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(Dimens.gapLarge), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = stringResource(R.string.limit_break_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(Dimens.gapSmall))
+                Text(
+                    text = stringResource(R.string.limit_break_body, minutes),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(Dimens.gapMedium))
+
+                if (gateQuestion == null) {
+                    ArcadeButton(
+                        text = stringResource(R.string.limit_break_ask),
+                        onClick = onAskGrownUp,
+                        topColor = Palette.SunYellow,
+                        bottomColor = Palette.Orange,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.gapSmall))
+                    ArcadeButton(
+                        text = stringResource(R.string.limit_break_done),
+                        onClick = onTakeBreak,
+                        topColor = Palette.Mint,
+                        bottomColor = Color(0xFF1E9E6E),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.limit_gate_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.gapSmall))
+                    Text(
+                        text = gateQuestion.text(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.gapSmall))
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.gapSmall)) {
+                        gateQuestion.options.chunked(2).forEach { row ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)
+                            ) {
+                                row.forEach { option ->
+                                    ArcadeButton(
+                                        text = option.toString(),
+                                        onClick = { onGateAnswer(option) },
+                                        topColor = Palette.Ocean,
+                                        bottomColor = Palette.DeepBlue,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(Dimens.gapSmall))
+                    ArcadeButton(
+                        text = stringResource(R.string.limit_gate_cancel),
+                        onClick = onCancelGate,
+                        height = 52.dp,
+                        topColor = Palette.Silver,
+                        bottomColor = Palette.InkSoft,
+                        modifier = Modifier.fillMaxWidth(0.6f)
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun ResultPhase(

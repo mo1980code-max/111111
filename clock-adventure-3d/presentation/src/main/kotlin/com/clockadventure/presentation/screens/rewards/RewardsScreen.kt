@@ -39,6 +39,7 @@ import com.clockadventure.presentation.components.Pill
 import com.clockadventure.presentation.components.ProgressBar
 import com.clockadventure.presentation.components.ScreenHeader
 import com.clockadventure.presentation.components.TrophyIcon
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -72,6 +73,8 @@ internal fun RewardsScreen(
     val lang = state.settings.language
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(modifier = Modifier.fillMaxSize()) {
                 ScreenHeader(
                     title = stringResource(R.string.rewards_title),
@@ -175,6 +178,8 @@ internal fun RewardsScreen(
                     }
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                 }
+            }
+        
             }
         }
     }

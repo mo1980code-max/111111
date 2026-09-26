@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -90,6 +91,8 @@ fun InteractiveClock(
     reduceMotion: Boolean = false,
     /** Semantics tag for the instrumented tests (see presentation/src/androidTest). */
     testTag: String? = null,
+    /** TalkBack description of the drawn time, so the clock is not a silent picture. */
+    contentDescription: String? = null,
     onTimeChanged: ((ClockTime) -> Unit)? = null
 ) {
     val palette = clockPaletteFor(style)
@@ -100,9 +103,17 @@ fun InteractiveClock(
     )
     var grabbedHand by remember { mutableStateOf<ClockHand?>(null) }
 
+    val description = contentDescription
     BoxWithConstraints(
         modifier = modifier
             .aspectRatioCompat()
+            .then(
+                if (description != null) {
+                    Modifier.semantics(mergeDescendants = true) { this.contentDescription = description }
+                } else {
+                    Modifier
+                }
+            )
             .shadow(elevation = 18.dp, shape = CircleShape, clip = false),
         contentAlignment = Alignment.Center
     ) {

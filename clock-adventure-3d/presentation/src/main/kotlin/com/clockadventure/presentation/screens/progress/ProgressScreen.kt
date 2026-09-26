@@ -33,6 +33,7 @@ import com.clockadventure.presentation.components.ProgressBar
 import com.clockadventure.presentation.components.ScreenHeader
 import com.clockadventure.presentation.components.StarRow
 import com.clockadventure.presentation.components.StatBar
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -59,6 +60,8 @@ internal fun ProgressScreen(
     val progress = state.progress
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(modifier = Modifier.fillMaxSize()) {
                 ScreenHeader(
                     title = stringResource(R.string.progress_title),
@@ -197,6 +200,8 @@ internal fun ProgressScreen(
                         Spacer(modifier = Modifier.height(Dimens.gapMedium))
                     }
                 }
+            }
+        
             }
         }
     }

@@ -36,6 +36,7 @@ import com.clockadventure.presentation.components.PlayIcon
 import com.clockadventure.presentation.components.ScreenHeader
 import com.clockadventure.presentation.components.ShieldIcon
 import com.clockadventure.presentation.components.TrophyIcon
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -66,6 +67,8 @@ internal fun ChallengesScreen(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(modifier = Modifier.fillMaxSize()) {
                 ScreenHeader(
                     title = stringResource(R.string.home_challenges),
@@ -120,6 +123,8 @@ internal fun ChallengesScreen(
                     }
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                 }
+            }
+        
             }
         }
     }

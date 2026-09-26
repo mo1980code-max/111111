@@ -213,4 +213,11 @@
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_no_account">No account needed</string>
     <string name="onboarding_no_internet">Works without internet</string>
+    <string name="limit_break_title">Time for a little break!</string>
+    <string name="limit_break_body">You have learned for %1$d minutes today. Stretch, drink some water, then come back and play again!</string>
+    <string name="limit_break_done">I am done for today</string>
+    <string name="limit_break_ask">Ask a grown-up</string>
+    <string name="limit_gate_hint">Ask a grown-up to solve this little sum for 15 more minutes:</string>
+    <string name="limit_gate_cancel">Not now</string>
+    <string name="cd_clock_time">Analog clock showing %1$s</string>
 </resources>

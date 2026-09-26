@@ -4,11 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clockadventure.domain.catalog.LevelCatalog
+import com.clockadventure.domain.model.GateQuestion
 import com.clockadventure.domain.model.AppSettings
 import com.clockadventure.domain.model.DailyStat
 import com.clockadventure.domain.model.LessonProgress
 import com.clockadventure.domain.model.QuestionKind
 import com.clockadventure.domain.model.UserProgress
+import com.clockadventure.domain.usecase.CreateParentGateQuestionUseCase
 import com.clockadventure.domain.repository.ProgressRepository
 import com.clockadventure.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,13 +23,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
 
-/** A multiplication the grown up has to solve before the parent area opens. */
-data class GateQuestion(val a: Int, val b: Int, val options: List<Int>) {
-    val answer: Int get() = a * b
-    fun text(language: com.clockadventure.domain.model.AppLanguage): String =
-        "$a × $b = ?"
-}
-
 data class ParentUiState(
     val settings: AppSettings = AppSettings(),
     val progress: UserProgress = UserProgress(),
@@ -39,11 +34,13 @@ data class ParentUiState(
 )
 
 @HiltViewModel
-class ParentGateViewModel @Inject constructor() : ViewModel() {
+class ParentGateViewModel @Inject constructor(
+    private val createGateQuestion: CreateParentGateQuestionUseCase
+) : ViewModel() {
 
     private val random = Random(System.currentTimeMillis())
 
-    private val _question = MutableStateFlow(newQuestion())
+    private val _question = MutableStateFlow(createGateQuestion(random))
     val question: StateFlow<GateQuestion> = _question
 
     private val _failed = MutableStateFlow(false)
@@ -54,20 +51,8 @@ class ParentGateViewModel @Inject constructor() : ViewModel() {
             onSuccess()
         } else {
             _failed.value = true
-            _question.value = newQuestion()
+            _question.value = createGateQuestion(random)
         }
-    }
-
-    private fun newQuestion(): GateQuestion {
-        val a = random.nextInt(4, 10)
-        val b = random.nextInt(3, 9)
-        val answer = a * b
-        val options = (setOf(answer) + setOf(
-            (answer + random.nextInt(1, 6)).coerceAtMost(99),
-            (answer - random.nextInt(1, 6)).coerceAtLeast(1),
-            (answer + random.nextInt(6, 13))
-        )).toList().shuffled(random)
-        return GateQuestion(a = a, b = b, options = options)
     }
 }
 

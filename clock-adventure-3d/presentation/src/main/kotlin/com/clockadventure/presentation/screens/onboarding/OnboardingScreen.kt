@@ -47,6 +47,7 @@ import com.clockadventure.presentation.components.MascotView
 import com.clockadventure.presentation.components.Pill
 import com.clockadventure.presentation.components.StepDots
 import com.clockadventure.presentation.components.StarRow
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -91,6 +92,8 @@ internal fun OnboardingScreen(
     val lang = settings.language
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -146,6 +149,8 @@ internal fun OnboardingScreen(
                     modifier = Modifier.fillMaxWidth(0.6f)
                 )
                 Spacer(modifier = Modifier.height(Dimens.gapMedium))
+            }
+        
             }
         }
     }
@@ -232,6 +237,10 @@ private fun HandsPage(settings: AppSettings) {
             use24Hour = settings.use24Hour,
             language = settings.language,
             reduceMotion = settings.reduceMotion,
+            contentDescription = stringResource(
+                R.string.cd_clock_time,
+                TimeFormatter.spoken(time, settings.language)
+            ),
             onTimeChanged = { time = it },
             modifier = Modifier.size(clockSize)
         )

@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clockadventure.domain.engine.ClockMath
 import com.clockadventure.domain.model.ClockTime
 import com.clockadventure.domain.model.MascotId
+import com.clockadventure.domain.engine.TimeFormatter
 import com.clockadventure.presentation.R
 import com.clockadventure.presentation.clock.InteractiveClock
 import com.clockadventure.presentation.components.AdventureBackground
@@ -57,6 +58,7 @@ import com.clockadventure.presentation.components.RewardHud
 import com.clockadventure.presentation.components.RoundIconButton
 import com.clockadventure.presentation.components.ShieldIcon
 import com.clockadventure.presentation.components.TrophyIcon
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -151,6 +153,8 @@ internal fun HomeScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -197,6 +201,10 @@ internal fun HomeScreen(
                             use24Hour = settings.use24Hour,
                             language = lang,
                             reduceMotion = reduceMotion,
+                            contentDescription = stringResource(
+                                R.string.cd_clock_time,
+                                TimeFormatter.spoken(time, lang)
+                            ),
                             modifier = Modifier
                                 .size(clockSize)
                                 .offset(y = bobPx.dp)
@@ -261,6 +269,8 @@ internal fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(Dimens.gapMedium))
+            }
+        
             }
         }
     }

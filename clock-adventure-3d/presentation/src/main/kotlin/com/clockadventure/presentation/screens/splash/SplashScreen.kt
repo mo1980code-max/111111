@@ -26,6 +26,7 @@ import com.clockadventure.domain.engine.ClockMath
 import com.clockadventure.presentation.R
 import com.clockadventure.presentation.clock.MiniClock
 import com.clockadventure.presentation.components.AdventureBackground
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import androidx.compose.ui.unit.times
 
@@ -50,6 +51,8 @@ fun SplashScreen(modifier: Modifier = Modifier) {
     )
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -69,6 +72,8 @@ fun SplashScreen(modifier: Modifier = Modifier) {
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
+            }
+        
             }
         }
     }

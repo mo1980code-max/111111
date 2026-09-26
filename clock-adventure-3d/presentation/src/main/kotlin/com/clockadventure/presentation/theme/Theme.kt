@@ -36,6 +36,8 @@ object Dimens {
     val buttonHeight = 72.dp
     val clockSize = 300.dp
     val hudHeight = 56.dp
+    /** Content never grows wider than this, so tablets keep phone-sized, readable layouts. */
+    val maxContentWidth = 560.dp
 }
 
 val AppShapes = Shapes(

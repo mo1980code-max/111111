@@ -112,6 +112,21 @@ Behind a little multiplication gate so a child cannot reach it by accident. It s
 total learning time, accuracy, finished lessons, strong topics, topics that need practise, a
 7-day bar chart, a daily time limit (off / 15 / 20 / 30 / 45 / 60 minutes) and a reset button.
 
+### When the daily limit is reached
+The limit is never enforced by throwing the child out. A session that runs into the limit is
+**paused** behind a friendly break dialog ("stretch, drink some water") with two choices: stop for
+today, or ask a grown-up. The grown-up route asks one multiplication and, when it is solved, grants
+15 extra minutes and rewinds the timers — the pause itself is not counted as play time. The maths
+lives in the domain (`CreateParentGateQuestionUseCase`), the same use case the parent gate uses, so
+both gates can always be solved.
+
+### Big screens and accessibility
+Every screen sits in a `ContentColumn` that stops at 560 dp and stays centred, so on a tablet or a
+foldable the buttons keep their phone size instead of stretching into ribbons. The clock, the
+mascot and the hud are laid out from fractions of the available width, and the clock itself is
+capped at 300 dp. The analog clock publishes a TalkBack description of the time it is showing, so
+it is never a silent picture.
+
 ### Child safety & privacy
 * no account, no sign-in, no personal data collected, nothing uploaded;
 * **no internet permission and no network code at all** — the whole app is offline;
@@ -137,7 +152,7 @@ UI never touches SQL or DataStore directly.
 
 | Where | What | How to run |
 |---|---|---|
-| `domain/src/test` | 9 test classes, 65 tests: clock geometry, question generation and its invariants, grading, adaptive difficulty, reward maths, time formatting, achievement evaluation, and the level / game / challenge catalogues | `./gradlew :domain:test` |
+| `domain/src/test` | 10 test classes, 70 tests: clock geometry, question generation and its invariants, grading, adaptive difficulty, reward maths, time formatting, achievement evaluation, the parent-gate maths, and the level / game / challenge catalogues | `./gradlew :domain:test` |
 | `presentation/src/androidTest` | instrumented tests of the interactive clock: the clock is on screen, a drag reports a new time, the minutes obey the snap granularity of the level, a read-only clock ignores touches | `./gradlew :presentation:connectedAndroidTest` (needs a device) |
 
 ## Verification in this repository

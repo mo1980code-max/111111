@@ -39,6 +39,7 @@ import com.clockadventure.presentation.components.GlassCard
 import com.clockadventure.presentation.components.ScreenHeader
 import com.clockadventure.presentation.components.ShieldIcon
 import com.clockadventure.presentation.components.StatBar
+import com.clockadventure.presentation.components.ContentColumn
 import com.clockadventure.presentation.theme.Dimens
 import com.clockadventure.presentation.theme.Palette
 import com.clockadventure.presentation.theme.appColors
@@ -60,6 +61,8 @@ fun ParentGateRoute(
 
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(modifier = Modifier.fillMaxSize()) {
                 ScreenHeader(title = stringResource(R.string.parent_gate_title), onBack = onBack)
                 Column(
@@ -87,7 +90,7 @@ fun ParentGateRoute(
                     }
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                     Text(
-                        text = question.text(com.clockadventure.domain.model.AppLanguage.ENGLISH),
+                        text = question.text(),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -112,6 +115,8 @@ fun ParentGateRoute(
                     }
                     Spacer(modifier = Modifier.height(Dimens.gapLarge))
                 }
+            }
+        
             }
         }
     }
@@ -150,6 +155,8 @@ internal fun ParentScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         AdventureBackground(modifier = Modifier.fillMaxSize()) {
+            ContentColumn {
+
             Column(modifier = Modifier.fillMaxSize()) {
                 ScreenHeader(
                     title = stringResource(R.string.parent_title),
@@ -310,6 +317,8 @@ internal fun ParentScreen(
                     )
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                 }
+            }
+        
             }
         }
     }

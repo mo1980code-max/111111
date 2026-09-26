@@ -15,6 +15,7 @@ import com.clockadventure.domain.model.ClockTime
 import com.clockadventure.domain.model.Difficulty
 import com.clockadventure.domain.model.DifficultyMode
 import com.clockadventure.domain.model.LessonCompletionResult
+import com.clockadventure.domain.model.GateQuestion
 import com.clockadventure.domain.model.LocalizedText
 import com.clockadventure.domain.model.Question
 import com.clockadventure.domain.model.QuestionKind
@@ -25,6 +26,7 @@ import com.clockadventure.domain.repository.ProgressRepository
 import com.clockadventure.domain.repository.SettingsRepository
 import com.clockadventure.domain.usecase.BuildSessionResultUseCase
 import com.clockadventure.domain.usecase.EvaluateAnswerUseCase
+import com.clockadventure.domain.usecase.CreateParentGateQuestionUseCase
 import com.clockadventure.domain.usecase.GenerateQuestionUseCase
 import com.clockadventure.presentation.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -83,6 +85,12 @@ data class SessionUiState(
     val matchState: MatchState? = null,
     val dailyLimitReached: Boolean = false,
     val settings: AppSettings = AppSettings(),
+    /** The daily limit was reached: the session pauses behind a kind break dialog. */
+    val breakTime: Boolean = false,
+    /** Set while the "ask a grown-up" gate is on screen. */
+    val gateQuestion: GateQuestion? = null,
+    /** Minutes a grown-up granted on top of the daily limit. */
+    val grantedExtraMinutes: Int = 0,
     val isLesson: Boolean = false,
     val levelId: Int = 0,
     val gameId: GameId? = null,
@@ -110,6 +118,7 @@ class SessionViewModel @Inject constructor(
     private val generateQuestion: GenerateQuestionUseCase,
     private val evaluateAnswer: EvaluateAnswerUseCase,
     private val buildSessionResult: BuildSessionResultUseCase,
+    private val createGateQuestion: CreateParentGateQuestionUseCase,
     private val audio: AudioController
 ) : ViewModel() {
 
@@ -127,7 +136,11 @@ class SessionViewModel @Inject constructor(
     private var answeredCurrentQuestion = false
     private var timerJob: Job? = null
     private var autoAdvanceJob: Job? = null
+    private var limitJob: Job? = null
     private var todaySeconds = 0
+    private var grantedExtraMinutes = 0
+    /** When the break dialog appeared, so the paused time is not counted as play time. */
+    private var pausedAtMs = 0L
 
     private val _uiState = MutableStateFlow(
         SessionUiState(
@@ -153,6 +166,7 @@ class SessionViewModel @Inject constructor(
             progressRepository.observeTodayStat().collect { stat -> todaySeconds = stat.secondsLearned }
         }
         sessionStartMs = System.currentTimeMillis()
+        startLimitWatcher()
         engine = DifficultyEngine(mode = DifficultyMode.AUTO, start = spec.baseDifficulty)
 
         if (spec.isMatchGame) {
@@ -409,6 +423,75 @@ class SessionViewModel @Inject constructor(
         }
     }
 
+    // ------------------------------------------------------------- daily limit
+
+    /**
+     * Checks every 20 seconds whether the daily learning time is up.
+     *
+     * The limit is a setting for grown-ups, but it is applied kindly: the session pauses behind a
+     * break dialog instead of throwing the child out, and a grown-up can grant more time.
+     */
+    private fun startLimitWatcher() {
+        limitJob?.cancel()
+        limitJob = viewModelScope.launch {
+            while (true) {
+                delay(20_000L)
+                checkDailyLimit()
+            }
+        }
+    }
+
+    private fun checkDailyLimit() {
+        val limitMinutes = settings.dailyLimitMinutes + grantedExtraMinutes
+        if (limitMinutes <= 0) return
+        if (_uiState.value.phase == SessionPhase.RESULT) return
+        val sessionSeconds = (System.currentTimeMillis() - sessionStartMs) / 1000L
+        if ((todaySeconds + sessionSeconds) / 60 >= limitMinutes) {
+            timerJob?.cancel()
+            pausedAtMs = System.currentTimeMillis()
+            _uiState.update { it.copy(breakTime = true) }
+        }
+    }
+
+    /** The child accepts the break: the session ends and the result screen is shown. */
+    fun onTakeBreak() {
+        audio.button()
+        finishSession()
+    }
+
+    fun onAskGrownUp() {
+        audio.button()
+        _uiState.update { it.copy(gateQuestion = createGateQuestion(random)) }
+    }
+
+    fun onCancelGate() {
+        _uiState.update { it.copy(gateQuestion = null) }
+    }
+
+    fun onGateAnswer(value: Int) {
+        val question = _uiState.value.gateQuestion ?: return
+        if (value == question.answer) {
+            audio.celebrate()
+            grantedExtraMinutes += EXTRA_MINUTES
+            if (pausedAtMs > 0L) {
+                sessionStartMs += System.currentTimeMillis() - pausedAtMs
+                pausedAtMs = 0L
+            }
+            _uiState.update {
+                it.copy(
+                    gateQuestion = null,
+                    breakTime = false,
+                    grantedExtraMinutes = grantedExtraMinutes
+                )
+            }
+            // Give the countdown a fresh window so the child is not punished for the pause.
+            startTimers()
+        } else {
+            audio.wrong()
+            _uiState.update { it.copy(gateQuestion = createGateQuestion(random)) }
+        }
+    }
+
     // ------------------------------------------------------------- match game
 
     private fun startMatchRound() {
@@ -558,7 +641,7 @@ class SessionViewModel @Inject constructor(
                 newLevel = completion?.currentLevel ?: 0
             )
 
-            val limitMinutes = settings.dailyLimitMinutes
+            val limitMinutes = settings.dailyLimitMinutes + grantedExtraMinutes
             val limitReached = limitMinutes > 0 && (todaySeconds + durationMs / 1000L) / 60 >= limitMinutes
 
             _uiState.update {
@@ -574,6 +657,8 @@ class SessionViewModel @Inject constructor(
 
     fun onReplay() {
         sessionStartMs = System.currentTimeMillis()
+        grantedExtraMinutes = 0
+        startLimitWatcher()
         engine = DifficultyEngine(mode = DifficultyMode.AUTO, start = spec.baseDifficulty)
         _uiState.update {
             SessionUiState(
@@ -597,6 +682,7 @@ class SessionViewModel @Inject constructor(
     override fun onCleared() {
         timerJob?.cancel()
         autoAdvanceJob?.cancel()
+        limitJob?.cancel()
         super.onCleared()
     }
 
@@ -619,5 +705,7 @@ class SessionViewModel @Inject constructor(
     companion object {
         const val MATCH_PAIRS = 4
         const val FAST_ANSWER_MS = 8_000L
+        /** Minutes a grown-up grants when they solve the gate after the daily limit. */
+        const val EXTRA_MINUTES = 15
     }
 }
