@@ -1,128 +1,86 @@
-# Azkar (standalone feature)
+# Azkar content
 
-A completely independent main section of the app, alongside **Quran** and
-**Islamic Wallpapers**. Nothing in the Quran or Wallpaper features was redesigned,
-moved or removed to add it.
-
-## Navigation
-
-```
-Home (Quran | Azkar | Islamic Wallpapers …)
-  └─ tap Azkar ──► AzkarHomeActivity ("Azkar")
-                      ├─ Morning Azkar ─┐
-                      ├─ Evening Azkar ─┼──► AzkarListActivity (one per category)
-                      └─ Tasbeeh ───────┘
-```
-
-The Azkar home icon (`frameAzkar` in `activity_select_function.xml`) is styled exactly
-like the Quran button: same 52 dp pill, same 30 dp icon + 18 sp label rhythm, in the
-Azkar emerald with the tasbeeh-bead `ic_azkar` icon.
+The adhkar are the product. They are transcribed content, not generated content: nothing in this
+repository may rewrite, normalise, reflow, shorten, paraphrase or "improve" them.
 
 ## Mandatory sources
 
-The Arabic text, order, numbers and **per-item repetition counts** were transcribed from:
+The Arabic text, the order, the numbering and the **per-item repetition counts** come from:
 
 | Category | Items | Source |
 |---|---|---|
-| Morning Azkar | 31 | https://www.islambook.com/azkar/1/أذكار-الصباح |
-| Evening Azkar | 30 | https://www.islambook.com/azkar/2/أذكار-المساء |
-| Tasbeeh | 17 | https://www.islamiokul.com/arabic/zikirler.html |
+| أذكار الصباح | 31 | https://www.islambook.com/azkar/1/أذكار-الصباح |
+| أذكار المساء | 30 | https://www.islambook.com/azkar/2/أذكار-المساء |
+| التسبيح | 17 | https://www.islamiokul.com/arabic/zikirler.html |
 
-The URLs live in three places so they can never be silently dropped: `assets/azkar.json`
-(`sources`), `AzkarRepository.SOURCE_*` and `res/values/azkar.xml` (header comment).
-`tests/test_azkar.py` asserts all three agree.
+The URLs live in `assets/azkar.json` under `sources` and travel with every row into the database
+(`sourceReference`, plus a mechanically derived `sourceName` = host), so the reader can always show
+the real attribution under "المصدر".
 
-Morning counts: `1,3,3,3,1,1,3,4,1,7,3,1,1,3,3,3,1,3,1,1,3,10,3,3,3,3,1,1,100,100,100`
-Evening counts: `1,1,3,3,3,1,1,3,4,1,7,3,1,1,3,3,3,1,3,1,1,3,10,3,3,3,3,100,1,100`
-Tasbeeh counts: `100 × 17`
-
-Evening is deliberately **not** assumed to match Morning (extra "آمن الرسول" item, different
-tail order).
-
-## Data & offline behaviour
-
-* `app/src/main/assets/azkar.json` — the whole feature content; the app works fully offline.
-* `azkar/AzkarRepository.java` — parses the asset once, builds **fresh** `AzkarItem`s on
-  every call. Totals come from the parsed arrays; no total is hard-coded anywhere.
-* `azkar/AzkarItem.java` — `id, category, order, arabicText, repeatCount, virtue` (imported,
-  immutable) + `remaining` (session-only). `isCompleted()` ⟺ `remaining == 0`.
-* `azkar/AzkarFontStore.java` — the persisted **display settings** (`SharedPreferences`
-  file `azkar_prefs`): `dhikr_font_size` (float, sp), `dhikr_font_family`
-  (`default`/`amiri`/`cairo`/`tajawal`) and `azkar_night_mode` (boolean). Counters are
-  never stored: every open rebuilds the items, so each counter restarts from its
-  original number.
-* `azkar/AzkarFonts.java` — loads the bundled Arabic faces from `assets/fonts/`
-  (Amiri Quran for the reader + Azkar default, Cairo, Tajawal; all SIL OFL).
-* `azkar/AzkarSettingsSheet.java` — the display-settings bottom sheet opened from the
-  settings icon of either Azkar screen; every control applies instantly and persists
-  at once, without touching any counter.
-
-## Counter behaviour (per item, countdown, session-only)
-
-* Each counter starts from its own original `repeatCount` (e.g. 3) on every open.
-* Tap the large counter button → `remaining - 1`, clamped at zero (never below).
-  Further taps on a completed item are ignored.
-* Reaching zero flips the card to the subtle green tint + emerald stroke and the
-  counter to solid emerald with **✓ Completed** (one short button pulse, nothing more),
-  and shows a short **"تم"** toast once.
-* There is intentionally **no reset control and no stored progress**: the counter
-  restarts only by reopening the screen, which rebuilds every item from its target.
-* Only the counter button counts — the rest of the card is inert while scrolling.
-
-## Display settings (bottom sheet, persisted)
-
-Both Azkar screens have a small tune icon in the header opening one bottom sheet
-(`azkar_settings_sheet.xml`) with three instant-apply sections:
-
-* **Text size** — **A− / current / A+** steps the dhikr text (14–32 sp, default
-  20 sp); titles, buttons and the counter keep fixed sizes. Every tap persists
-  `dhikr_font_size` immediately (`apply()`) and repaints all cards.
-* **Font** — Default (platform) / Amiri / Cairo / Tajawal, persisted as
-  `dhikr_font_family`. Amiri is the historical default; Cairo and Tajawal ship in
-  `assets/fonts/` (OFL, see `docs/licenses/`).
-* **Night mode** — a switch for the Azkar section only, persisted as
-  `azkar_night_mode`. Dark green-charcoal surfaces, warm off-white ink and a
-  brighter emerald accent; turning it off restores the original design pixel for
-  pixel. Nothing outside the Azkar section is affected.
-
-On open, each screen reads only these saved settings; counters always restart from
-their targets, and changing any setting never resets a count.
-
-## Progress
-
-* Category header: `"X / N Completed"` + progress bar, computed from the live items.
-* All complete → emerald **"All Azkar Completed ✓"** banner.
-* Azkar home cards show `0 / N` (counters are session-only), refreshed in `onResume()`.
-
-## Design
-
-* Palette (`colors.xml`, `azkar_*`): deep emerald `#0B3D2E`, emerald `#0E7C5B`,
-  soft gold `#C9A227`, ivory `#FAF7EE`, warm white `#FFFDF7`.
-* Cards: 16–18 dp radius, hairline strokes, 2–3 dp elevation, generous spacing.
-* Dhikr text: RTL, 20 sp Amiri, extra line spacing; virtue line 13 sp muted.
-* Mobile-first: 64 dp counter buttons, 48 dp reset targets, one-handed taps.
-
-## Files owned by this feature
+Repetition counts as bundled:
 
 ```
-app/src/main/assets/azkar.json
-app/src/main/java/com/clock/livewallpaper/azkar/*.java (6 files)
-app/src/main/java/com/clock/livewallpaper/activity/AzkarHomeActivity.java
-app/src/main/java/com/clock/livewallpaper/activity/AzkarListActivity.java
-app/src/main/java/com/clock/livewallpaper/adapter/AzkarAdapter.java
-app/src/main/res/layout/activity_azkar_home.xml
-app/src/main/res/layout/activity_azkar_list.xml
-app/src/main/res/layout/item_azkar.xml
-app/src/main/res/layout/azkar_settings_sheet.xml
-app/src/main/assets/fonts/cairo_regular.ttf, tajawal_regular.ttf (OFL)
-app/src/main/res/values/azkar.xml
-app/src/main/res/drawable/ic_azkar*.xml, bg_azkar_*.xml, azkar_progress.xml
+morning  1,3,3,3,1,1,3,4,1,7,3,1,1,3,3,3,1,3,1,1,3,10,3,3,3,3,1,1,100,100,100
+evening  1,1,3,3,3,1,1,3,4,1,7,3,1,1,3,3,3,1,3,1,1,3,10,3,3,3,3,100,1,100
+tasbeeh  100 × 17
 ```
 
-Touched, not owned: `AndroidManifest.xml` (2 activities), `MainActivity.java` + 
-`activity_select_function.xml` (the `frameAzkar` button only), `colors.xml` (appended
-palette). Verified with:
+Evening is deliberately **not** assumed to mirror morning: it has the extra "آمن الرسول" item and a
+different tail order.
+
+## File format
+
+```jsonc
+{
+  "sources": { "morning": "…", "evening": "…", "tasbeeh": "…" },
+  "morning": [
+    { "id": 1, "order": 1, "text": "…", "repeat": 1, "virtue": "…" }
+  ],
+  "evening": [ … ],
+  "tasbeeh": [ … ]
+}
+```
+
+## How it reaches the screen
 
 ```
-python3 -m unittest discover -s tests -v
+assets/azkar.json ──AzkarSeedSource.load()──► List<DhikrEntity> ──DAO insert(IGNORE)──► Room
+                                                                        │
+                                            DhikrRepository.observeCategory(category)
+                                                                        │
+                                                ReadingViewModel ──► ReadingScreen
 ```
+
+* `AzkarSeedSource` copies `text`, `repeat`, `order` and `virtue` **verbatim**. It does not trim,
+  normalise, truncate or re-encode anything; an item without text is skipped rather than replaced by
+  invented content. The only derived values are `seedKey` (`"morning:1"`), `sourceName` (the host of
+  the recorded URL) and `includeInOverlay` (`text.length <= 180`) - a display decision about which
+  verified text fits a small card, never an edit of it.
+* Seeding is idempotent twice over: it runs only when the stored seed version is older than
+  `AzkarSeedSource.SEED_VERSION`, and `seedKey` carries a unique index with
+  `OnConflictStrategy.IGNORE`, so a second run cannot duplicate a row.
+* Seeded rows are immutable content: `DhikrRepository.save()` only lets the user flip their
+  `isEnabled` / `includeInOverlay` switches, and the DAO delete is
+  `DELETE FROM dhikr WHERE id = :id AND isDefault = 0` - a default dhikr cannot be deleted.
+* The user's own dhikr (`DhikrCategory.CUSTOM`) live in the same table with `isDefault = 0` and are
+  fully editable.
+
+## Reading behaviour
+
+* Each item shows the verified text at the reader's chosen size (0.9-1.4), its repetition counter,
+  its virtue and its source; the text itself is never reflowed or re-styled.
+* Counting down to zero marks the item complete, the header progress advances, and the list scrolls
+  to the next item.
+* Progress is per session: reopening the screen restarts every counter from its own target.
+
+## Guardrails
+
+`tests/test_content_integrity.py` fails if any of the following changes:
+
+* the SHA-256 of `assets/azkar.json`, or its difference from the committed blob,
+* the section counts 31 / 30 / 17, the uniqueness of `id` / `order`, or an empty text,
+* the presence of a source for every section,
+* the verbatim seeding path (`arabicText = text`, no `trim`, `replace`, `normalize`, `substring`,
+  `take`, `filter` on the text),
+* the "skip, never invent" rule for an empty item,
+* the immutability guarantees (unique `seedKey`, `IGNORE` conflict strategy, guarded delete).

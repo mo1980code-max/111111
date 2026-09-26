@@ -1,121 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   >
+<!--
+  Permission budget (minimum for the retained product features):
 
-    <uses-permission android:name="android.permission.SET_WALLPAPER" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    SYSTEM_ALERT_WINDOW   the floating dhikr card drawn over other apps (optional at runtime)
+    POST_NOTIFICATIONS    Android 13+ runtime permission for reminder notifications (optional)
+    RECEIVE_BOOT_COMPLETED  re-arms the enabled alarms after a reboot
+    VIBRATE               the optional short haptic of the tasbeeh / floating card
+
+  Deliberately absent: INTERNET, ACCESS_NETWORK_STATE, READ/WRITE_EXTERNAL_STORAGE, SET_WALLPAPER,
+  WAKE_LOCK and com.google.android.gms.permission.AD_ID. Nothing in the app can reach the network,
+  write outside its own sandbox, set a wallpaper or show an advert, so none of them are declared.
+  No SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM either: reminders use inexact alarms on purpose.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
-
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:name="com.clock.livewallpaper.AppClass"
+        android:name=".DhikrApplication"
         android:allowBackup="true"
-        android:icon="@drawable/icon200"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
-
-        <!-- Quran: the index of 114 surahs is the feature entry point; the reader opens from it. -->
-        <activity
-            android:name="com.clock.livewallpaper.activity.SurahListActivity"
-            android:exported="false"
-            android:label="@string/quran_index_title"
-            android:theme="@style/QuranTheme" />
+        android:enableOnBackInvokedCallback="true"
+        android:theme="@style/Theme.Dhikr.Starting">
 
         <activity
-            android:name="com.clock.livewallpaper.activity.QuranActivity"
-            android:exported="false"
-            android:label="@string/quran_title"
-            android:theme="@style/QuranTheme" />
-
-        <!-- Azkar: standalone home screen plus one category screen per section. -->
-        <activity
-            android:name="com.clock.livewallpaper.activity.AzkarHomeActivity"
-            android:exported="false"
-            android:label="@string/azkar_title"
-            android:theme="@style/AzkarTheme" />
-
-        <activity
-            android:name="com.clock.livewallpaper.activity.AzkarListActivity"
-            android:exported="false"
-            android:label="@string/azkar_title"
-            android:theme="@style/AzkarTheme" />
-
-        <activity
-            android:name="com.clock.livewallpaper.activity.AllahNamesActivity"
-            android:exported="false"
-            android:label="@string/allah_names_title"
-            android:theme="@style/AppTheme" />
-
-        <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.EditorActivity" />
-        <activity
-            android:name="com.clock.livewallpaper.activity.ClockStudioActivity"
-            android:exported="false"
-            android:label="@string/app_name" />
-        <activity
-            android:name="com.clock.livewallpaper.activity.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Dhikr.Starting"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name="com.clock.livewallpaper.LiveClockWallpaper"
-            android:enabled="true"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/bosswallpaper" />
-        </service>
-        <service
-            android:name="com.clock.livewallpaper.CustomWallpaper"
-            android:enabled="true"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/bosswallpaper" />
-        </service>
+        <!-- Periodic dhikr reminder: inexact AlarmManager alarm, re-armed after every delivery. -->
+        <receiver
+            android:name=".reminder.DhikrReminderReceiver"
+            android:exported="false" />
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
+        <!-- Morning / evening / Friday reminders. -->
+        <receiver
+            android:name=".reminder.DailyReminderReceiver"
+            android:exported="false" />
+
+        <!-- Re-arms only the schedules the user actually enabled; never opens UI. -->
+        <receiver
+            android:name=".reminder.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".widget.DhikrWidgetProvider"
+            android:label="@string/widget_dhikr_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
             <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-        </provider>
-        <meta-data
-            android:name="com.google.android.gms.ads.AD_MANAGER_APP"
-            android:value="true" />
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_dhikr_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickActionsWidgetProvider"
+            android:label="@string/widget_quick_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_actions_info" />
+        </receiver>
+
     </application>
 
 </manifest>

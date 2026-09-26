@@ -5,8 +5,11 @@
 /.idea/libraries
 .DS_Store
 /build
+/app/build
 /captures
 .externalNativeBuild
+.cxx
+.kotlin
 __pycache__/
 *.pyc
 

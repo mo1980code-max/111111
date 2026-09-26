@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Post-splash window shell. Colours inside the window are Compose's job; this theme only
+         owns the window background (so cold start does not flash white) and transparent system
+         bars for edge-to-edge. -->
+    <style name="Theme.Dhikr" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+
+    <!-- Official Splash Screen API: deep emerald field + the original geometric mark. No
+         artificial delay is added anywhere; the icon shows only while the process starts. -->
+    <style name="Theme.Dhikr.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.Dhikr</item>
+    </style>
+
+</resources>

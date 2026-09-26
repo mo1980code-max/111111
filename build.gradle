@@ -1,10 +1,22 @@
+// Root build file. Versions are declared once here and reused by :app.
+//
+// Offline-first product rule: only google() and mavenCentral() are needed. jitpack was dropped
+// together with the retired colour-picker of the legacy clock editor, so dependency resolution no
+// longer depends on a third-party mirror.
 buildscript {
+    ext {
+        kotlinVersion = '2.1.20'
+        hiltVersion = '2.56.2'
+    }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hiltVersion"
     }
 }
 
@@ -12,12 +24,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        // jitpack serves com.github.QuadFlask:colorpicker; everything else is on the two above.
-        maven { url 'https://jitpack.io' }
-        // jcenter was removed: JFrog sunset it (read-only, then 403/expired certs), so leaving it
-        // in the list only added a doomed network round trip to every dependency resolution and
-        // turned an outage there into a build failure here. No dependency resolves from it --
-        // colorpicker comes from jitpack, the rest from google()/mavenCentral().
     }
 }
 

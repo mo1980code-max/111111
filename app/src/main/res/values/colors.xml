@@ -1,133 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Only the values the PLATFORM needs (window background, splash, launcher, widgets) live here.
+  The in-app Compose palette is defined once in ui/theme/Color.kt so there is a single source of
+  truth for the app surfaces.
+-->
 <resources>
-    <color name="colorAccent">#4d4d4d</color>
-    <color name="colorPrimary">#646464</color>
-    <color name="colorPrimaryDark">#363636</color>
+    <color name="window_background">#FBF7F0</color>
+    <color name="splash_background">#0A3D2F</color>
+    <color name="ic_launcher_background">#0A3D2F</color>
 
-    <color name="adBg">#7e83ff</color>
-    <color name="adButton">#54c7c9</color>
-    <color name="appColor">#4d52de</color>
-    <color name="black">#ff000000</color>
-    <color name="colorWhite">#fff</color>
-    <color name="colorWidgetBackground">#222121</color>
-    <color name="colorYellow">#ffc107</color>
-    <color name="ic_launcher_background">#4d52de</color>
-    <color name="purple_200">#ffbb86fc</color>
-    <color name="purple_700">#ff3700b3</color>
-    <color name="teal_200">#ff03dac5</color>
-    <color name="textColor">#fff</color>
-    <color name="textWhite">#fff</color>
-    <color name="themeColor">#eeeeee</color>
-    <color name="themeDarkColor">#dedede</color>
-    <color name="transparent">#00000000</color>
-
-    <!--
-      Quran reader palette. Single source of truth for the Surah Index and the reader screens;
-      used by res/values/quran.xml, res/layout/activity_surah_list.xml, item_surah.xml and
-      activity_quran.xml. Do not redefine these values elsewhere.
-    -->
-
-    <!-- Background: paper colour behind the whole reader and the index screen. -->
-    <color name="quran_background">#FBF9F0</color>
-    <!-- Text: Arabic verse ink and primary list text. -->
-    <color name="quran_text">#1A1A1A</color>
-    <!-- Highlight: selection / pressed tint, e.g. a tapped surah row. -->
-    <color name="quran_highlight">#D0ECE4</color>
-    <!-- Header: surah name, Juz and page labels (muted secondary text). -->
-    <color name="quran_header">#7A7A7A</color>
-    <!-- Buttons: Next Surah / Previous Surah and the home-screen Quran pill. -->
-    <color name="quran_button">#2D7D46</color>
-
-    <!-- Supporting shades derived from the five colours above. -->
-    <!-- Pressed state for quran_button, so taps give feedback without a new hue. -->
-    <color name="quran_button_pressed">#246438</color>
-    <!-- Foreground for text drawn on top of quran_button. -->
-    <color name="quran_on_button">#FBF9F0</color>
-    <!-- Hairline separators on quran_background, darker than the highlight. -->
-    <color name="quran_divider">#E8E4D5</color>
-    <!-- Surah number badge fill: the highlight tint, kept away from pure white. -->
-    <color name="quran_badge">#EFEADA</color>
-    <!-- Load/permission errors on quran_background. -->
-    <color name="quran_error">#C62828</color>
-
-    <!--
-      Azkar palette. Single source of truth for the Azkar home and category screens;
-      used by res/values/azkar.xml and the activity_azkar_*/item_azkar layouts.
-      Deep emerald + emerald + soft gold on ivory/warm white: peaceful, premium Islamic feel.
-    -->
-
-    <!-- Screen background: warm ivory. -->
-    <color name="azkar_background">#FAF7EE</color>
-    <!-- Card surface: warm white. -->
-    <color name="azkar_card">#FFFDF7</color>
-    <!-- Primary text: deep green-charcoal ink. -->
-    <color name="azkar_text">#22312A</color>
-    <!-- Secondary text: muted warm grey. -->
-    <color name="azkar_muted">#7C7666</color>
-    <!-- Primary action / completed state: emerald green. -->
-    <color name="azkar_primary">#0E7C5B</color>
-    <!-- Pressed state for azkar_primary. -->
-    <color name="azkar_primary_dark">#0A5C44</color>
-    <!-- Deep emerald: header accents and evening tile. -->
-    <color name="azkar_deep">#0B3D2E</color>
-    <!-- Soft gold: badges, icon accents, card strokes. -->
-    <color name="azkar_gold">#C9A227</color>
-    <!-- Pale gold wash behind number badges. -->
-    <color name="azkar_gold_soft">#F3E9C8</color>
-    <!-- Foreground for text drawn on top of azkar_primary. -->
-    <color name="azkar_on_primary">#FFFFFF</color>
-    <!-- Completed card wash: subtle green tint. -->
-    <color name="azkar_completed_bg">#E5F3EB</color>
-    <!-- Hairline separators and card strokes on azkar_background. -->
-    <color name="azkar_divider">#E6E0CE</color>
-    <!-- Progress track behind the emerald progress fill. -->
-    <color name="azkar_track">#E9E4D2</color>
-
-    <!--
-      Azkar night palette. Used ONLY inside the Azkar section when the user enables its
-      own night mode (AzkarFontStore KEY_NIGHT_MODE); the day palette above stays the
-      default and is restored untouched when night mode is off. Deep green-charcoal
-      surfaces with warm off-white ink and a brighter emerald accent: calm and readable.
-    -->
-    <!-- Night screen background: deep green-charcoal. -->
-    <color name="azkar_night_background">#0F1714</color>
-    <!-- Night card surface. -->
-    <color name="azkar_night_card">#1B2620</color>
-    <!-- Night counter button surface (a touch darker than the card). -->
-    <color name="azkar_night_counter">#141E19</color>
-    <!-- Night primary text: warm off-white ink. -->
-    <color name="azkar_night_text">#ECE7D6</color>
-    <!-- Night secondary text. -->
-    <color name="azkar_night_muted">#A89F88</color>
-    <!-- Night accent: brighter emerald, readable on dark surfaces. -->
-    <color name="azkar_night_primary">#45B981</color>
-    <!-- Night completed card wash: deep green tint. -->
-    <color name="azkar_night_completed_bg">#16352A</color>
-    <!-- Night hairlines, strokes and progress track. -->
-    <color name="azkar_night_divider">#2C3A32</color>
-    <color name="azkar_night_track">#2C3A32</color>
-
-    <!--
-      Ad and unlock layer palette (see values/ads.xml, docs/ADS.md). One definition for every ad
-      surface so a native ad card can never take a content card's colours by accident.
-    -->
-    <!-- In-feed native ad card: warm paper, deliberately unlike the dark content tiles. -->
-    <color name="ad_surface">#FFFDF6</color>
-    <color name="ad_stroke">#D9D2BE</color>
-    <color name="ad_badge_bg">#1F2937</color>
-    <color name="ad_badge_text">#FFFFFF</color>
-    <color name="ad_headline">#1A1A1A</color>
-    <color name="ad_body">#5B5648</color>
-    <color name="ad_cta">#0E7C5B</color>
-    <color name="ad_cta_text">#FFFFFF</color>
-    <color name="ad_divider">#EAE4D2</color>
-    <!-- Locked tile: dim the art, keep the lock badge legible. -->
-    <color name="lock_scrim">#A6101416</color>
-    <color name="lock_badge_bg">#F2FFFFFF</color>
-    <color name="lock_badge_text">#1A1A1A</color>
-    <color name="lock_accent">#C9A227</color>
-    <!-- Section subtitle under the header bar. -->
-    <color name="section_hint">#7C7666</color>
-    <!-- Same caption, drawn on the dark header image instead of a white background. -->
-    <color name="section_hint_on_dark">#D9FFFFFF</color>
+    <!-- Home-screen widgets (light) -->
+    <color name="widget_surface">#FBF7F0</color>
+    <color name="widget_surface_alt">#F2EADC</color>
+    <color name="widget_ink">#17241F</color>
+    <color name="widget_ink_muted">#5C6B63</color>
+    <color name="widget_emerald">#0A3D2F</color>
+    <color name="widget_gold">#B08D51</color>
+    <color name="widget_hairline">#1A0A3D2F</color>
 </resources>

@@ -1,30 +1,19 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# R8 rules for the Dhikr app.
 #
-# For more details, see
-#   http:
+# The previous file contained `-keep class * { public private *; }`, which kept every member of
+# every class and made minification pointless. Room, Hilt, Compose, Navigation and DataStore all
+# ship their own consumer rules, so only the few app-specific entry points below are needed.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Entities are reflected over by Room's generated code; their field names must survive.
+-keep class com.clock.livewallpaper.data.local.DhikrEntity { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Broadcast receivers / widget providers are instantiated by name from the manifest.
+-keep class com.clock.livewallpaper.reminder.** extends android.content.BroadcastReceiver
+-keep class com.clock.livewallpaper.widget.** extends android.appwidget.AppWidgetProvider
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
-#com.photolab.galaxyoverlay
+# Keep annotation and signature metadata used by Hilt/Room generated code.
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
 
--ignorewarnings
--keep class * {
-    public private *;
-}
-
--dontwarn com.androidlab.bokehoverlay.**
-
+# Line numbers make Play Console crash reports readable while still obfuscating names.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

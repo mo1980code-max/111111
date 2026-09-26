@@ -1,38 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic is the product language, so the DEFAULT resource folder is the Arabic copy: whatever the
+  device language is, the UI reads the same. Religious text is never stored here - dhikr text,
+  virtue and source come from assets/azkar.json and the Room database, verbatim.
+-->
 <resources>
-    <string name="app_name">clock live wallpaper</string>
 
-    <!-- Clock Studio actions. The two-line label keeps the English and Arabic action discoverable. -->
-    <string name="clock_studio_set_live_wallpaper">Set as Live Wallpaper
-تعيين كخلفية حية</string>
-    <string name="clock_studio_set_live_wallpaper_description">Set the saved clock composition as the Android live wallpaper</string>
-    <string name="clock_studio_wallpaper_unavailable">Live wallpaper preview is not available on this device.</string>
-    <string name="clock_studio_choose_color">Choose color</string>
-    <string name="clock_studio_ok">OK</string>
-    <string name="clock_studio_cancel">Cancel</string>
-    <string name="clock_studio_select_picture">Select picture</string>
-    <string name="clock_studio_color_one">Color 1</string>
-    <string name="clock_studio_color_two">Color 2</string>
-    <string name="clock_studio_title">ساعات مخصصة</string>
-    <string name="clock_studio_settings">إعدادات التاريخ والوقت</string>
-    <string name="clock_studio_settings_description">Configure date, time and theme options</string>
-    <string name="clock_studio_theme">المظهر الإسلامي</string>
-    <string name="clock_studio_24_hour">نظام 24 ساعة</string>
-    <string name="clock_studio_seconds">إظهار الثواني</string>
-    <string name="clock_studio_hijri">إظهار التاريخ الهجري</string>
-    <string name="clock_studio_gregorian">إظهار التاريخ الميلادي</string>
-    <string name="clock_studio_day_name">إظهار اسم اليوم</string>
-    <string name="clock_studio_hijri_adjustment">تعديل التاريخ الهجري: %1$d</string>
-    <string name="clock_studio_save">حفظ</string>
+    <string name="app_name">ذِكر</string>
 
-    <string name="back">رجوع</string>
-    <string name="allah_names_title">أسماء الله الحسنى · 99 Names</string>
-    <string name="allah_names_subtitle">اختر اسمًا لتصميم الساعة</string>
-    <string name="allah_name_number">الاسم %1$d</string>
-    <string name="allah_name_locked">مقفلة</string>
-    <string name="allah_name_open_description">فتح الاسم %1$d في Clock Studio</string>
-    <string name="allah_name_locked_description">الاسم %1$d مقفل</string>
-    <string name="allah_name_locked_message">افتح هذا الاسم أولًا لاستخدامه في الخلفية.</string>
-    <string name="unlock_name_title">اسم من أسماء الله الحسنى مقفل</string>
-    <string name="unlock_name_message">شاهد إعلانًا قصيرًا واحدًا لفتح هذا الاسم نهائيًا على هذا الجهاز.</string>
-    <string name="unlock_name_cta">مشاهدة إعلان لفتح الاسم</string>
+    <!-- ===================== عام ===================== -->
+    <string name="action_start">ابدأ</string>
+    <string name="action_skip">تخطي</string>
+    <string name="action_next">التالي</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_copy">نسخ</string>
+    <string name="action_share">مشاركة</string>
+    <string name="action_not_now">ليس الآن</string>
+    <string name="action_edit">تعديل</string>
+    <string name="action_reset">إعادة</string>
+    <string name="copied_to_clipboard">تم نسخ الذكر</string>
+    <string name="share_chooser_title">مشاركة الذكر</string>
+
+    <!-- ===================== الترحيب ===================== -->
+    <string name="onboarding_title_1">الذكر معك أينما كنت</string>
+    <string name="onboarding_subtitle_1">تذكيرات لطيفة ترافقك أثناء استخدام هاتفك</string>
+    <string name="onboarding_title_2">بالوقت الذي يناسبك</string>
+    <string name="onboarding_subtitle_2">اختر متى وكم مرة تريد أن يظهر لك الذكر</string>
+    <string name="onboarding_title_3">خصوصيتك أولًا</string>
+    <string name="onboarding_subtitle_3">بياناتك وأذكارك محفوظة على جهازك</string>
+    <string name="onboarding_page_indicator">الصفحة %1$s من %2$s</string>
+
+    <!-- ===================== الأذونات ===================== -->
+    <string name="overlay_permission_title">اجعل الذكر قريبًا منك</string>
+    <string name="overlay_permission_text">فعّل إذن الظهور فوق التطبيقات لتظهر لك بطاقة الذكر أثناء استخدام هاتفك.</string>
+    <string name="overlay_permission_privacy">التطبيق لا يحتاج إلى قراءة محتوى التطبيقات الأخرى ولا يعرف ما تستخدمه؛ يعرض بطاقة الذكر فقط.</string>
+    <string name="overlay_permission_cta">تفعيل بطاقة الذكر</string>
+    <string name="overlay_permission_granted">إذن بطاقة الذكر مفعّل</string>
+    <string name="overlay_permission_missing">إذن بطاقة الذكر غير مفعّل</string>
+    <string name="notification_permission_title">لا تفوّت أذكارك</string>
+    <string name="notification_permission_text">فعّل التنبيهات لتذكيرك بأذكار الصباح والمساء وبقية التذكيرات.</string>
+    <string name="notification_permission_cta">تفعيل التنبيهات</string>
+    <string name="notification_permission_denied">التنبيهات موقوفة من إعدادات النظام</string>
+
+    <!-- ===================== الرئيسية ===================== -->
+    <string name="home_greeting">السلام عليكم</string>
+    <string name="home_hero_morning_title">صباحٌ بذكر الله</string>
+    <string name="home_hero_morning_subtitle">ابدأ يومك بأذكار الصباح</string>
+    <string name="home_hero_evening_title">مساؤك طمأنينة</string>
+    <string name="home_hero_evening_subtitle">اختم يومك بذكر الله</string>
+    <string name="home_hero_cta">ابدأ الآن</string>
+    <string name="home_reminder_card_title">منبه الأذكار</string>
+    <string name="home_reminder_active">نشط</string>
+    <string name="home_reminder_paused">متوقف</string>
+    <string name="home_reminder_every">كل %1$s</string>
+    <string name="home_reminder_custom">تخصيص</string>
+    <string name="home_daily_dhikr">ذكر اليوم</string>
+    <string name="home_quick_actions">اختصارات</string>
+
+    <!-- ===================== التنقل ===================== -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_adhkar">الأذكار</string>
+    <string name="nav_tasbeeh">المسبحة</string>
+    <string name="nav_my_dhikr">أذكاري</string>
+
+    <!-- ===================== الأذكار ===================== -->
+    <string name="adhkar_title">الأذكار</string>
+    <string name="adhkar_subtitle">اختر مجموعة الأذكار التي تريد قراءتها</string>
+    <string name="category_morning">أذكار الصباح</string>
+    <string name="category_evening">أذكار المساء</string>
+    <string name="category_tasbeeh">التسبيح</string>
+    <string name="category_custom">أذكاري</string>
+    <string name="category_item_count">%1$s ذكرًا</string>
+    <string name="category_empty_title">لا توجد أذكار في هذه المجموعة</string>
+    <string name="category_empty_text">ستظهر الأذكار هنا فور توفرها في بيانات التطبيق</string>
+
+    <!-- ===================== شاشة القراءة ===================== -->
+    <string name="reading_progress">%1$s / %2$s</string>
+    <string name="reading_repeat_count">التكرار %1$s</string>
+    <string name="reading_remaining">المتبقي %1$s</string>
+    <string name="reading_tap_to_count">اضغط للعد</string>
+    <string name="reading_item_done">تم هذا الذكر</string>
+    <string name="reading_all_done">أتممت هذه الأذكار، تقبّل الله</string>
+    <string name="reading_restart">إعادة القراءة</string>
+    <string name="reading_virtue">الفضل</string>
+    <string name="reading_source_title">مصدر النص</string>
+    <string name="reading_source_note">النص منقول كما ورد في المصدر دون أي تعديل.</string>
+
+    <!-- ===================== المسبحة ===================== -->
+    <string name="tasbeeh_title">المسبحة</string>
+    <string name="tasbeeh_of_target">/ %1$s</string>
+    <string name="tasbeeh_target">الهدف</string>
+    <string name="tasbeeh_target_custom">مخصص</string>
+    <string name="tasbeeh_custom_target_title">هدف مخصص</string>
+    <string name="tasbeeh_custom_target_hint">عدد التسبيحات</string>
+    <string name="tasbeeh_custom_target_error">اختر رقمًا بين %1$s و %2$s</string>
+    <string name="tasbeeh_daily_total">مجموع تسبيحات اليوم</string>
+    <string name="tasbeeh_reset">تصفير العداد</string>
+    <string name="tasbeeh_reset_title">تصفير العداد؟</string>
+    <string name="tasbeeh_reset_text">سيعود العداد إلى الصفر، ولن يتأثر مجموع تسبيحات اليوم.</string>
+    <string name="tasbeeh_select_dhikr">اختر الذكر</string>
+    <string name="tasbeeh_custom_dhikr">ذكر مخصص</string>
+    <string name="tasbeeh_custom_dhikr_hint">اكتب الذكر</string>
+    <string name="tasbeeh_completed">اكتمل الهدف، تقبّل الله</string>
+    <string name="tasbeeh_tap_hint">اضغط على الدائرة للتسبيح</string>
+    <string name="tasbeeh_counter_description">عداد التسبيح، العدد الحالي %1$s من %2$s</string>
+
+    <!-- ===================== أذكاري ===================== -->
+    <string name="my_dhikr_title">أذكاري</string>
+    <string name="my_dhikr_empty_title">لم تضف أذكارًا خاصة بعد</string>
+    <string name="my_dhikr_empty_text">أضف ذكرًا ليظهر ضمن تذكيراتك</string>
+    <string name="my_dhikr_add">إضافة ذكر</string>
+    <string name="my_dhikr_add_title">إضافة ذكر</string>
+    <string name="my_dhikr_edit_title">تعديل الذكر</string>
+    <string name="my_dhikr_field_text">نص الذكر</string>
+    <string name="my_dhikr_field_repeat">عدد التكرارات</string>
+    <string name="my_dhikr_field_category">التصنيف</string>
+    <string name="my_dhikr_switch_enabled">مفعّل</string>
+    <string name="my_dhikr_switch_overlay">إظهار في بطاقة الذكر</string>
+    <string name="my_dhikr_validation_empty">اكتب نص الذكر أولًا</string>
+    <string name="my_dhikr_validation_repeat">عدد التكرارات يجب أن يكون بين %1$s و %2$s</string>
+    <string name="my_dhikr_delete_title">حذف الذكر؟</string>
+    <string name="my_dhikr_delete_text">هل تريد حذف هذا الذكر نهائيًا؟</string>
+    <string name="my_dhikr_builtin_badge">ذكر أساسي</string>
+    <string name="my_dhikr_builtin_note">الأذكار الأساسية منقولة من مصادرها، يمكنك إيقافها أو إخفاؤها من بطاقة الذكر دون تغيير نصها.</string>
+    <string name="my_dhikr_saved">تم حفظ الذكر</string>
+    <string name="my_dhikr_deleted">تم حذف الذكر</string>
+    <string name="my_dhikr_count_summary">%1$s من أذكارك</string>
+
+    <!-- ===================== الإعدادات ===================== -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_section_overlay">بطاقة الذكر</string>
+    <string name="settings_section_reminders">التذكيرات</string>
+    <string name="settings_section_daily">أذكار الصباح والمساء</string>
+    <string name="settings_section_friday">تذكير الجمعة</string>
+    <string name="settings_section_quiet">ساعات الهدوء</string>
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_section_tasbeeh">المسبحة</string>
+    <string name="settings_section_about">عن التطبيق</string>
+
+    <string name="settings_overlay_enabled">بطاقة الذكر فوق التطبيقات</string>
+    <string name="settings_overlay_enabled_desc">تظهر بطاقة ذكر صغيرة أثناء استخدامك لتطبيقات أخرى</string>
+    <string name="settings_overlay_appearance">مظهر بطاقة الذكر</string>
+    <string name="settings_overlay_appearance_desc">النمط، المكان، حجم الخط، الشفافية ومدة الظهور</string>
+
+    <string name="settings_reminder_enabled">منبه الأذكار</string>
+    <string name="settings_reminder_enabled_desc">تذكير دوري بالأذكار خلال اليوم</string>
+    <string name="settings_reminder_interval">المدة بين التذكيرات</string>
+    <string name="settings_reminder_inexact_note">تُستخدم منبهات غير دقيقة توفيرًا للبطارية، وقد يؤخّرها وضع توفير الطاقة قليلًا.</string>
+    <string name="settings_reminder_custom_title">مدة مخصصة</string>
+    <string name="settings_reminder_custom_hours">ساعات</string>
+    <string name="settings_reminder_custom_minutes">دقائق</string>
+    <string name="settings_reminder_custom_error">اختر مدة بين %1$s و %2$s</string>
+
+    <string name="settings_morning_enabled">أذكار الصباح</string>
+    <string name="settings_morning_desc">تنبيه يومي لقراءة أذكار الصباح</string>
+    <string name="settings_evening_enabled">أذكار المساء</string>
+    <string name="settings_evening_desc">تنبيه يومي لقراءة أذكار المساء</string>
+    <string name="settings_reminder_time">وقت التذكير</string>
+    <string name="settings_friday_enabled">تذكير بقراءة سورة الكهف</string>
+    <string name="settings_friday_desc">تنبيه أسبوعي يوم الجمعة</string>
+
+    <string name="settings_quiet_enabled">ساعات الهدوء</string>
+    <string name="settings_quiet_desc">أوقف التذكيرات خلال وقت راحتك</string>
+    <string name="settings_quiet_from">من</string>
+    <string name="settings_quiet_to">إلى</string>
+    <string name="settings_quiet_summary">من %1$s إلى %2$s</string>
+
+    <string name="settings_theme">سمة التطبيق</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system">حسب النظام</string>
+    <string name="settings_font_scale">حجم نص الأذكار</string>
+    <string name="settings_font_scale_desc">يتحكم بحجم نص الذكر في شاشات القراءة</string>
+    <string name="settings_hijri">إظهار التاريخ الهجري</string>
+    <string name="settings_hijri_desc">تاريخ هجري تقويمي يُحسب على الجهاز دون إنترنت</string>
+
+    <string name="settings_haptics">الاهتزاز عند التسبيح</string>
+    <string name="settings_haptics_desc">اهتزاز خفيف مع كل تسبيحة</string>
+
+    <string name="settings_privacy_row">سياسة الخصوصية</string>
+    <string name="settings_privacy_desc">لا حسابات، لا إعلانات، لا تتبّع</string>
+    <string name="settings_about_row">عن التطبيق</string>
+    <string name="settings_about_desc">الإصدار والغرض من التطبيق</string>
+
+    <!-- ===================== مظهر بطاقة الذكر ===================== -->
+    <string name="overlay_settings_title">مظهر بطاقة الذكر</string>
+    <string name="overlay_preview_label">معاينة مباشرة</string>
+    <string name="overlay_style">النمط</string>
+    <string name="overlay_style_noor">نور</string>
+    <string name="overlay_style_emerald">زمرد</string>
+    <string name="overlay_style_night">ليل</string>
+    <string name="overlay_style_clear">صفاء</string>
+    <string name="overlay_position">المكان</string>
+    <string name="overlay_position_top">أعلى الشاشة</string>
+    <string name="overlay_position_center">منتصف الشاشة</string>
+    <string name="overlay_position_bottom">أسفل الشاشة</string>
+    <string name="overlay_font_size">حجم الخط</string>
+    <string name="overlay_opacity">الشفافية</string>
+    <string name="overlay_duration">مدة الظهور</string>
+    <string name="overlay_duration_touch">عند اللمس فقط</string>
+    <string name="overlay_duration_seconds">%1$s ثانية</string>
+    <string name="overlay_haptic">الاهتزاز عند الظهور</string>
+    <string name="overlay_test">تجربة البطاقة الآن</string>
+    <string name="overlay_test_needs_permission">فعّل إذن الظهور فوق التطبيقات أولًا</string>
+    <string name="overlay_dismiss_hint">المس البطاقة لإخفائها</string>
+    <string name="overlay_card_description">بطاقة ذكر، المس لإخفائها</string>
+
+    <!-- ===================== الخصوصية ===================== -->
+    <string name="privacy_title">الخصوصية</string>
+    <string name="privacy_headline">كل شيء يبقى على جهازك</string>
+    <string name="privacy_intro">صُمّم التطبيق ليعمل بالكامل دون إنترنت ودون أي حساب.</string>
+    <string name="privacy_point_account">لا يوجد تسجيل دخول ولا حساب مستخدم</string>
+    <string name="privacy_point_ads">لا توجد إعلانات ولا أي مكتبة إعلانات</string>
+    <string name="privacy_point_analytics">لا يوجد تحليل سلوك ولا تتبّع ولا إرسال بيانات</string>
+    <string name="privacy_point_backend">لا يوجد خادم أو قاعدة بيانات خارجية</string>
+    <string name="privacy_point_local">أذكارك وإعداداتك محفوظة في ذاكرة التطبيق على جهازك</string>
+    <string name="privacy_point_overlay">إذن الظهور فوق التطبيقات يُستخدم لعرض بطاقة الذكر فقط، ولا يقرأ محتوى أي تطبيق آخر</string>
+    <string name="privacy_point_permissions">الأذونات المطلوبة: الظهور فوق التطبيقات، التنبيهات، إعادة جدولة التذكيرات بعد إعادة التشغيل، والاهتزاز</string>
+    <string name="privacy_no_internet">التطبيق لا يملك إذن الإنترنت أصلًا، فلا يستطيع إرسال أي شيء.</string>
+
+    <!-- ===================== عن التطبيق ===================== -->
+    <string name="about_title">عن التطبيق</string>
+    <string name="about_version">الإصدار %1$s</string>
+    <string name="about_purpose">تطبيق أذكار عربي يعمل دون إنترنت، يرافقك ببطاقة ذكر لطيفة أثناء استخدام هاتفك.</string>
+    <string name="about_content_title">مصادر المحتوى</string>
+    <string name="about_content_note">نصوص الأذكار منقولة كما وردت في مصادرها المرفقة داخل التطبيق دون أي تعديل.</string>
+    <string name="about_fonts_title">الخطوط</string>
+    <string name="about_fonts_note">خطوط عربية مرخّصة برخصة SIL OFL ومضمّنة داخل التطبيق.</string>
+    <string name="about_offline_title">يعمل دون إنترنت</string>
+    <string name="about_offline_note">كل المحتوى والإعدادات محفوظة على الجهاز.</string>
+
+    <!-- ===================== التنبيهات ===================== -->
+    <string name="channel_dhikr_name">تذكير الأذكار</string>
+    <string name="channel_dhikr_desc">التذكير الدوري بالأذكار</string>
+    <string name="channel_daily_name">أذكار الصباح والمساء</string>
+    <string name="channel_daily_desc">تنبيهات أذكار الصباح والمساء وتذكير الجمعة</string>
+    <string name="notification_dhikr_title">ذكر</string>
+    <string name="notification_morning_title">حان وقت أذكار الصباح</string>
+    <string name="notification_morning_text">ابدأ يومك بذكر الله</string>
+    <string name="notification_evening_title">حان وقت أذكار المساء</string>
+    <string name="notification_evening_text">اختم يومك بذكر الله</string>
+    <string name="notification_friday_title">نورٌ بين الجمعتين ✦</string>
+    <string name="notification_friday_text">تذكير بقراءة سورة الكهف</string>
+
+    <!-- ===================== الأدوات (Widgets) ===================== -->
+    <string name="widget_dhikr_label">ذكر</string>
+    <string name="widget_dhikr_description">بطاقة ذكر على الشاشة الرئيسية</string>
+    <string name="widget_next_dhikr">ذكر آخر</string>
+    <string name="widget_quick_label">اختصارات الأذكار</string>
+    <string name="widget_quick_description">الصباح، المساء والمسبحة</string>
+    <string name="widget_morning">الصباح</string>
+    <string name="widget_evening">المساء</string>
+    <string name="widget_tasbeeh">المسبحة</string>
+    <string name="widget_empty">أضف ذكرًا من التطبيق ليظهر هنا</string>
+
+    <!-- ===================== حالات فارغة ورسائل ===================== -->
+    <string name="overlay_unavailable">تعذّر عرض بطاقة الذكر على هذا الجهاز</string>
+
+    <!-- ===================== أوصاف إمكانية الوصول ===================== -->
+    <string name="cd_brand_mark">شعار التطبيق</string>
+    <string name="cd_settings">فتح الإعدادات</string>
+    <string name="cd_back">رجوع</string>
+    <string name="cd_add">إضافة</string>
+    <string name="cd_edit_item">تعديل الذكر</string>
+    <string name="cd_delete_item">حذف الذكر</string>
+    <string name="cd_copy">نسخ الذكر</string>
+    <string name="cd_share">مشاركة الذكر</string>
+    <string name="cd_progress">التقدم %1$s من %2$s</string>
+    <string name="cd_counter_tap">اضغط لزيادة العدد</string>
+    <string name="cd_reset">إعادة الضبط</string>
+    <!-- Time, duration and Hijri formatting tokens used by ArabicText / HijriDate. -->
+    <string name="time_am">ص</string>
+    <string name="time_pm">م</string>
+    <string name="time_format">%1$s:%2$s %3$s</string>
+    <string name="duration_minutes">%1$s د</string>
+    <string name="duration_hour_one">ساعة</string>
+    <string name="duration_hour_two">ساعتان</string>
+    <string name="duration_hours_few">%1$s ساعات</string>
+    <string name="duration_hours_many">%1$s ساعة</string>
+    <string name="duration_hours_and_minutes">%1$s و %2$s د</string>
+    <string name="hijri_date_format">%1$s %2$s %3$s هـ</string>
+    <string-array name="hijri_months">
+        <item>محرّم</item>
+        <item>صفر</item>
+        <item>ربيع الأول</item>
+        <item>ربيع الآخر</item>
+        <item>جمادى الأولى</item>
+        <item>جمادى الآخرة</item>
+        <item>رجب</item>
+        <item>شعبان</item>
+        <item>رمضان</item>
+        <item>شوّال</item>
+        <item>ذو القعدة</item>
+        <item>ذو الحجة</item>
+    </string-array>
+
+    <string name="cd_increase">زيادة</string>
+    <string name="cd_decrease">إنقاص</string>
+
 </resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dhikr widget. Arabic RTL, app palette, no network: the text comes from the local database. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:layoutDirection="rtl"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:contentDescription="@string/cd_brand_mark"
+            android:src="@drawable/ic_brand_mark"
+            android:tint="@color/widget_gold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/tajawal_regular"
+            android:text="@string/widget_dhikr_label"
+            android:textColor="@color/widget_gold"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/widget_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_action_bg"
+            android:fontFamily="@font/tajawal_regular"
+            android:minHeight="36dp"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/widget_next_dhikr"
+            android:textColor="@color/widget_emerald"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_dhikr_text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="@font/cairo_regular"
+        android:lineSpacingExtra="6dp"
+        android:maxLines="4"
+        android:text="@string/widget_empty"
+        android:textAlignment="viewStart"
+        android:textColor="@color/widget_ink"
+        android:textSize="16sp" />
+
+</LinearLayout>

@@ -1,40 +1,34 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
 
 android {
     compileSdk 36
     namespace 'com.clock.livewallpaper'
+
     defaultConfig {
         applicationId "com.clock.livewallpaper"
         minSdk 23
         targetSdk 36
         versionCode 1
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        resConfigs "en"
-        multiDexEnabled true
+        versionName "1.0"
+        // The whole UI is Arabic and lives in the default resource folder, so no locale filter is
+        // applied: values/ IS the Arabic copy and is used whatever the device language is.
+        vectorDrawables.useSupportLibrary false
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    // dataBinding is deliberately NOT enabled. It was on while no layout used it: there is no
-    // <layout> root, no <data>/<variable> block, no @{...} expression and no DataBindingUtil /
-    // BindingAdapter / BaseObservable anywhere in src/main/java. Enabling it still made AGP run
-    // its StAX layout parser over every file in res/layout on each build, and that parser reports
-    // a missing attribute as a bare NullPointerException ("Cannot invoke
-    // javax.xml.stream.events.Attribute.getValue() because ... getAttributeByName(...) is null")
-    // with no file or line, instead of an AAPT2 error pointing at the offending tag.
-    // Re-add `buildFeatures { dataBinding true }` when a layout actually gains a <layout> root.
-    bundle {
-        density {
-            enableSplit true
-        }
-        abi {
-            enableSplit true
-        }
-        language {
-            enableSplit false
-        }
+
+    buildFeatures {
+        compose true
+        buildConfig true
     }
+
     buildTypes {
         release {
             debuggable false
@@ -42,7 +36,6 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-
         debug {
             debuggable true
             minifyEnabled false
@@ -50,29 +43,66 @@ android {
         }
     }
 
+    bundle {
+        density { enableSplit true }
+        abi { enableSplit true }
+        language { enableSplit false }
+    }
+
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', '/META-INF/DEPENDENCIES', '/META-INF/LICENSE*']
+        }
+    }
 }
-// Selects the compiler JDK; also run Gradle itself with JDK 17 (JAVA_HOME/Android Studio).
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+
+// Selects the compiler JDK; also run Gradle itself with JDK 17 (JAVA_HOME / Android Studio).
+kotlin {
+    jvmToolchain(17)
+}
+
+kapt {
+    correctErrorTypes true
+    arguments {
+        // Room schemas are exported so every future version bump ships with a real migration
+        // instead of a destructive fallback.
+        arg("room.schemaLocation", "$projectDir/schemas".toString())
     }
 }
 
 dependencies {
+    def composeBom = platform('androidx.compose:compose-bom:2025.04.01')
+    implementation composeBom
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
-    // The clock and wallpaper browsers read their artwork from assets/ through
-    // com.clock.livewallpaper.image.LocalImage, so the image loading stack the old build carried
-    // (Glide, Picasso, Volley, okdownload, FileDownloader, OkHttp) and the remote wallpaper APIs are
-    // gone on purpose: nothing in this app can fetch a picture over the network any more.
-    implementation 'com.github.QuadFlask:colorpicker:0.0.14'
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    // Swipe navigation between surahs: one QuranFragment per surah inside a FragmentStateAdapter.
-    implementation 'androidx.viewpager2:viewpager2:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'com.google.android.gms:play-services-ads:22.6.0'
+    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'androidx.activity:activity-compose:1.10.1'
 
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    // The floating card is a ComposeView owned by WindowManager, so it needs its own
+    // ViewTree lifecycle / saved-state owners.
+    implementation 'androidx.savedstate:savedstate-ktx:1.2.1'
+
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.animation:animation'
+    implementation 'androidx.compose.material3:material3'
+
+    implementation 'androidx.navigation:navigation-compose:2.8.9'
+    implementation 'androidx.datastore:datastore-preferences:1.1.4'
+
+    implementation 'androidx.room:room-runtime:2.7.1'
+    implementation 'androidx.room:room-ktx:2.7.1'
+    kapt 'androidx.room:room-compiler:2.7.1'
+
+    implementation "com.google.dagger:hilt-android:$hiltVersion"
+    kapt "com.google.dagger:hilt-android-compiler:$hiltVersion"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
+
+    debugImplementation 'androidx.compose.ui:ui-tooling'
 }

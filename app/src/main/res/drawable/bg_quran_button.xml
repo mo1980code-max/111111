@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Pill background for the home-screen Quran button (#2D7D46 from the Quran theme). -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="@color/quran_button" />
-    <corners android:radius="26dp" />
-</shape>
