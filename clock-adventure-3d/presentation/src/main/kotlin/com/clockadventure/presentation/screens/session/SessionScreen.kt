@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +77,32 @@ import com.clockadventure.presentation.theme.appColors
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.unit.minus
 import androidx.compose.ui.unit.plus
+
+/** The clock never shrinks below this, whatever the window shape - it must stay readable and draggable. */
+private val MIN_CLOCK_SIZE = 160.dp
+
+/**
+ * Sizes the interactive clock from *both* dimensions of the window instead of only its width.
+ *
+ * The two [BoxWithConstraints] below already cap the clock against [maxWidth] so it never outgrows
+ * a phone turned sideways or a tablet's wide column - but width alone is not enough: a landscape
+ * phone, a tablet split 50/50 with another app, or a small free-form multi-window all have plenty
+ * of width and very little *height*, and the prompt card, hints and buttons around the clock still
+ * need to fit above and below it without the phase collapsing into an awkward scroll. This mirrors
+ * the width fraction against a fraction of [Configuration.screenHeightDp][android.content.res.Configuration.screenHeightDp]
+ * from [LocalConfiguration] - which Compose already recomposes on every rotation, fold and
+ * multi-window resize - and keeps whichever fraction is smaller.
+ */
+@Composable
+private fun heightAwareClockSize(
+    maxWidth: Dp,
+    widthFraction: Float,
+    heightFraction: Float,
+    cap: Dp
+): Dp {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    return minOf(maxWidth * widthFraction, screenHeight * heightFraction, cap).coerceAtLeast(MIN_CLOCK_SIZE)
+}
 
 /** Main exercise screen: the ten lessons, the six mini games and the four challenges all run here. */
 @Composable
@@ -317,7 +344,12 @@ private fun TeachPhase(
         }
         Spacer(modifier = Modifier.height(Dimens.gapMedium))
         BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            val clockSize: Dp = (maxWidth * 0.8f).coerceAtMost(320.dp)
+            val clockSize: Dp = heightAwareClockSize(
+                maxWidth = maxWidth,
+                widthFraction = 0.8f,
+                heightFraction = 0.46f,
+                cap = 320.dp
+            )
             InteractiveClock(
                 time = time,
                 style = state.settings.clockStyle,
@@ -420,7 +452,12 @@ private fun QuestionPhase(
         Spacer(modifier = Modifier.height(Dimens.gapSmall))
 
         BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            val clockSize: Dp = (maxWidth * 0.86f).coerceAtMost(320.dp)
+            val clockSize: Dp = heightAwareClockSize(
+                maxWidth = maxWidth,
+                widthFraction = 0.86f,
+                heightFraction = 0.4f,
+                cap = 320.dp
+            )
             InteractiveClock(
                 time = shownTime,
                 style = settings.clockStyle,

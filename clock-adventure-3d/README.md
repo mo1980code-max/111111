@@ -2,8 +2,8 @@
 
 A **native Android** learning game that teaches children aged 5–10 how to read analog and
 digital clocks. Kotlin + Jetpack Compose + Material 3, MVVM + Clean Architecture, Room +
-DataStore, Hilt, Navigation Compose. Portrait first, phones and tablets, English and Arabic (RTL),
-and it works **completely offline**.
+DataStore, Hilt, Navigation Compose. Portrait first on a phone, rotatable and resizable on a
+tablet or in multi-window, English and Arabic (RTL), and it works **completely offline**.
 
 There is no WebView, no HTML/CSS/JS, no React/Flutter anywhere in the project — every pixel is
 drawn by Compose (`Canvas`, `Modifier`, animation APIs) and every screen is a native destination.
@@ -128,6 +128,20 @@ foldable the buttons keep their phone size instead of stretching into ribbons. T
 mascot and the hud are laid out from fractions of the available width, and the clock itself is
 capped at 300 dp. The analog clock publishes a TalkBack description of the time it is showing, so
 it is never a silent picture.
+
+`MainActivity` locks a phone to portrait — the right call for a game a child holds one-handed —
+but lifts that lock itself on a tablet (`smallestScreenWidthDp >= 600`) and the instant Android
+puts the activity into split screen or a free-form window, where a fixed orientation isn't allowed
+anyway (`applyOrientationLock`, re-checked on every configuration and multi-window change). The
+manifest declares `android:resizeableActivity="true"` and lists every config change it cares about,
+so rotating or resizing resizes the Compose tree in place instead of recreating the activity.
+
+The interactive clock on the lesson and question screens is also **height-aware**: it used to be
+sized from the window's width alone, which is not the limiting dimension on a landscape phone, a
+tablet split 50/50 with another app, or a small free-form window. It now shrinks against a fraction
+of `screenHeightDp` too (`heightAwareClockSize` in `SessionScreen.kt`), so the prompt, the clock and
+the answer buttons keep fitting on screen together instead of pushing into a long scroll, while
+never dropping below a comfortably draggable 160 dp.
 
 ### Child safety & privacy
 * no account, no sign-in, no personal data collected, nothing uploaded;
