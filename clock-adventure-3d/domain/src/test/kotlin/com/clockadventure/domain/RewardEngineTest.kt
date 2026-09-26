@@ -39,8 +39,17 @@ class RewardEngineTest {
         assertEquals(1, RewardEngine.playerLevelFor(0))
         assertEquals(2, RewardEngine.playerLevelFor(100))
         assertEquals(3, RewardEngine.playerLevelFor(300))
-        assertTrue(RewardEngine.levelProgress(0) == 0f)
-        assertTrue(RewardEngine.levelProgress(200) > 0.5f)
+        assertTrue("progress at 0 xp", RewardEngine.levelProgress(0) == 0f)
+        // 200 xp is exactly the middle of level 2 (100..300), so pick points around it.
+        assertEquals(0.25f, RewardEngine.levelProgress(150), 0.001f)
+        assertTrue("progress at 250 xp = ${RewardEngine.levelProgress(250)}", RewardEngine.levelProgress(250) > 0.5f)
+        // Level 14 starts at 9 100 xp and level 15 at 10 500, so 10 000 sits inside level 14.
+        assertTrue("progress restarts at a level floor", RewardEngine.levelProgress(9_100) == 0f)
+        assertTrue(
+            "progress at 10000 xp = ${RewardEngine.levelProgress(10_000)}",
+            RewardEngine.levelProgress(10_000) in 0.1f..0.9f
+        )
+        assertTrue("progress is never above 1", RewardEngine.levelProgress(1_000_000) <= 1f)
     }
 
     @Test

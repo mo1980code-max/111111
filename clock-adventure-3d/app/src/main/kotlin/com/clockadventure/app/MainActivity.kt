@@ -21,7 +21,10 @@ import com.clockadventure.domain.model.AppLanguage
 import com.clockadventure.domain.model.AppSettings
 import com.clockadventure.domain.repository.AudioController
 import com.clockadventure.domain.repository.SettingsRepository
+import com.clockadventure.app.notification.ReminderScheduler
 import com.clockadventure.presentation.navigation.AppNavHost
+import com.clockadventure.presentation.navigation.Routes
+import com.clockadventure.presentation.screens.splash.SplashScreen
 import com.clockadventure.presentation.theme.ClockAdventureTheme
 import com.clockadventure.presentation.theme.LocalRtl
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,6 +47,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var audio: AudioController
 
+    @Inject
+    lateinit var reminderScheduler: ReminderScheduler
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,13 +57,28 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            val settings by settingsRepository.settings.collectAsState(initial = AppSettings())
+            // null until the saved preferences have been read from disk: the navigation graph must
+            // not be created before we know whether this is a first run.
+            val settings by settingsRepository.settings.collectAsState(initial = null)
 
-            LaunchedEffect(settings.language) {
-                applyLanguage(settings.language)
+            if (settings == null) {
+                SplashScreen()
+                return@setContent
             }
-            LaunchedEffect(settings.musicEnabled, settings.soundEnabled, settings.voiceEnabled) {
-                audio.applySettings(settings.musicEnabled, settings.soundEnabled, settings.voiceEnabled)
+            val current = settings!!
+
+            LaunchedEffect(current.language) {
+                applyLanguage(current.language)
+            }
+            LaunchedEffect(current.musicEnabled, current.soundEnabled, current.voiceEnabled) {
+                audio.applySettings(current.musicEnabled, current.soundEnabled, current.voiceEnabled)
+            }
+            LaunchedEffect(current.notificationsEnabled) {
+                if (current.notificationsEnabled) {
+                    reminderScheduler.scheduleDailyReminder()
+                } else {
+                    reminderScheduler.cancel()
+                }
             }
             DisposableEffect(Unit) {
                 onDispose {
@@ -65,10 +86,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val rtl = settings.language == AppLanguage.ARABIC
+            val rtl = current.language == AppLanguage.ARABIC
             ClockAdventureTheme(
-                theme = settings.theme,
-                reduceMotion = settings.reduceMotion,
+                theme = current.theme,
+                reduceMotion = current.reduceMotion,
                 rtl = rtl
             ) {
                 CompositionLocalProvider(
@@ -78,6 +99,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     AppNavHost(
                         navController = navController,
+                        startDestination = if (current.hasSeenIntro) Routes.HOME else Routes.ONBOARDING,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

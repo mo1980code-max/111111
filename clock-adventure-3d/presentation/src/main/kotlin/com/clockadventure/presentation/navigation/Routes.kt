@@ -3,6 +3,7 @@ package com.clockadventure.presentation.navigation
 /** Navigation destinations. Arguments are kept simple so the graph stays readable. */
 object Routes {
     const val HOME = "home"
+    const val ONBOARDING = "onboarding"
     const val LESSONS = "lessons"
     const val CHALLENGES = "challenges"
     const val GAMES = "games"

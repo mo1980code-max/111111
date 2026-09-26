@@ -82,6 +82,12 @@ face, ticks, glass highlight and hand shadows (the “3D” look, no image asset
 * correct answer → the clock pops and confetti flies;
 * the digital time is shown as a helper and hidden during tests.
 
+### A first-run introduction
+The very first start opens a four page onboarding: the mascot says hello, the child picks the
+character they like, drags both hands of a free-play clock, sees what stars and coins are for, and
+hears that the game needs no account and no internet. It is shown once - `hasSeenIntro` is stored
+in DataStore (and `intro_seen` in the profile), so it never comes back.
+
 ### Six mini games
 What Time Is It? · Set The Clock · Match The Time · Time Race (60 s) · True or False ·
 My Daily Routine — plus four optional challenges (Daily, Time Attack, Perfect Run, Boss Clock).
@@ -127,6 +133,13 @@ UI never touches SQL or DataStore directly.
 
 ---
 
+## Tests
+
+| Where | What | How to run |
+|---|---|---|
+| `domain/src/test` | 9 test classes, 65 tests: clock geometry, question generation and its invariants, grading, adaptive difficulty, reward maths, time formatting, achievement evaluation, and the level / game / challenge catalogues | `./gradlew :domain:test` |
+| `presentation/src/androidTest` | instrumented tests of the interactive clock: the clock is on screen, a drag reports a new time, the minutes obey the snap granularity of the level, a read-only clock ignores touches | `./gradlew :presentation:connectedAndroidTest` (needs a device) |
+
 ## Verification in this repository
 
 The sandbox that produced this project has no Android SDK and no access to Google’s Maven
@@ -138,18 +151,25 @@ syntax, unresolved references, argument counts, nullability, generics and exhaus
 ```bash
 cd tools/clock-adventure-typecheck
 python3 build_stubs.py          # regenerates stubs/ and the R classes from the real res/ folders
-python3 check.py                # domain · data · presentation · app · tests
+python3 check.py                # domain · data · presentation · app · tests · androidTest
 python3 check.py domain         # or a single module
 
+python3 run_tests.py            # actually RUNS the domain unit tests (65 passed, 0 failed)
 python3 audit.py                # build readiness: dependencies, resources, Room SQL
     audit_deps.py  every Kotlin import has a matching Gradle dependency; AGP config is valid
     audit_res.py   every resource XML parses; every @string/@drawable/@mipmap/... reference resolves
     audit_room.py  every table and column used in a Room @Query exists on its @Entity
 ```
 
-Current state: **all five source sets type-check clean** (domain, data, presentation, app and the
-domain unit tests) and **all three audits pass**. The unit tests in `domain/src/test` cover clock
-geometry, question generation, grading, the adaptive difficulty engine, reward maths, time
-formatting and achievement evaluation.
+Maven cannot be reached from this sandbox, so `run_tests.py` compiles the domain against a tiny
+JUnit replacement (`testrt/junit-runtime.kt`) whose assertions really check, and runs every
+`@Test` method reflectively. `check.py` stays a pure type check.
+
+Current state:
+
+* **all six source sets type-check clean** (domain, data, presentation, app, domain tests,
+  instrumented tests) - 528 files compiled per module pass;
+* **65 domain unit tests pass, 0 fail**;
+* **all three audits pass**.
 
 Open the project in Android Studio for the Gradle build and the APK/AAB.

@@ -3,6 +3,7 @@ package com.clockadventure.presentation.clock
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -87,6 +88,8 @@ fun InteractiveClock(
     /** Pops the clock when an answer was right. */
     successPulse: Boolean = false,
     reduceMotion: Boolean = false,
+    /** Semantics tag for the instrumented tests (see presentation/src/androidTest). */
+    testTag: String? = null,
     onTimeChanged: ((ClockTime) -> Unit)? = null
 ) {
     val palette = clockPaletteFor(style)
@@ -111,6 +114,7 @@ fun InteractiveClock(
 
         Canvas(
             modifier = Modifier
+                .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
                 .size(maxWidth)
                 .then(
                     if (interactive && onTimeChanged != null) {

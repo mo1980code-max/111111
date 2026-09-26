@@ -32,6 +32,7 @@ MODULES = {
     "presentation": "presentation/src/main/kotlin",
     "app": "app/src/main/kotlin",
     "tests": "domain/src/test/kotlin",
+    "androidTest": "presentation/src/androidTest/kotlin",
 }
 
 # Gradle module dependencies, so each source set is compiled together with what it depends on.
@@ -41,6 +42,7 @@ DEPS = {
     "presentation": ["domain", "presentation"],
     "app": ["domain", "data", "presentation", "app"],
     "tests": ["domain", "tests"],
+    "androidTest": ["domain", "presentation", "androidTest"],
 }
 
 

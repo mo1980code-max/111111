@@ -11,6 +11,7 @@ import com.clockadventure.presentation.screens.challenges.ChallengesRoute
 import com.clockadventure.presentation.screens.games.GamesRoute
 import com.clockadventure.presentation.screens.home.HomeRoute
 import com.clockadventure.presentation.screens.lessons.LessonsRoute
+import com.clockadventure.presentation.screens.onboarding.OnboardingRoute
 import com.clockadventure.presentation.screens.parent.ParentGateRoute
 import com.clockadventure.presentation.screens.parent.ParentRoute
 import com.clockadventure.presentation.screens.progress.ProgressRoute
@@ -25,13 +26,25 @@ import com.clockadventure.presentation.screens.settings.SettingsRoute
 @Composable
 fun AppNavHost(
     navController: NavHostController,
+    startDestination: String = Routes.HOME,
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.HOME,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        composable(Routes.ONBOARDING) {
+            OnboardingRoute(
+                onFinished = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
         composable(Routes.HOME) {
             HomeRoute(
                 onStartLearning = { levelId -> navController.navigate(Routes.session(levelId = levelId)) },

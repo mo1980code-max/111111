@@ -13,10 +13,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -122,6 +128,7 @@ fun ParentRoute(
         state = state,
         onBack = onBack,
         onLimitSelected = viewModel::setDailyLimit,
+        onNotificationsChanged = viewModel::setNotifications,
         onReset = viewModel::resetProgress,
         modifier = modifier
     )
@@ -132,6 +139,7 @@ internal fun ParentScreen(
     state: ParentUiState,
     onBack: () -> Unit,
     onLimitSelected: (Int) -> Unit,
+    onNotificationsChanged: (Boolean) -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -286,6 +294,11 @@ internal fun ParentScreen(
                         }
                     }
 
+                    ReminderCard(
+                        enabled = state.settings.notificationsEnabled,
+                        onToggle = onNotificationsChanged
+                    )
+
                     ResetCard(onReset = onReset, resetDone = state.resetDone)
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                     Text(
@@ -297,6 +310,80 @@ internal fun ParentScreen(
                     )
                     Spacer(modifier = Modifier.height(Dimens.gapMedium))
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The daily reminder needs the notification permission on Android 13 and newer. The switch asks for
+ * it the moment a grown-up turns the reminder on; if the permission is refused the switch simply
+ * stays off and nothing else in the app changes.
+ */
+@Composable
+private fun ReminderCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var denied by remember { mutableStateOf(false) }
+    var pending by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        pending = false
+        denied = !granted
+        onToggle(granted)
+    }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(Dimens.gapMedium)) {
+            Text(
+                text = stringResource(R.string.parent_notifications_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.parent_notifications_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+            )
+            if (denied) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.parent_notifications_denied),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Palette.Coral
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.gapSmall))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(
+                        if (enabled) R.string.parent_notifications_granted else R.string.parent_notifications_title
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = { next ->
+                        if (!next) {
+                            onToggle(false)
+                            return@Switch
+                        }
+                        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU ||
+                            androidx.core.content.ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.POST_NOTIFICATIONS
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        ) {
+                            onToggle(true)
+                        } else {
+                            pending = true
+                            launcher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                )
             }
         }
     }

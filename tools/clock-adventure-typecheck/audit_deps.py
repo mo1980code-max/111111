@@ -40,6 +40,7 @@ REQUIRED = [
     ("androidx.compose.animation", "Compose Animation", ["composeAnimation", "composeMaterial3", "composeUi "]),
     ("androidx.compose.runtime", "Compose Runtime", ["composeRuntime", "composeMaterial3", "composeUi "]),
     ("androidx.compose.ui", "Compose UI", ["composeUi", "composeMaterial3"]),
+    ("androidx.compose.ui.test", "Compose UI Test", ["composeUiTestJunit4"]),
     ("androidx.navigation.compose", "Navigation Compose", ["navigationCompose"]),
     ("androidx.navigation", "Navigation", ["navigationCompose", "navigationRuntime"]),
     ("androidx.hilt.navigation.compose", "Hilt Navigation Compose", ["hiltNavigationCompose"]),

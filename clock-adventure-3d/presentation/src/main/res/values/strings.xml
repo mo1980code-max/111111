@@ -193,4 +193,24 @@
     <string name="limit_reached">You reached today's play time. Take a break and stretch!</string>
     <string name="loading">Loading…</string>
     <string name="settings_gameplay">Gameplay</string>
+    <string name="splash_title">Clock Adventure 3D</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_start">Let\'s play!</string>
+    <string name="onboarding_welcome_title">Hello! I am Ticky</string>
+    <string name="onboarding_welcome_body">We are going to learn how to read the clock together. It is easy and it is fun!</string>
+    <string name="onboarding_pick_friend">Pick the friend you like</string>
+    <string name="onboarding_hands_title">Two hands, two jobs</string>
+    <string name="onboarding_hands_body">The SHORT hand shows the hour. The LONG hand shows the minutes. Try dragging them!</string>
+    <string name="onboarding_rewards_title">Stars, coins and surprises</string>
+    <string name="onboarding_rewards_body">Every good answer gives you stars and coins. Spend them in the shop on new clocks and friends!</string>
+    <string name="onboarding_offline_title">Always with you</string>
+    <string name="onboarding_offline_body">The game works without the internet, needs no account and never asks for your name. Ready?</string>
+    <string name="parent_notifications_title">Daily reminder</string>
+    <string name="parent_notifications_body">One gentle reminder per day at 17:00. It is created on this device only.</string>
+    <string name="parent_notifications_granted">Reminders are allowed</string>
+    <string name="parent_notifications_denied">Allow notifications to switch reminders on</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_no_account">No account needed</string>
+    <string name="onboarding_no_internet">Works without internet</string>
 </resources>

@@ -14,6 +14,7 @@ android {
 
     defaultConfig {
         minSdk rootProject.ext.minSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // All user facing strings and drawables live in this module, so the resource
         // configurations have to be declared here too.
         resConfigs(*rootProject.ext.supportedLocales)
@@ -70,4 +71,12 @@ dependencies {
     implementation rootProject.ext.versions.javaxInject
 
     testImplementation "junit:junit:4.13.2"
+
+    // Instrumented tests: the drag gestures of the interactive clock can only be verified on a
+    // real device, see presentation/src/androidTest.
+    debugImplementation rootProject.ext.versions.composeUiTestManifest
+    androidTestImplementation platform(rootProject.ext.versions.composeBom)
+    androidTestImplementation rootProject.ext.versions.composeUiTestJunit4
+    androidTestImplementation rootProject.ext.versions.androidxTestExtJunit
+    androidTestImplementation rootProject.ext.versions.espressoCore
 }

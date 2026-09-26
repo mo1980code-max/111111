@@ -102,6 +102,13 @@ class ParentViewModel @Inject constructor(
 
     val isVerified: Boolean get() = verified || uiState.value.progress.parentVerified
 
+    /** Flips the optional daily reminder. The alarm itself is (re)scheduled by MainActivity. */
+    fun setNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.update { it.copy(notificationsEnabled = enabled) }
+        }
+    }
+
     fun setDailyLimit(minutes: Int) {
         viewModelScope.launch {
             settingsRepository.update { it.copy(dailyLimitMinutes = minutes) }

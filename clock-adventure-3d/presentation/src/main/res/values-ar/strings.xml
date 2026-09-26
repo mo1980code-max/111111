@@ -189,4 +189,24 @@
     <string name="limit_reached">وصلت إلى مدة اللعب اليومية. خذ استراحة وتمدّد قليلاً!</string>
     <string name="loading">جارٍ التحميل…</string>
     <string name="settings_gameplay">طريقة اللعب</string>
+    <string name="splash_title">مغامرة الساعة</string>
+    <string name="onboarding_next">التالي</string>
+    <string name="onboarding_back">السابق</string>
+    <string name="onboarding_start">هيا نلعب!</string>
+    <string name="onboarding_welcome_title">مرحباً! أنا تيكي</string>
+    <string name="onboarding_welcome_body">سنتعلم قراءة الساعة معاً. الأمر سهل وممتع!</string>
+    <string name="onboarding_pick_friend">اختر صديقك المفضل</string>
+    <string name="onboarding_hands_title">عقربان ومهمتان</string>
+    <string name="onboarding_hands_body">العقرب القصير يدل على الساعة، والعقرب الطويل يدل على الدقائق. جرّب تحريكهما!</string>
+    <string name="onboarding_rewards_title">نجوم وعملات ومفاجآت</string>
+    <string name="onboarding_rewards_body">كل إجابة صحيحة تعطيك نجوماً وعملات. أنفقها في المتجر على ساعات وأصدقاء جدد!</string>
+    <string name="onboarding_offline_title">دائماً معك</string>
+    <string name="onboarding_offline_body">اللعبة تعمل بدون إنترنت، ولا تحتاج حساباً، ولا تطلب اسمك أبداً. هل أنت جاهز؟</string>
+    <string name="parent_notifications_title">تذكير يومي</string>
+    <string name="parent_notifications_body">تذكير لطيف واحد يومياً في الساعة الخامسة مساءً، يُنشأ على هذا الجهاز فقط.</string>
+    <string name="parent_notifications_granted">التذكيرات مسموحة</string>
+    <string name="parent_notifications_denied">اسمح بالإشعارات لتشغيل التذكيرات</string>
+    <string name="onboarding_skip">تخطي</string>
+    <string name="onboarding_no_account">لا يحتاج حساباً</string>
+    <string name="onboarding_no_internet">يعمل بدون إنترنت</string>
 </resources>
