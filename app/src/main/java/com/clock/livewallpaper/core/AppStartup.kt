@@ -42,8 +42,10 @@ class AppStartup @Inject constructor(
             runCatching {
                 // Idempotent: seeds only when the stored seed version is older than the bundled one.
                 repository.ensureSeeded()
-                // Re-applies the user's own schedule, also after an app update or a settings restore.
-                scheduler.apply(settings.snapshot())
+                // Re-applies the user's own schedule, also after an app update or a settings
+                // restore. keepPendingChain leaves an already armed periodic reminder alone, so
+                // opening the app cannot keep postponing the next dhikr.
+                scheduler.apply(settings.snapshot(), keepPendingChain = true)
                 WidgetRefresh.request(context)
             }
         }

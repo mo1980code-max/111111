@@ -148,7 +148,7 @@
     <string name="settings_reminder_enabled">منبه الأذكار</string>
     <string name="settings_reminder_enabled_desc">تذكير دوري بالأذكار خلال اليوم</string>
     <string name="settings_reminder_interval">المدة بين التذكيرات</string>
-    <string name="settings_reminder_inexact_note">تُستخدم منبهات غير دقيقة توفيرًا للبطارية، وقد يؤخّرها وضع توفير الطاقة قليلًا.</string>
+    <string name="settings_reminder_inexact_note">تُستخدم منبهات غير دقيقة توفيرًا للبطارية، فلا يصل التذكير في لحظته بالضبط؛ وعند سكون الجهاز أو تفعيل توفير الطاقة قد يؤجّله النظام، وقد لا تصل المدد القصيرة كل مرة.</string>
     <string name="settings_reminder_custom_title">مدة مخصصة</string>
     <string name="settings_reminder_custom_hours">ساعات</string>
     <string name="settings_reminder_custom_minutes">دقائق</string>

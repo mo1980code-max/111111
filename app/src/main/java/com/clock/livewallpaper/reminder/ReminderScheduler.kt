@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import androidx.core.app.AlarmManagerCompat
 import com.clock.livewallpaper.data.prefs.ReminderSettings
 import com.clock.livewallpaper.data.prefs.SettingsSnapshot
@@ -21,7 +22,10 @@ import javax.inject.Singleton
  * user in the reminder settings instead of being worked around.
  *
  * The periodic reminder is a self-rearming chain: every delivery schedules the next one, which is
- * also what makes a changed interval take effect immediately.
+ * also what makes a changed interval take effect immediately. That chain is armed on the elapsed
+ * realtime clock, so moving the wall clock or crossing a timezone cannot skip it or fire it early;
+ * the daily reminders are wall-clock alarms by definition and are simply recomputed when the
+ * system reports a time or timezone change.
  */
 @Singleton
 class ReminderScheduler @Inject constructor(
@@ -35,13 +39,33 @@ class ReminderScheduler @Inject constructor(
 
     fun schedulePeriodic(intervalMinutes: Int) {
         val minutes = ReminderSettings.sanitizeInterval(intervalMinutes)
-        val triggerAt = System.currentTimeMillis() + minutes * 60_000L
-        setAlarm(triggerAt, periodicIntent())
+        val triggerAt = SystemClock.elapsedRealtime() + minutes * 60_000L
+        setElapsedAlarm(triggerAt, periodicIntent())
     }
 
     fun cancelPeriodic() {
-        runCatching { alarmManager()?.cancel(periodicIntent()) }
+        runCatching {
+            val operation = periodicIntent()
+            alarmManager()?.cancel(operation)
+            // Drops the PendingIntent record too, so [isPeriodicPending] cannot report a chain
+            // that was just switched off.
+            operation.cancel()
+        }
     }
+
+    /**
+     * True when a periodic delivery is already armed for this process.
+     *
+     * FLAG_NO_CREATE asks the system whether the record still exists; it is gone after a reboot,
+     * after the package was replaced and after the chain was cancelled, which is exactly when the
+     * chain has to be armed again.
+     */
+    fun isPeriodicPending(): Boolean = PendingIntent.getBroadcast(
+        context,
+        REQUEST_PERIODIC,
+        periodicBaseIntent(),
+        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+    ) != null
 
     // ---------------------------------------------------------------- daily
 
@@ -50,13 +74,26 @@ class ReminderScheduler @Inject constructor(
     }
 
     fun cancelDaily(kind: DailyReminderKind) {
-        runCatching { alarmManager()?.cancel(dailyIntent(kind)) }
+        runCatching {
+            val operation = dailyIntent(kind)
+            alarmManager()?.cancel(operation)
+            operation.cancel()
+        }
     }
 
-    /** Applies a full settings snapshot - used on boot, on app start and after any change. */
-    fun apply(snapshot: SettingsSnapshot) {
+    /**
+     * Applies a full settings snapshot - used on boot, on app start and after any change.
+     *
+     * [keepPendingChain] is set by the callers that only restore state (process start, boot,
+     * time changes). Without it every cold start would push the next periodic reminder a full
+     * interval into the future, so a user who opens the app often would never be reminded.
+     * A real settings change leaves it false, which re-arms the chain immediately.
+     */
+    fun apply(snapshot: SettingsSnapshot, keepPendingChain: Boolean = false) {
         if (snapshot.reminder.enabled) {
-            schedulePeriodic(snapshot.reminder.intervalMinutes)
+            if (!keepPendingChain || !isPeriodicPending()) {
+                schedulePeriodic(snapshot.reminder.intervalMinutes)
+            }
         } else {
             cancelPeriodic()
         }
@@ -102,23 +139,31 @@ class ReminderScheduler @Inject constructor(
 
     // --------------------------------------------------------------- plumbing
 
+    /** Wall-clock alarm, for the reminders the user picked a time of day for. */
     private fun setAlarm(triggerAtMillis: Long, operation: PendingIntent) {
+        setAlarm(AlarmManager.RTC_WAKEUP, triggerAtMillis, operation)
+    }
+
+    /** Elapsed-realtime alarm, for interval based reminders: immune to clock and timezone edits. */
+    private fun setElapsedAlarm(triggerAtMillis: Long, operation: PendingIntent) {
+        setAlarm(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, operation)
+    }
+
+    private fun setAlarm(type: Int, triggerAtMillis: Long, operation: PendingIntent) {
         val manager = alarmManager() ?: return
         runCatching {
-            AlarmManagerCompat.setAndAllowWhileIdle(
-                manager,
-                AlarmManager.RTC_WAKEUP,
-                triggerAtMillis,
-                operation
-            )
+            AlarmManagerCompat.setAndAllowWhileIdle(manager, type, triggerAtMillis, operation)
         }
     }
+
+    private fun periodicBaseIntent(): Intent =
+        Intent(context, DhikrReminderReceiver::class.java)
+            .setAction(DhikrReminderReceiver.ACTION_DHIKR_REMINDER)
 
     private fun periodicIntent(): PendingIntent = PendingIntent.getBroadcast(
         context,
         REQUEST_PERIODIC,
-        Intent(context, DhikrReminderReceiver::class.java)
-            .setAction(DhikrReminderReceiver.ACTION_DHIKR_REMINDER),
+        periodicBaseIntent(),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 

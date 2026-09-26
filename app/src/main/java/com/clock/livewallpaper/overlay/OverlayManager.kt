@@ -2,9 +2,11 @@ package com.clock.livewallpaper.overlay
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.view.Display
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.annotation.MainThread
@@ -37,8 +39,12 @@ import javax.inject.Singleton
 import kotlin.math.min
 
 /**
- * Owns the floating dhikr card: one window at a time, added to and removed from WindowManager with
- * the application context.
+ * Owns the floating dhikr card: one window at a time, added to and removed from WindowManager.
+ *
+ * From API 30 the window is created through a window context bound to TYPE_APPLICATION_OVERLAY on
+ * the default display, which is what the platform asks for when a non-activity window is added:
+ * it carries the configuration, density and metrics of the area the card is actually drawn in.
+ * Older releases keep using the application context, and any failure falls back to it as well.
  *
  * Product contract enforced here:
  *  - touching the card dismisses it and does NOTHING else - no Activity is started, no task is
@@ -62,6 +68,10 @@ class OverlayManager @Inject constructor(
         val view: ComposeView,
         val owner: OverlayViewOwner,
         val visible: MutableState<Boolean>,
+        /** The exact manager the view was added to; the same one must remove it. */
+        val windowManager: WindowManager,
+        /** Held for the lifetime of the window: releasing it would invalidate the window token. */
+        @Suppress("unused") val windowContext: Context,
         var dismissing: Boolean = false
     )
 
@@ -78,14 +88,15 @@ class OverlayManager @Inject constructor(
     fun showDhikr(text: String, settings: OverlaySettings): Boolean {
         if (text.isBlank()) return false
         if (!OverlayPermission.canDraw(context)) return false
-        val windowManager = windowManager() ?: return false
+        val windowContext = overlayWindowContext()
+        val windowManager = windowManager(windowContext) ?: return false
 
         // Never two cards at once, and never an old auto-dismiss firing on a new card.
         removeImmediately()
 
         val owner = OverlayViewOwner().apply { attach() }
         val visible = mutableStateOf(false)
-        val view = ComposeView(context)
+        val view = ComposeView(windowContext)
         view.setViewTreeLifecycleOwner(owner)
         view.setViewTreeViewModelStoreOwner(owner)
         view.setViewTreeSavedStateRegistryOwner(owner)
@@ -102,8 +113,8 @@ class OverlayManager @Inject constructor(
         }
 
         return try {
-            windowManager.addView(view, buildLayoutParams(settings))
-            session = Session(view, owner, visible)
+            windowManager.addView(view, buildLayoutParams(settings, windowContext, windowManager))
+            session = Session(view, owner, visible, windowManager, windowContext)
             owner.resume()
             visible.value = true
             if (settings.haptic) Vibrations.tick(context)
@@ -143,24 +154,53 @@ class OverlayManager @Inject constructor(
         mainHandler.removeCallbacks(removeRunnable)
         val current = session ?: return
         session = null
-        val manager = windowManager()
         runCatching {
             if (current.view.isAttachedToWindow) {
-                manager?.removeViewImmediate(current.view)
+                current.windowManager.removeViewImmediate(current.view)
             }
         }
         runCatching { current.view.disposeComposition() }
         runCatching { current.owner.destroy() }
     }
 
-    private fun windowManager(): WindowManager? =
-        context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+    private fun windowManager(source: Context): WindowManager? =
+        source.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
 
-    private fun buildLayoutParams(settings: OverlaySettings): WindowManager.LayoutParams {
-        val metrics = context.resources.displayMetrics
-        val density = metrics.density
+    /**
+     * Context the overlay window belongs to.
+     *
+     * A fresh window context per card keeps the configuration current (rotation, font scale,
+     * multi-window) and is released with the session instead of being held for the whole process.
+     * Anything unexpected - no display, an OEM that refuses the call - degrades to the
+     * application context, which is what every release below API 30 uses anyway.
+     */
+    private fun overlayWindowContext(): Context {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return context
+        return runCatching {
+            val displays = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+            val display = displays?.getDisplay(Display.DEFAULT_DISPLAY) ?: return context
+            context.createDisplayContext(display).createWindowContext(
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                null
+            )
+        }.getOrDefault(context)
+    }
+
+    private fun buildLayoutParams(
+        settings: OverlaySettings,
+        windowContext: Context,
+        windowManager: WindowManager
+    ): WindowManager.LayoutParams {
+        val density = windowContext.resources.displayMetrics.density
+        val availableWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // The bounds of the area this window is added to, not of the whole physical screen.
+            windowManager.currentWindowMetrics.bounds.width()
+        } else {
+            @Suppress("DEPRECATION")
+            windowContext.resources.displayMetrics.widthPixels
+        }
         val width = min(
-            (metrics.widthPixels * WIDTH_FRACTION).toInt(),
+            (availableWidth * WIDTH_FRACTION).toInt(),
             (MAX_WIDTH_DP * density).toInt()
         )
 

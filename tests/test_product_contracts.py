@@ -376,5 +376,112 @@ class DataContractTest(unittest.TestCase):
         self.assertIn("datastore", rules)
 
 
+class ReleaseHardeningTest(unittest.TestCase):
+    """Regressions for the release audit: background delivery, clock changes, window context."""
+
+    def setUp(self):
+        self.scheduler = strip_comments(read(os.path.join(SRC, "reminder", "ReminderScheduler.kt")))
+        self.boot = strip_comments(read(os.path.join(SRC, "reminder", "BootReceiver.kt")))
+        self.overlay = strip_comments(read(os.path.join(SRC, "overlay", "OverlayManager.kt")))
+        self.manifest = read(MANIFEST)
+        # Declared actions only: the manifest comments explain what is deliberately absent.
+        self.actions = {
+            element.get(f"{{{ANDROID_NS}}}name")
+            for element in ET.parse(MANIFEST).getroot().iter("action")
+        }
+
+    def test_interval_reminders_use_the_elapsed_realtime_clock(self):
+        """A wall-clock edit must not skip or double-fire the periodic chain."""
+        block = self.scheduler[self.scheduler.index("fun schedulePeriodic"):]
+        block = block[:block.index("fun cancelPeriodic")]
+        self.assertIn("SystemClock.elapsedRealtime()", block)
+        self.assertNotIn("System.currentTimeMillis()", block)
+        self.assertIn("ELAPSED_REALTIME_WAKEUP", self.scheduler)
+        # Time-of-day reminders stay on the wall clock, which is what the user picked.
+        self.assertIn("AlarmManager.RTC_WAKEUP", self.scheduler)
+
+    def test_a_restore_never_postpones_an_armed_reminder(self):
+        """Cold starts used to push the next dhikr one full interval into the future."""
+        self.assertIn("FLAG_NO_CREATE", self.scheduler)
+        self.assertIn("fun isPeriodicPending()", self.scheduler)
+        block = self.scheduler[self.scheduler.index("fun apply("):]
+        block = block[:block.index("fun applyDaily")]
+        self.assertIn("keepPendingChain", block)
+        self.assertIn("!keepPendingChain || !isPeriodicPending()", block)
+        for path in (("core", "AppStartup.kt"), ("reminder", "ReminderPresenter.kt")):
+            source = strip_comments(read(os.path.join(SRC, *path)))
+            self.assertIn("keepPendingChain = true", source, path[-1])
+
+    def test_cancelling_releases_the_pending_intent_record(self):
+        """Otherwise isPeriodicPending would keep reporting a chain the user switched off."""
+        for name in ("fun cancelPeriodic", "fun cancelDaily"):
+            block = self.scheduler[self.scheduler.index(name):]
+            end = block.find("\n    fun ", 1)
+            self.assertIn("operation.cancel()", block[:end if end != -1 else len(block)], name)
+
+    def test_clock_and_timezone_changes_rearm_the_daily_alarms(self):
+        self.assertIn("Intent.ACTION_TIME_CHANGED", self.boot)
+        self.assertIn("Intent.ACTION_TIMEZONE_CHANGED", self.boot)
+        self.assertIn("android.intent.action.TIME_SET", self.actions)
+        self.assertIn("android.intent.action.TIMEZONE_CHANGED", self.actions)
+
+    def test_locked_boot_is_not_claimed(self):
+        """The app is not directBootAware, so handling LOCKED_BOOT_COMPLETED would be a lie."""
+        self.assertNotIn("android.intent.action.LOCKED_BOOT_COMPLETED", self.actions)
+        self.assertNotIn("LOCKED_BOOT_COMPLETED", all_kotlin_source())
+        self.assertNotIn('directBootAware="true"', self.manifest)
+
+    def test_boot_receiver_ignores_everything_else(self):
+        self.assertIn("if (action !in HANDLED_ACTIONS) return", self.boot)
+        self.assertIn("Intent.ACTION_BOOT_COMPLETED", self.boot)
+        self.assertIn("Intent.ACTION_MY_PACKAGE_REPLACED", self.boot)
+
+    def test_overlay_window_uses_a_window_context(self):
+        """API 30+ wants a window context for a non-activity window; older releases fall back."""
+        block = self.overlay[self.overlay.index("fun overlayWindowContext"):]
+        block = block[:block.index("private fun buildLayoutParams")]
+        self.assertIn("Build.VERSION_CODES.R", block)
+        self.assertIn("createDisplayContext", block)
+        self.assertIn("createWindowContext", block)
+        self.assertIn("TYPE_APPLICATION_OVERLAY", block)
+        self.assertIn("getOrDefault(context)", block)
+        self.assertIn("ComposeView(windowContext)", self.overlay)
+
+    def test_overlay_measures_the_window_it_is_added_to(self):
+        block = self.overlay[self.overlay.index("private fun buildLayoutParams"):]
+        self.assertIn("currentWindowMetrics.bounds.width()", block)
+
+    def test_overlay_is_removed_by_the_manager_that_added_it(self):
+        self.assertIn("current.windowManager.removeViewImmediate", self.overlay)
+
+    def test_no_foreground_service_was_added_for_the_overlay(self):
+        source = all_kotlin_source()
+        for forbidden in ("startForegroundService", "foregroundServiceType", "Service()"):
+            self.assertNotIn(forbidden, source)
+        self.assertNotIn("<service", self.manifest)
+
+    def test_hilt_plugin_is_applied_so_receivers_are_injected(self):
+        """@AndroidEntryPoint on a BroadcastReceiver only injects through the Hilt transform."""
+        gradle = read(os.path.join(APP, "build.gradle"))
+        self.assertIn("dagger.hilt.android.plugin", gradle)
+        self.assertIn("hilt-android-compiler", gradle)
+        for name in ("BootReceiver", "DhikrReminderReceiver", "DailyReminderReceiver"):
+            source = read(os.path.join(SRC, "reminder", f"{name}.kt"))
+            self.assertIn("@AndroidEntryPoint", source, name)
+            self.assertIn("@Inject", source, name)
+            # BroadcastReceiver.onReceive is abstract: calling super would not compile.
+            self.assertNotIn("super.onReceive", source, name)
+
+    def test_reminder_copy_admits_the_delay(self):
+        strings = read(os.path.join(RES, "values", "strings.xml"))
+        note = strings[strings.index('name="settings_reminder_inexact_note"'):]
+        note = note[:note.index("</string>")]
+        self.assertIn("غير دقيقة", note)
+        self.assertIn("قد", note)
+        self.assertIn("settings_reminder_inexact_note", read(
+            os.path.join(SRC, "ui", "screens", "settings", "SettingsScreen.kt")
+        ))
+
+
 if __name__ == "__main__":
     unittest.main()

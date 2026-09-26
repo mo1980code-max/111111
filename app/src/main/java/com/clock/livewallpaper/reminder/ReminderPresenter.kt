@@ -75,7 +75,9 @@ class ReminderPresenter @Inject constructor(
 
     /** Re-arms every enabled schedule; used after boot, package replace and app start. */
     suspend fun restoreSchedules() {
-        scheduler.apply(settings.snapshot())
+        // keepPendingChain: a restore must never move a reminder that is already armed - only the
+        // schedules the system actually dropped (reboot, package replace) are armed again.
+        scheduler.apply(settings.snapshot(), keepPendingChain = true)
     }
 
     /** "تجربة البطاقة الآن" in overlay settings - same renderer, same settings model. */

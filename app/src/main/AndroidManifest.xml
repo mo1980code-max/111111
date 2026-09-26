@@ -53,14 +53,24 @@
             android:name=".reminder.DailyReminderReceiver"
             android:exported="false" />
 
-        <!-- Re-arms only the schedules the user actually enabled; never opens UI. -->
+        <!--
+          Re-arms only the schedules the user actually enabled; never opens UI.
+
+          All four actions are protected system broadcasts and are on the exception list of the
+          Android 8+ implicit-broadcast ban, so a manifest registration still receives them.
+          LOCKED_BOOT_COMPLETED is intentionally not declared: the app is not directBootAware, so
+          it cannot run - nor read its credential-encrypted settings - before the first unlock,
+          and BOOT_COMPLETED arrives right after it.
+        -->
         <receiver
             android:name=".reminder.BootReceiver"
+            android:directBootAware="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
 
