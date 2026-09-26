@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+apply from: "$rootDir/dependencies.gradle"
+
+// The domain layer is plain Kotlin on purpose: no Android dependency, no framework import.
+// That keeps the learning rules (question generation, grading, difficulty adaptation, reward
+// maths) unit-testable on the JVM and independent of the UI.
+
+java {
+    sourceCompatibility rootProject.ext.javaVersion
+    targetCompatibility rootProject.ext.javaVersion
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = rootProject.ext.javaVersion.toString()
+        freeCompilerArgs += ["-Xjvm-default=all"]
+    }
+}
+
+dependencies {
+    api rootProject.ext.versions.kotlinxCoroutinesCore
+    implementation rootProject.ext.versions.javaxInject
+
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0"
+    testImplementation "com.google.truth:truth:1.4.4"
+}

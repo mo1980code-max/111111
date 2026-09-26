@@ -1,0 +1,22 @@
+// Root build file for Clock Adventure 3D.
+//
+// Plugin versions are declared once here with `apply false`; the modules then request the same
+// plugins WITHOUT a version (Gradle rejects a versioned request for a plugin that is already on
+// the buildscript classpath). Every artefact version lives in `dependencies.gradle`, which the
+// root project and each module apply, so the whole build shares one source of truth.
+
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+    id 'com.android.library' version '8.7.3' apply false
+    id 'org.jetbrains.kotlin.android' version '2.0.21' apply false
+    id 'org.jetbrains.kotlin.jvm' version '2.0.21' apply false
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.0.21' apply false
+    id 'com.google.devtools.ksp' version '2.0.21-1.0.27' apply false
+    id 'com.google.dagger.hilt.android' version '2.52' apply false
+}
+
+apply from: "$rootDir/dependencies.gradle"
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}

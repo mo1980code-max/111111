@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
+    id 'com.google.dagger.hilt.android'
+}
+
+apply from: "$rootDir/dependencies.gradle"
+
+android {
+    namespace 'com.clockadventure.data'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+    }
+
+    compileOptions {
+        sourceCompatibility rootProject.ext.javaVersion
+        targetCompatibility rootProject.ext.javaVersion
+    }
+
+    kotlinOptions {
+        jvmTarget = rootProject.ext.javaVersion.toString()
+    }
+}
+
+dependencies {
+    implementation project(':domain')
+
+    implementation rootProject.ext.versions.coreKtx
+    implementation rootProject.ext.versions.kotlinxCoroutinesAndroid
+
+    // Room: offline persistence for progress, statistics, achievements and unlocks.
+    implementation rootProject.ext.versions.roomRuntime
+    implementation rootProject.ext.versions.roomKtx
+    ksp rootProject.ext.versions.roomCompiler
+
+    // DataStore: application settings.
+    implementation rootProject.ext.versions.datastorePreferences
+
+    implementation rootProject.ext.versions.hiltAndroid
+    ksp rootProject.ext.versions.hiltCompiler
+    implementation rootProject.ext.versions.javaxInject
+
+    testImplementation "junit:junit:4.13.2"
+}
