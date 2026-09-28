@@ -52,6 +52,13 @@ object AdConfig {
     const val CACHED_AD_MAX_AGE_MS: Long = 60 * 60 * 1000L
 
     /**
+     * A banner lives in a lazy list, so scrolling it out of sight destroys it and scrolling it
+     * back builds a new one. Without this floor that would be one ad request per flick; Google's
+     * own auto-refresh never goes below a minute either.
+     */
+    const val BANNER_MIN_RELOAD_MS: Long = 60_000L
+
+    /**
      * Quiet window after a consent form, a runtime permission prompt or any other system screen:
      * coming back from one of those must never look like "the app just showed me an advert".
      */

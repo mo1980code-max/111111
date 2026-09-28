@@ -82,6 +82,8 @@ fun BannerAdSlot(
 
         LaunchedEffect(widthDp) {
             if (requested || widthDp <= 0) return@LaunchedEffect
+            // Scrolling the slot in and out must not turn into a stream of requests.
+            if (!viewModel.canRequestBanner()) return@LaunchedEffect
             requested = true
             adView.adUnitId = AdConfig.BANNER_UNIT_ID
             adView.setAdSize(

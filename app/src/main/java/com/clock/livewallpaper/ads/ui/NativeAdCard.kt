@@ -50,7 +50,11 @@ private class NativeAdViews(
     val media: MediaView,
     val body: TextView,
     val action: Button
-)
+) {
+    /** What this layout currently shows, so a recomposition does not re-register the same ad. */
+    var boundAd: NativeAd? = null
+    var boundPalette: NativeAdPalette? = null
+}
 
 /**
  * A native advert dressed as one of the app's cards - same radius, same hairline, same rhythm -
@@ -228,6 +232,9 @@ private fun buildNativeAdView(context: Context, label: String): NativeAdView {
 /** Fills the layout with one ad. Assets an ad does not carry are hidden, never invented. */
 private fun bindNativeAd(adView: NativeAdView, ad: NativeAd, palette: NativeAdPalette) {
     val views = adView.tag as NativeAdViews
+    if (views.boundAd === ad && views.boundPalette == palette) return
+    views.boundAd = ad
+    views.boundPalette = palette
 
     views.badge.setTextColor(palette.label)
     (views.badge.background as GradientDrawable).setColor(palette.labelBackground)

@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.ads
 
 import android.app.Activity
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.ads.nativead.NativeAd
@@ -54,6 +55,26 @@ class AdsViewModel @Inject constructor(
     /** Google's privacy options form, opened from the settings row UMP asked for. */
     fun showPrivacyOptions(activity: Activity) {
         coordinator.showPrivacyOptions(activity)
+    }
+
+    private var lastBannerRequestAtMs: Long = 0L
+
+    /**
+     * Permission for a banner slot to start one request, granted at most once a minute per screen.
+     *
+     * The slot itself cannot remember anything - a lazy list disposes it as soon as it scrolls
+     * away - so the throttle lives here, where it survives the scrolling and dies with the screen.
+     */
+    fun canRequestBanner(): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        if (lastBannerRequestAtMs != 0L &&
+            now - lastBannerRequestAtMs < AdConfig.BANNER_MIN_RELOAD_MS
+        ) {
+            AdLog.d("banner request skipped: the previous one is less than a minute old")
+            return false
+        }
+        lastBannerRequestAtMs = now
+        return true
     }
 
     /** Requests the screen's native ad once; calls made while one is loading or loaded do nothing. */
