@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -35,12 +37,17 @@ val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
  *
  * The bottom bar only exists on the four tab destinations; reading, editor, settings and legal
  * screens are full-height and carry their own top bar with a back affordance.
+ *
+ * It also reports one thing to its host: the moment a guided reading session is left. That is
+ * the app's natural break, and the only moment an interstitial is even considered - the shell
+ * knows the navigation, the activity knows the ad policy, and neither leaks into the other.
  */
 @Composable
 fun DhikrApp(
     startWithOnboarding: Boolean,
     pendingRoute: String?,
-    onRouteHandled: () -> Unit
+    onRouteHandled: () -> Unit,
+    onReadingSessionEnded: () -> Unit
 ) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -51,6 +58,16 @@ fun DhikrApp(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val bottomBarVisible = currentRoute != null && Routes.BOTTOM_ROUTES.contains(currentRoute)
+
+    // Leaving the reading screen - finished or interrupted - closes a session.
+    var previousRoute by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(currentRoute) {
+        val previous = previousRoute
+        previousRoute = currentRoute
+        if (currentRoute != null && Routes.isReading(previous) && !Routes.isReading(currentRoute)) {
+            onReadingSessionEnded()
+        }
+    }
 
     LaunchedEffect(pendingRoute, currentRoute) {
         val route = pendingRoute ?: return@LaunchedEffect

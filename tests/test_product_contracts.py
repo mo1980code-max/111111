@@ -1,8 +1,9 @@
 """The product rules of the specification, asserted against the source.
 
 These are the constraints a compiler would never catch: which permissions exist, how the floating
-card dismisses itself, that reminders use inexact alarms only, that nothing in the app can reach
-the network, and that the deep links a notification or a widget can fire are all reachable.
+card dismisses itself, that reminders use inexact alarms only, that the only network client in the
+app is the advertising SDK - under the rules the ad layer promises - and that the deep links a
+notification or a widget can fire are all reachable.
 
 Run with::
 
@@ -66,9 +67,49 @@ def all_kotlin_source():
     return "\n".join(strip_comments(read(path)) for path in kotlin_files())
 
 
+ADS = os.path.join(SRC, "ads")
+
+
+def ad_layer_files():
+    """Every Kotlin file of the advertising layer."""
+    for root, _dirs, files in os.walk(ADS):
+        for name in sorted(files):
+            if name.endswith(".kt"):
+                yield os.path.join(root, name)
+
+
+def screen_files(folder):
+    directory = os.path.join(SRC, "ui", "screens", folder)
+    for name in sorted(os.listdir(directory)):
+        if name.endswith(".kt"):
+            yield os.path.join(directory, name)
+
+
+def gradle_dependency_lines():
+    """The dependency declarations of the app module, without the comments around them."""
+    gradle = strip_comments(read(os.path.join(APP, "build.gradle")))
+    return [
+        line.strip() for line in gradle.splitlines()
+        if re.match(r"\s*(implementation|api|kapt|compileOnly|runtimeOnly|debugImplementation)\b",
+                    line)
+    ]
+
+
+def text_files_of_repository():
+    """Every text file of the repository - used to prove no real ad unit id hides anywhere."""
+    extensions = (".kt", ".java", ".xml", ".gradle", ".pro", ".properties", ".md", ".py",
+                  ".json", ".txt", ".yml", ".yaml", ".kts")
+    for root, dirs, files in os.walk(REPO):
+        dirs[:] = [name for name in dirs if name not in {".git", ".gradle", "build", "node_modules"}]
+        for name in sorted(files):
+            if name.endswith(extensions):
+                yield os.path.join(root, name)
+
+
 class PermissionBudgetTest(unittest.TestCase):
 
     EXPECTED = {
+        "android.permission.INTERNET",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
@@ -89,8 +130,11 @@ class PermissionBudgetTest(unittest.TestCase):
         for name in ("SCHEDULE_EXACT_ALARM", "USE_EXACT_ALARM"):
             self.assertNotIn(f"android.permission.{name}", self.declared)
 
-    def test_no_internet_permission(self):
-        for name in ("INTERNET", "ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE"):
+    def test_internet_is_the_only_network_permission(self):
+        """INTERNET exists for the ads SDK; nothing needs to inspect the network itself."""
+        self.assertIn("android.permission.INTERNET", self.declared)
+        for name in ("ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE", "ACCESS_FINE_LOCATION",
+                     "ACCESS_COARSE_LOCATION"):
             self.assertNotIn(f"android.permission.{name}", self.declared)
 
     def test_no_privacy_sensitive_services(self):
@@ -113,6 +157,7 @@ class PermissionBudgetTest(unittest.TestCase):
 
 
 class OfflineTest(unittest.TestCase):
+    """The content is local; the advertising SDK is the single exception, and it is fenced in."""
 
     FORBIDDEN_APIS = (
         "HttpURLConnection",
@@ -122,12 +167,9 @@ class OfflineTest(unittest.TestCase):
         "WebView",
         "Firebase",
         "FirebaseAnalytics",
-        "MobileAds",
-        "AdRequest",
-        "AdView",
-        "InterstitialAd",
         "GoogleSignIn",
-        "com.google.android.gms",
+        "com.google.android.gms.analytics",
+        "com.google.android.gms.measurement",
         "Supabase",
     )
 
@@ -135,6 +177,16 @@ class OfflineTest(unittest.TestCase):
         source = all_kotlin_source()
         offenders = [api for api in self.FORBIDDEN_APIS if api in source]
         self.assertEqual([], offenders, f"network / SDK usage: {offenders}")
+
+    def test_the_app_never_opens_a_connection_itself(self):
+        """No socket, no URL, no download: whatever leaves the device leaves through the SDK."""
+        offenders = []
+        for path in kotlin_files():
+            source = strip_comments(read(path))
+            for api in ("java.net.", "URLConnection", "Socket(", "openStream(", "HttpClient"):
+                if api in source:
+                    offenders.append((os.path.relpath(path, REPO), api))
+        self.assertEqual([], offenders, f"hand written networking: {offenders}")
 
     def test_no_remote_fonts_or_images(self):
         """Fonts are bundled files; no downloadable-font provider and no http(s) references."""
@@ -158,9 +210,300 @@ class OfflineTest(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(RES, "font", font)), font)
 
     def test_no_backend_dependencies(self):
-        gradle = read(os.path.join(APP, "build.gradle"))
-        for forbidden in ("firebase", "play-services", "admob", "supabase", "retrofit", "okhttp"):
-            self.assertNotIn(forbidden, gradle.lower())
+        """Only the two Google advertising artifacts may talk to a server on the app's behalf."""
+        dependencies = gradle_dependency_lines()
+        for forbidden in ("firebase", "supabase", "retrofit", "okhttp", "volley", "ktor",
+                          "appsflyer", "facebook", "unity-ads", "applovin", "ironsource",
+                          "play-services-analytics", "play-services-measurement"):
+            offenders = [line for line in dependencies if forbidden in line.lower()]
+            self.assertEqual([], offenders, f"forbidden dependency: {offenders}")
+
+    def test_the_only_google_dependencies_are_ads_and_consent(self):
+        google = [
+            line for line in gradle_dependency_lines()
+            if "com.google.android" in line
+        ]
+        self.assertEqual(
+            [
+                "implementation 'com.google.android.gms:play-services-ads:25.4.0'",
+                "implementation 'com.google.android.ump:user-messaging-platform:4.0.0'",
+            ],
+            google,
+        )
+
+
+class AdvertisingContractTest(unittest.TestCase):
+    """The advertising layer: Google test ids only, consent first, and no surprises for the user."""
+
+    TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+    TEST_UNITS = {
+        "banner": "ca-app-pub-3940256099942544/6300978111",
+        "interstitial": "ca-app-pub-3940256099942544/1033173712",
+        "rewarded": "ca-app-pub-3940256099942544/5224354917",
+        "rewarded interstitial": "ca-app-pub-3940256099942544/5354046379",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "app open": "ca-app-pub-3940256099942544/9257395921",
+    }
+    SENSITIVE_SCREENS = ("onboarding", "reading", "tasbeeh", "editor", "mydhikr", "overlay",
+                         "privacy", "about")
+
+    def setUp(self):
+        self.config = strip_comments(read(os.path.join(ADS, "AdConfig.kt")))
+        self.coordinator = strip_comments(read(os.path.join(ADS, "AdsCoordinator.kt")))
+        self.consent = strip_comments(read(os.path.join(ADS, "ConsentManager.kt")))
+        self.banner = strip_comments(read(os.path.join(ADS, "ui", "BannerAdSlot.kt")))
+        self.native = strip_comments(read(os.path.join(ADS, "ui", "NativeAdCard.kt")))
+        self.activity = strip_comments(read(os.path.join(SRC, "MainActivity.kt")))
+        self.settings_screen = strip_comments(
+            read(os.path.join(SRC, "ui", "screens", "settings", "SettingsScreen.kt"))
+        )
+        self.manifest = read(MANIFEST)
+
+    # -------------------------------------------------------------- identifiers
+
+    def test_every_ad_id_in_the_repository_is_a_google_test_id(self):
+        """One real publisher id anywhere would be a live ad in a test build."""
+        allowed = set(self.TEST_UNITS.values()) | {self.TEST_APP_ID}
+        found = set()
+        for path in text_files_of_repository():
+            found.update(re.findall(r"ca-app-pub-\d+[/~]\d+", read(path)))
+        self.assertEqual(allowed, found, f"unexpected ad ids: {sorted(found - allowed)}")
+
+    def test_ad_config_declares_every_format_once(self):
+        for name, unit in self.TEST_UNITS.items():
+            self.assertEqual(1, self.config.count(unit), f"{name} unit id")
+
+    def test_the_application_id_lives_only_in_the_manifest(self):
+        self.assertIn("com.google.android.gms.ads.APPLICATION_ID", self.manifest)
+        self.assertEqual(1, self.manifest.count(self.TEST_APP_ID))
+        self.assertNotIn(self.TEST_APP_ID, all_kotlin_source())
+
+    # ----------------------------------------------------------------- layering
+
+    def test_the_sdk_is_confined_to_the_ads_package(self):
+        offenders = []
+        for path in kotlin_files():
+            relative = os.path.relpath(path, SRC)
+            if not re.search(r"^import\s+com\.google\.android\.(gms\.ads|ump)\.", read(path), re.M):
+                continue
+            if not relative.startswith("ads" + os.sep):
+                offenders.append(relative)
+        self.assertEqual([], offenders, f"ad SDK reached outside ads/: {offenders}")
+
+    def test_no_singleton_keeps_an_activity(self):
+        offenders = []
+        for path in ad_layer_files():
+            source = strip_comments(read(path))
+            for pattern in (r"(?:val|var)\s+\w+\s*:\s*Activity\b", r"WeakReference<Activity>"):
+                for match in re.finditer(pattern, source):
+                    offenders.append((os.path.relpath(path, REPO), match.group(0)))
+        self.assertEqual([], offenders, f"Activity retained by the ad layer: {offenders}")
+
+    def test_the_activity_is_always_passed_in(self):
+        for signature in (
+            "fun gatherConsent(activity: Activity)",
+            "fun showPrivacyOptions(activity: Activity)",
+            "fun onForeground(activity: Activity)",
+            "fun onContentSessionEnded(activity: Activity)",
+        ):
+            self.assertIn(signature, self.coordinator)
+
+    # ------------------------------------------------------------------ consent
+
+    def test_consent_runs_through_ump_with_a_foreground_activity(self):
+        self.assertIn("UserMessagingPlatform.getConsentInformation(context)", self.consent)
+        self.assertIn("requestConsentInfoUpdate(\n            activity,", self.consent)
+        self.assertIn("loadAndShowConsentFormIfRequired(activity)", self.consent)
+        self.assertIn("showPrivacyOptionsForm(activity)", self.consent)
+        self.assertIn("PrivacyOptionsRequirementStatus.REQUIRED", self.consent)
+
+    def test_two_consent_requests_or_forms_can_never_overlap(self):
+        self.assertIn("updateInFlight.compareAndSet(false, true)", self.consent)
+        self.assertIn("formInFlight.compareAndSet(false, true)", self.consent)
+
+    def test_debug_builds_do_not_bypass_consent(self):
+        source = "\n".join(strip_comments(read(path)) for path in ad_layer_files())
+        for bypass in ("ConsentDebugSettings", "DEBUG_GEOGRAPHY", "addTestDeviceHashedId",
+                       "consentInformation.reset()", "setTagForUnderAgeOfConsent"):
+            self.assertNotIn(bypass, source)
+        self.assertNotIn("BuildConfig.DEBUG", self.consent)
+
+    def test_nothing_is_requested_before_consent_initialisation_and_onboarding(self):
+        self.assertIn("consent.canRequestAds && initialized && onboarded", self.coordinator)
+        self.assertIn("if (consent.canRequestAds) initializer.ensureInitialized()", self.coordinator)
+
+    def test_the_sdk_is_initialised_in_exactly_one_idempotent_place(self):
+        callers = [
+            os.path.relpath(path, SRC) for path in kotlin_files()
+            if "MobileAds.initialize(" in strip_comments(read(path))
+        ]
+        self.assertEqual([os.path.join("ads", "MobileAdsInitializer.kt")], callers)
+        initializer = read(os.path.join(ADS, "MobileAdsInitializer.kt"))
+        self.assertIn("started.compareAndSet(false, true)", initializer)
+        # An initialised SDK is not a loaded ad, and the log says so.
+        self.assertIn("no ad requested yet", initializer)
+
+    # ------------------------------------------------------------------- banner
+
+    def test_banner_is_created_once_sized_and_destroyed(self):
+        self.assertIn("if (!state.adsReady) return", self.banner)
+        self.assertIn("remember { AdView(context) }", self.banner)
+        self.assertIn("getCurrentOrientationAnchoredAdaptiveBannerAdSize", self.banner)
+        self.assertIn("Lifecycle.Event.ON_PAUSE -> adView.pause()", self.banner)
+        self.assertIn("Lifecycle.Event.ON_RESUME -> adView.resume()", self.banner)
+        self.assertIn("removeView(adView)", self.banner)
+        self.assertIn("adView.destroy()", self.banner)
+
+    def test_banner_reports_both_outcomes(self):
+        self.assertIn("override fun onAdLoaded()", self.banner)
+        self.assertIn('AdLog.loadFailed("banner", error)', self.banner)
+
+    # ------------------------------------------------------------------- native
+
+    def test_native_ad_is_labelled_bound_and_destroyed(self):
+        self.assertIn("R.string.ad_label", self.native)
+        self.assertIn("adView.setNativeAd(ad)", self.native)
+        self.assertIn("onRelease = { view -> view.destroy() }", self.native)
+        view_model = strip_comments(read(os.path.join(ADS, "AdsViewModel.kt")))
+        cleared = view_model[view_model.index("override fun onCleared"):]
+        self.assertIn("nativeRequest?.cancel()", cleared)
+        self.assertIn("_nativeAd.value?.destroy()", cleared)
+        manager = strip_comments(read(os.path.join(ADS, "NativeAdManager.kt")))
+        self.assertIn("if (request.isCancelled)", manager)
+        self.assertIn("nativeAd.destroy()", manager)
+
+    def test_the_ad_label_is_arabic_copy(self):
+        strings = read(os.path.join(RES, "values", "strings.xml"))
+        self.assertIn('<string name="ad_label">إعلان</string>', strings)
+
+    # ------------------------------------------------------------- full screen
+
+    def test_full_screen_ads_are_capped_by_one_gate(self):
+        for constant in ("SESSION_WARM_UP_MS", "FULLSCREEN_MIN_GAP_MS", "SENSITIVE_FLOW_QUIET_MS",
+                         "INTERSTITIAL_MIN_SESSIONS", "APP_OPEN_MIN_BACKGROUND_MS"):
+            self.assertIn(f"AdConfig.{constant}", self.coordinator)
+        gate = self.coordinator[self.coordinator.index("private fun canShowFullscreen"):]
+        gate = gate[:gate.index("private fun markFullscreenShown")]
+        self.assertIn("!adsReady.value", gate)
+        self.assertIn("consentManager.formVisible.value", gate)
+        self.assertIn("now < quietUntilMs", gate)
+        self.assertIn("AdConfig.SESSION_WARM_UP_MS", gate)
+        self.assertIn("AdConfig.FULLSCREEN_MIN_GAP_MS", gate)
+
+    def test_only_the_coordinator_can_show_a_full_screen_ad(self):
+        owners = {
+            os.path.join("ads", name) for name in
+            ("AdsCoordinator.kt", "InterstitialAdManager.kt", "AppOpenAdManager.kt",
+             "RewardedAdManager.kt")
+        }
+        offenders = []
+        for path in kotlin_files():
+            relative = os.path.relpath(path, SRC)
+            if relative in owners:
+                continue
+            source = strip_comments(read(path))
+            for symbol in ("InterstitialAdManager", "AppOpenAdManager", "RewardedAdManager"):
+                if symbol in source:
+                    offenders.append((relative, symbol))
+        self.assertEqual([], offenders, f"full screen ads triggered outside the gate: {offenders}")
+
+    def test_interstitial_waits_for_a_finished_reading_session(self):
+        self.assertIn("finishedContentSessions < AdConfig.INTERSTITIAL_MIN_SESSIONS",
+                      self.coordinator)
+        shell = strip_comments(read(os.path.join(SRC, "ui", "DhikrApp.kt")))
+        self.assertIn("Routes.isReading(previous)", shell)
+        self.assertIn("!Routes.isReading(currentRoute)", shell)
+        self.assertIn("adsCoordinator.onContentSessionEnded(", self.activity)
+
+    def test_app_open_skips_the_cold_start_and_short_trips(self):
+        block = self.coordinator[self.coordinator.index("fun onForeground"):]
+        block = block[:block.index("fun onBackground")]
+        self.assertIn("foregroundCount == 1", block)
+        self.assertIn("awayMs < AdConfig.APP_OPEN_MIN_BACKGROUND_MS", block)
+        self.assertIn('canShowFullscreen("app open")', block)
+
+    def test_rewarded_is_user_initiated_and_rewards_from_the_callback_only(self):
+        rewarded = strip_comments(read(os.path.join(ADS, "RewardedAdManager.kt")))
+        self.assertIn("fun show(activity: Activity, onRewardEarned: (RewardItem) -> Unit)", rewarded)
+        self.assertEqual(1, rewarded.count("onRewardEarned("))
+        self.assertIn("ready.show(activity) { reward ->", rewarded)
+        # No automatic placement exists: the coordinator never starts a rewarded ad.
+        self.assertNotIn("RewardedAdManager", self.coordinator)
+
+    def test_system_and_consent_screens_open_a_quiet_window(self):
+        block = self.activity[self.activity.index("override fun startActivity("):]
+        self.assertIn("adsCoordinator.onSystemUiShown()", block[:block.index("super.startActivity")])
+        self.assertIn("markQuietPeriod()", self.coordinator)
+        gather = self.coordinator[self.coordinator.index("fun gatherConsent"):]
+        self.assertIn("markQuietPeriod()", gather[:gather.index("consentManager.gather")])
+
+    # ----------------------------------------------------------------- placement
+
+    def test_no_ads_in_focused_or_legal_screens(self):
+        offenders = []
+        for folder in self.SENSITIVE_SCREENS:
+            for path in screen_files(folder):
+                source = strip_comments(read(path))
+                for symbol in ("BannerAdSlot", "NativeAdCard", "PrivacyOptionsRow", "AdsViewModel"):
+                    if symbol in source:
+                        offenders.append((folder, symbol))
+        self.assertEqual([], offenders, f"ads inside a focused screen: {offenders}")
+
+    def test_ads_are_placed_in_the_browsing_screens(self):
+        home = strip_comments(read(os.path.join(SRC, "ui", "screens", "home", "HomeScreen.kt")))
+        adhkar = strip_comments(read(os.path.join(SRC, "ui", "screens", "adhkar", "AdhkarScreen.kt")))
+        self.assertIn("NativeAdCard()", home)
+        self.assertIn("BannerAdSlot()", adhkar)
+
+    def test_settings_has_no_debug_or_status_surface(self):
+        for forbidden in ("AdMob", "adsReady", "canRequestAds", "BannerAdSlot", "NativeAdCard",
+                          "InterstitialAd", "RewardedAd", "AppOpenAd", "AdView", "AdsUiState"):
+            self.assertNotIn(forbidden, self.settings_screen)
+        self.assertIn("PrivacyOptionsRow()", self.settings_screen)
+
+    def test_the_only_ad_control_is_googles_privacy_options(self):
+        row = strip_comments(read(os.path.join(ADS, "ui", "PrivacyOptionsRow.kt")))
+        self.assertIn("if (!state.privacyOptionsRequired) return", row)
+        self.assertIn("viewModel.showPrivacyOptions(activity)", row)
+        strings = read(os.path.join(RES, "values", "strings.xml"))
+        declared = set(re.findall(r'<string name="(settings_ads_\w+)"', strings))
+        self.assertEqual(
+            {"settings_ads_privacy_options", "settings_ads_privacy_options_subtitle"},
+            declared,
+        )
+
+    # ------------------------------------------------------------------ logging
+
+    def test_logging_is_debug_only_and_carries_one_tag(self):
+        log = strip_comments(read(os.path.join(ADS, "AdLog.kt")))
+        self.assertIn('TAG: String = "AdMobDebug"', log)
+        calls = len(re.findall(r"(?<![\w.])Log\.", log))
+        self.assertGreaterEqual(calls, 4)
+        self.assertEqual(calls, log.count("BuildConfig.DEBUG"))
+        offenders = [
+            os.path.relpath(path, REPO) for path in ad_layer_files()
+            if os.path.basename(path) != "AdLog.kt" and "android.util.Log" in read(path)
+        ]
+        self.assertEqual([], offenders, f"logging around AdLog: {offenders}")
+
+    def test_every_ad_event_the_report_needs_is_logged(self):
+        source = "\n".join(strip_comments(read(path)) for path in ad_layer_files())
+        for event in ("onAdLoaded", "onAdFailedToLoad", "onAdImpression", "onAdClicked",
+                      "onAdShowedFullScreenContent", "onAdDismissedFullScreenContent",
+                      "onAdFailedToShowFullScreenContent", "requestConsentInfoUpdate",
+                      "MobileAds.initialize"):
+            self.assertIn(event, source)
+        log = read(os.path.join(ADS, "AdLog.kt"))
+        for field in ("error.code", "error.domain", "error.message", "error.responseInfo"):
+            self.assertIn(field, log)
+
+    def test_no_user_content_is_logged(self):
+        """The dhikr text, the counter and the settings never reach Logcat through the ad layer."""
+        source = "\n".join(strip_comments(read(path)) for path in ad_layer_files())
+        for leak in ("dhikr", "Dhikr", "tasbeeh", "settings.", "counter"):
+            offenders = [line for line in source.splitlines()
+                         if "AdLog" in line and leak in line]
+            self.assertEqual([], offenders, f"user data in a log line: {offenders}")
 
 
 class OverlayContractTest(unittest.TestCase):

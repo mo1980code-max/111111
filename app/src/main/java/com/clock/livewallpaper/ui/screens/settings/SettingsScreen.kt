@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clock.livewallpaper.R
+import com.clock.livewallpaper.ads.ui.PrivacyOptionsRow
 import com.clock.livewallpaper.core.ArabicText
 import com.clock.livewallpaper.data.prefs.AppearanceSettings
 import com.clock.livewallpaper.data.prefs.ReminderSettings
@@ -396,10 +397,12 @@ fun SettingsScreen(
                         iconRes = R.drawable.ic_info,
                         onClick = onOpenAbout
                     )
+                    // The app's only advertising control, and only where Google requires one.
+                    PrivacyOptionsRow()
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    text = stringResource(R.string.privacy_no_internet),
+                    text = stringResource(R.string.privacy_ads_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier

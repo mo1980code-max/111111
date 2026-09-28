@@ -50,4 +50,11 @@ object Routes {
     }
 
     fun isKnown(route: String?): Boolean = route != null && EXTERNAL_ROUTES.contains(route)
+
+    /**
+     * True for the guided reading destination, whatever category it carries - the nav host
+     * reports the pattern, a deep link reports the filled route, and both start the same way.
+     */
+    fun isReading(route: String?): Boolean =
+        route != null && route.startsWith(READING_PATTERN.substringBefore('{'))
 }
