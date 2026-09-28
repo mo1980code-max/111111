@@ -181,9 +181,14 @@
     <string name="settings_haptics_desc">اهتزاز خفيف مع كل تسبيحة</string>
 
     <string name="settings_privacy_row">سياسة الخصوصية</string>
-    <string name="settings_privacy_desc">لا حسابات، لا إعلانات، لا تتبّع</string>
+    <string name="settings_privacy_desc">لا حسابات ولا تتبّع، والمحتوى كله على جهازك</string>
     <string name="settings_about_row">عن التطبيق</string>
     <string name="settings_about_desc">الإصدار والغرض من التطبيق</string>
+    <string name="settings_ads_privacy_options">خيارات الخصوصية في الإعلانات</string>
+    <string name="settings_ads_privacy_options_subtitle">راجع موافقتك على استخدام بياناتك في الإعلانات</string>
+
+    <!-- ===================== الإعلانات ===================== -->
+    <string name="ad_label">إعلان</string>
 
     <!-- ===================== مظهر بطاقة الذكر ===================== -->
     <string name="overlay_settings_title">مظهر بطاقة الذكر</string>
@@ -210,27 +215,28 @@
 
     <!-- ===================== الخصوصية ===================== -->
     <string name="privacy_title">الخصوصية</string>
-    <string name="privacy_headline">كل شيء يبقى على جهازك</string>
-    <string name="privacy_intro">صُمّم التطبيق ليعمل بالكامل دون إنترنت ودون أي حساب.</string>
+    <string name="privacy_headline">أذكارك تبقى على جهازك</string>
+    <string name="privacy_intro">كل محتوى التطبيق يعمل دون إنترنت ودون أي حساب؛ الاتصال بالشبكة يُستخدم لعرض الإعلانات فقط.</string>
     <string name="privacy_point_account">لا يوجد تسجيل دخول ولا حساب مستخدم</string>
-    <string name="privacy_point_ads">لا توجد إعلانات ولا أي مكتبة إعلانات</string>
-    <string name="privacy_point_analytics">لا يوجد تحليل سلوك ولا تتبّع ولا إرسال بيانات</string>
-    <string name="privacy_point_backend">لا يوجد خادم أو قاعدة بيانات خارجية</string>
+    <string name="privacy_point_ads">الإعلانات من منصّة جوجل للإعلانات، وهي الجهة الوحيدة التي يتصل بها التطبيق</string>
+    <string name="privacy_point_consent">في المناطق التي تشترط الموافقة تظهر لك شاشة جوجل للموافقة، ويمكنك تغيير اختيارك متى شئت من الإعدادات</string>
+    <string name="privacy_point_analytics">لا توجد أدوات تحليل أو تتبّع داخل التطبيق، ولا يُرسل نص أذكارك ولا إعداداتك إلى أي جهة</string>
+    <string name="privacy_point_backend">لا يوجد خادم أو قاعدة بيانات خاصة بالتطبيق</string>
     <string name="privacy_point_local">أذكارك وإعداداتك محفوظة في ذاكرة التطبيق على جهازك</string>
     <string name="privacy_point_overlay">إذن الظهور فوق التطبيقات يُستخدم لعرض بطاقة الذكر فقط، ولا يقرأ محتوى أي تطبيق آخر</string>
-    <string name="privacy_point_permissions">الأذونات المطلوبة: الظهور فوق التطبيقات، التنبيهات، إعادة جدولة التذكيرات بعد إعادة التشغيل، والاهتزاز</string>
-    <string name="privacy_no_internet">التطبيق لا يملك إذن الإنترنت أصلًا، فلا يستطيع إرسال أي شيء.</string>
+    <string name="privacy_point_permissions">الأذونات المطلوبة: الإنترنت للإعلانات، الظهور فوق التطبيقات، التنبيهات، إعادة جدولة التذكيرات بعد إعادة التشغيل، والاهتزاز</string>
+    <string name="privacy_ads_note">الإعلانات معروضة من جوجل وتحمل دائمًا كلمة «إعلان»، ولا تظهر داخل شاشات القراءة أو التسبيح.</string>
 
     <!-- ===================== عن التطبيق ===================== -->
     <string name="about_title">عن التطبيق</string>
     <string name="about_version">الإصدار %1$s</string>
-    <string name="about_purpose">تطبيق أذكار عربي يعمل دون إنترنت، يرافقك ببطاقة ذكر لطيفة أثناء استخدام هاتفك.</string>
+    <string name="about_purpose">تطبيق أذكار عربي، محتواه كامل على جهازك، يرافقك ببطاقة ذكر لطيفة أثناء استخدام هاتفك.</string>
     <string name="about_content_title">مصادر المحتوى</string>
     <string name="about_content_note">نصوص الأذكار منقولة كما وردت في مصادرها المرفقة داخل التطبيق دون أي تعديل.</string>
     <string name="about_fonts_title">الخطوط</string>
     <string name="about_fonts_note">خطوط عربية مرخّصة برخصة SIL OFL ومضمّنة داخل التطبيق.</string>
-    <string name="about_offline_title">يعمل دون إنترنت</string>
-    <string name="about_offline_note">كل المحتوى والإعدادات محفوظة على الجهاز.</string>
+    <string name="about_offline_title">المحتوى يعمل دون إنترنت</string>
+    <string name="about_offline_note">كل الأذكار والإعدادات محفوظة على الجهاز، والاتصال بالإنترنت يُستخدم لعرض الإعلانات فقط.</string>
 
     <!-- ===================== التنبيهات ===================== -->
     <string name="channel_dhikr_name">تذكير الأذكار</string>

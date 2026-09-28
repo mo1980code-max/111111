@@ -1,7 +1,8 @@
 # Assets
 
-Everything the app displays ships inside the APK. There is no download step, no remote font, no
-remote image and no network permission, so every asset below is also the offline story.
+Everything the app displays ships inside the APK. There is no download step, no remote font and no
+remote image, so every asset below is also the offline story. The network is used for one thing
+only: the ad creatives that Google's SDK fetches and draws itself.
 
 ## Religious content
 

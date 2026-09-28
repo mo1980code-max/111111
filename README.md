@@ -4,8 +4,9 @@ A premium, fully offline Arabic dhikr app for Android: adhkar of the morning and
 counter, the user's own dhikr, and a floating dhikr card that appears gently over whatever app is
 in front of you and disappears the moment you touch it.
 
-No account, no backend, no ads, no analytics, no tracking, no network permission. Everything -
-content, settings, counters - lives on the device.
+No account, no backend, no analytics, no tracking. The content, the settings and the counters live
+on the device and work with the network switched off; the only thing that goes online is the
+advertising described below, and only after the user's consent choice allows it.
 
 ## Features
 
@@ -25,11 +26,36 @@ content, settings, counters - lives on the device.
 * Arabic-first, true RTL, light and independently designed dark theme, Hijri + Gregorian date,
   TalkBack labels, ≥48 dp targets, font scaling, edge-to-edge.
 
+## Advertising
+
+The app carries Google AdMob advertising, integrated through one Hilt layer in
+`com.clock.livewallpaper.ads` and governed by Google's User Messaging Platform (UMP).
+
+* **Google test ad units only.** Every id in the repository is one of Google's published test ids -
+  the application id `ca-app-pub-3940256099942544~3347511713` in the manifest, and the banner,
+  interstitial, rewarded, rewarded-interstitial, native and app-open test units in `AdConfig.kt`.
+  They must be replaced with real units before publishing.
+* **Consent first.** UMP is asked on every launch from the foreground activity; a form is shown when
+  it is required; the SDK is initialised and an ad is requested only while `canRequestAds()` is
+  true. Onboarding must be finished first.
+* **Where ads appear.** A native card among the cards of the home screen (labelled إعلان), an
+  adaptive banner in the adhkar list, one interstitial at most when a reading session ends, and an
+  app open ad on a real return to the app. The reading, tasbeeh, editor, onboarding, privacy and
+  about screens carry none.
+* **One gate.** `AdsCoordinator` owns the frequency caps and the quiet windows around consent forms
+  and Android permission dialogs; screens never talk to the SDK.
+* **Privacy options.** When UMP reports that a privacy options form is required, and only then,
+  Settings shows a single row that opens Google's form. There is no debug or status surface.
+* **Debug logging.** Debug builds log the init, the UMP result, each request, load, failure (code,
+  domain, message, response info), impression, click and full-screen event under the Logcat tag
+  `AdMobDebug`. Release builds log nothing, and no user content is ever logged.
+
 ## Stack
 
 Kotlin 2.1.20 · Jetpack Compose (BOM 2025.04.01) · Material 3 · MVVM · Room 2.7.1 · DataStore ·
 Hilt 2.56.2 · Navigation Compose · Coroutines/Flow · WindowManager · AlarmManager (inexact) ·
-AppWidgetProvider · Java 17 · AGP 8.13.2 / Gradle 8.13 · compileSdk & targetSdk 36 · minSdk 23.
+AppWidgetProvider · Google Mobile Ads 25.4.0 + UMP 4.0.0 · Java 17 · AGP 8.13.2 / Gradle 8.13 ·
+compileSdk & targetSdk 36 · minSdk 23.
 
 ## Build
 
@@ -40,10 +66,11 @@ Requires **JDK 17** and the Android SDK (platform 36):
 ./gradlew assembleRelease          # minified + resource-shrunk
 ```
 
-Static audit suite (no JDK needed, runs anywhere Python 3 does):
+Static audit suite (no Android SDK needed, runs anywhere Python 3 does):
 
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v      # 138 checks
+python3 tools/dhikr-typecheck/check.py        # kotlinc type-check of the ad layer (needs kotlinc)
 ```
 
 ## Documentation
@@ -63,6 +90,8 @@ python3 -m unittest discover -s tests -v
 | `POST_NOTIFICATIONS` | reminder notifications (Android 13+) | yes |
 | `RECEIVE_BOOT_COMPLETED` | re-arm the enabled reminders after a reboot | - |
 | `VIBRATE` | the short optional haptic | yes |
+| `INTERNET` | required by the Google Mobile Ads SDK; nothing else uses it | - |
 
-There is deliberately no `INTERNET` permission, no exact-alarm permission, no accessibility
-service, no usage-stats access and no notification listener.
+There is deliberately no exact-alarm permission, no accessibility service, no usage-stats access,
+no notification listener, no location, no advertising-id permission and no backend of our own: the
+app's own data never leaves the device.

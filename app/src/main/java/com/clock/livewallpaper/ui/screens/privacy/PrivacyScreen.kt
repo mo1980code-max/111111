@@ -26,7 +26,10 @@ import com.clock.livewallpaper.ui.components.DhikrCard
 import com.clock.livewallpaper.ui.components.IconBadge
 import com.clock.livewallpaper.ui.theme.LocalDhikrColors
 
-/** The privacy screen states plainly what the app does not do - because it really does not. */
+/**
+ * The privacy screen states plainly what the app does and does not do - including the one thing
+ * that does leave the device: the advert request, and the consent that governs it.
+ */
 @Composable
 fun PrivacyScreen(
     onBack: () -> Unit,
@@ -37,6 +40,7 @@ fun PrivacyScreen(
         R.string.privacy_point_backend,
         R.string.privacy_point_account,
         R.string.privacy_point_ads,
+        R.string.privacy_point_consent,
         R.string.privacy_point_analytics,
         R.string.privacy_point_overlay,
         R.string.privacy_point_permissions
@@ -85,7 +89,7 @@ fun PrivacyScreen(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = stringResource(R.string.privacy_no_internet),
+                text = stringResource(R.string.privacy_ads_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier

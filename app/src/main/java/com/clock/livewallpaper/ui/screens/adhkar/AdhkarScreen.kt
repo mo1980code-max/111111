@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clock.livewallpaper.R
+import com.clock.livewallpaper.ads.ui.BannerAdSlot
 import com.clock.livewallpaper.core.ArabicText
 import com.clock.livewallpaper.data.local.DhikrCategory
 import com.clock.livewallpaper.ui.components.DhikrCard
@@ -82,6 +83,12 @@ fun AdhkarScreen(
                 iconRes = R.drawable.ic_add,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+
+        // The end of the list: the banner scrolls with the content instead of covering it, and
+        // it takes the width of the list, so nothing moves when it fails to load.
+        item(key = "banner") {
+            BannerAdSlot()
         }
     }
 }

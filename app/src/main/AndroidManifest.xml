@@ -2,18 +2,21 @@
 <!--
   Permission budget (minimum for the retained product features):
 
+    INTERNET              the only network client in the app is the Google Mobile Ads SDK
     SYSTEM_ALERT_WINDOW   the floating dhikr card drawn over other apps (optional at runtime)
     POST_NOTIFICATIONS    Android 13+ runtime permission for reminder notifications (optional)
     RECEIVE_BOOT_COMPLETED  re-arms the enabled alarms after a reboot
     VIBRATE               the optional short haptic of the tasbeeh / floating card
 
-  Deliberately absent: INTERNET, ACCESS_NETWORK_STATE, READ/WRITE_EXTERNAL_STORAGE, SET_WALLPAPER,
-  WAKE_LOCK and com.google.android.gms.permission.AD_ID. Nothing in the app can reach the network,
-  write outside its own sandbox, set a wallpaper or show an advert, so none of them are declared.
-  No SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM either: reminders use inexact alarms on purpose.
+  Deliberately absent: ACCESS_NETWORK_STATE, READ/WRITE_EXTERNAL_STORAGE, SET_WALLPAPER and
+  WAKE_LOCK - the dhikr content, the counter, the reminders and the widgets are all local, and
+  nothing but the ads SDK talks to a server. com.google.android.gms.permission.AD_ID is not
+  declared here either; it arrives from the Mobile Ads SDK's own manifest, which is where it
+  belongs. No SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM: reminders use inexact alarms on purpose.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -30,6 +33,15 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.Dhikr.Starting">
+
+        <!--
+          Google's official AdMob sample application id. It is the only advertising identifier in
+          the manifest; the unit ids live in ads/AdConfig.kt and are Google's official test units
+          as well, so no real inventory can ever be requested by this build.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
 
         <activity
             android:name=".MainActivity"

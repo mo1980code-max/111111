@@ -104,5 +104,12 @@ dependencies {
     kapt "com.google.dagger:hilt-android-compiler:$hiltVersion"
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
 
+    // Advertising: Google's Mobile Ads SDK and Google's User Messaging Platform (the consent
+    // SDK), and nothing else - no analytics, no attribution, no Firebase, no crash reporter.
+    // play-services-ads is pinned to 25.4.0 on purpose: 25.5.0 raised the SDK floor to minSdk 24
+    // while this app still ships to minSdk 23. UMP 4.0.0 is the consent SDK that version expects.
+    implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
+
     debugImplementation 'androidx.compose.ui:ui-tooling'
 }

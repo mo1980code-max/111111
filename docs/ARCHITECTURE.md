@@ -1,13 +1,16 @@
 # Architecture
 
-Offline Arabic dhikr companion: Kotlin, Jetpack Compose, Material 3, MVVM, Room, DataStore, Hilt.
-One Activity, one Compose navigation graph, no backend, no account, no analytics, no network code
-of any kind.
+Offline-first Arabic dhikr companion: Kotlin, Jetpack Compose, Material 3, MVVM, Room, DataStore,
+Hilt. One Activity, one Compose navigation graph, no backend, no account, no analytics. The only
+code that touches the network is the advertising layer (`ads/`, Google Mobile Ads + UMP); every
+feature of the app works with the network switched off.
 
 ```
 app/src/main/java/com/clock/livewallpaper/
 ├── DhikrApplication.kt        @HiltAndroidApp, delegates to AppStartup
 ├── MainActivity.kt            the single Activity: splash, edge-to-edge, deep-link routing
+├── ads/                       AdMob + UMP: config, consent, init, one manager per format
+│   └── ui/                    the banner slot, the native card, the privacy options row
 ├── core/                      Arabic formatting, Hijri date, day part, haptics, startup
 ├── data/
 │   ├── local/                 Room entity, DAO, database, category enum
@@ -27,8 +30,8 @@ app/src/main/java/com/clock/livewallpaper/
 └── widget/                    two app widgets and their refresh helper
 ```
 
-70 Kotlin files. No `Service`, no `AccessibilityService`, no `UsageStatsManager`, no
-`NotificationListenerService`, no `WorkManager`.
+83 Kotlin files, 13 of them the advertising layer. No `Service`, no `AccessibilityService`, no
+`UsageStatsManager`, no `NotificationListenerService`, no `WorkManager`.
 
 ## Layers
 
@@ -161,6 +164,27 @@ alarm at a time, re-armed after each delivery. The app therefore never requests
 Both providers declare `updatePeriodMillis="0"`: the system never polls them. They refresh only on a
 real event - a reminder fired, "ذكر آخر" was tapped, a reboot, or `WidgetRefresh.request`. Every
 `PendingIntent` is explicit and `FLAG_IMMUTABLE`.
+
+## Advertising
+
+```
+ConsentManager ──state──► AdsCoordinator ──►  MobileAdsInitializer
+   (UMP)                      │  ▲                 (once, idempotent)
+                              │  └── MainActivity: foreground, background, system UI
+                              ├──► InterstitialAdManager   one gate: canShowFullscreen()
+                              ├──► AppOpenAdManager        caps + quiet windows live here
+                              └──► RewardedAdManager
+AdsViewModel ──►  NativeAdManager ──►  NativeAdCard          BannerAdSlot ──► AdView
+```
+
+`AdsCoordinator` is the only object that decides whether an ad may be requested or shown:
+`adsReady = canRequestAds (UMP) && SDK initialised && onboarding finished`. The managers are
+`@Singleton` and hold only the application context; every full-screen show takes the `Activity` as
+a parameter, so no `Activity` is ever retained. `MainActivity` drives the lifecycle - it gathers
+consent from the foreground, reports foreground/background transitions, and opens a quiet window
+whenever it launches a system screen (permission dialogs, overlay grant, settings), which suppresses
+full-screen ads around it. Screens never call the SDK; they use `BannerAdSlot`, `NativeAdCard` or
+`PrivacyOptionsRow`, which do nothing at all until `adsReady` is true.
 
 ## Theme
 

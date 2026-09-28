@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clock.livewallpaper.R
+import com.clock.livewallpaper.ads.ui.NativeAdCard
 import com.clock.livewallpaper.core.DayPart
 import com.clock.livewallpaper.data.local.DhikrCategory
 import com.clock.livewallpaper.overlay.OverlayPermission
@@ -193,6 +194,12 @@ fun HomeScreen(
                 onClick = onOpenAdhkar,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+
+        // Below the content, never between a dhikr and its action: the card appears only once
+        // consent allows it and an ad has actually arrived, and it is labelled as an ad.
+        item(key = "sponsored") {
+            NativeAdCard()
         }
     }
 
