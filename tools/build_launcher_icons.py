@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Rasterises the legacy-density launcher icons (API < 26) from the same original brand geometry
-used by the adaptive icon and the splash mark: a deep-emerald tile, a warm-gold circle of
-remembrance, an eight-point geometric star and a still centre point.
+"""Renders the Dhikr brand mark for Android launchers and Google Play.
 
-API 26+ devices use res/mipmap-anydpi-v26/ic_launcher.xml (adaptive, vector foreground); these PNGs
-exist only so API 23-25 launchers have a bitmap.
+The mark uses the same original geometry as the adaptive icon and splash screen: a deep-emerald
+field, a warm-gold circle of remembrance, an eight-point geometric star and a still centre point.
+
+API 26+ devices use res/mipmap-anydpi-v26/ic_launcher.xml (adaptive, vector foreground); the
+mipmap PNGs support API 23-25.  The 512px, opaque, square PNG in artwork/google-play/ is ready for
+the Play Console's App icon upload field.
 
 Run:  python3 tools/build_launcher_icons.py
 """
@@ -69,6 +71,33 @@ def build(size, round_icon):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def build_play_store_icon(size=512):
+    """Build Play's square, fully opaque listing icon.
+
+    Store artwork must not rely on transparent padding or a device-specific adaptive-icon mask.
+    The brand mark is therefore placed on a full-bleed emerald field with generous breathing room,
+    while retaining the exact launcher mark and colours.
+    """
+    big = size * SS
+    # Use an opaque radial field rather than radial_tile(), which intentionally masks launcher
+    # fallbacks into a rounded or circular shape.
+    img = Image.new("RGB", (big, big), EMERALD[:3])
+    px = img.load()
+    cx = cy = (big - 1) / 2.0
+    maxd = math.hypot(cx, cy)
+    for y in range(big):
+        for x in range(big):
+            t = min(1.0, math.hypot(x - cx, y - cy) / maxd)
+            px[x, y] = tuple(
+                int(EMERALD[channel] + (EMERALD_DEEP[channel] - EMERALD[channel]) * t)
+                for channel in range(3)
+            )
+    draw = ImageDraw.Draw(img)
+    stroke = max(2, int(big * 0.030))
+    draw_mark(draw, big, big / 2.0, big / 2.0, big * 0.285, stroke, IVORY, GOLD)
+    return img.resize((size, size), Image.LANCZOS)
+
+
 def main():
     for density, size in DENSITIES.items():
         out = RES / f"mipmap-{density}"
@@ -76,6 +105,11 @@ def main():
         build(size, False).save(out / "ic_launcher.png")
         build(size, True).save(out / "ic_launcher_round.png")
         print(f"mipmap-{density}: {size}px")
+
+    play_store_out = ROOT / "artwork/google-play/app-icon-512.png"
+    play_store_out.parent.mkdir(parents=True, exist_ok=True)
+    build_play_store_icon().save(play_store_out, optimize=True)
+    print(f"Google Play: {play_store_out.relative_to(ROOT)} (512px, opaque PNG)")
 
 
 if __name__ == "__main__":
