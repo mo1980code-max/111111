@@ -1,0 +1,271 @@
+/* ==========================================================================
+   Smart Clean AI - Global Stylesheet & Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+:root {
+  --font-arabic: 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif;
+  --bg-main: #0B0F19;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(14, 165, 233, 0.4);
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+  --primary: #0EA5E9;
+  --primary-glow: rgba(14, 165, 233, 0.35);
+  --accent-emerald: #10B981;
+  --accent-purple: #8B5CF6;
+  --accent-amber: #F59E0B;
+  --accent-rose: #F43F5E;
+}
+
+[data-theme="light"] {
+  --bg-main: #F8FAFC;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: #FFFFFF;
+  --border-subtle: rgba(226, 232, 240, 0.9);
+  --border-active: rgba(14, 165, 233, 0.6);
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --primary: #0284C7;
+  --primary-glow: rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="oled"] {
+  --bg-main: #000000;
+  --bg-card: #080808;
+  --bg-card-hover: #121212;
+  --border-subtle: #1E1E1E;
+  --border-active: #0EA5E9;
+  --text-main: #FFFFFF;
+  --text-muted: #888888;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--font-arabic);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.6);
+}
+
+/* Glassmorphism Card Effect */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-active);
+  box-shadow: 0 10px 30px -10px var(--primary-glow);
+}
+
+.glass-panel-glow {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  box-shadow: 0 0 25px rgba(14, 165, 233, 0.15);
+}
+
+/* Neon Glow Accents */
+.glow-cyan {
+  text-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
+}
+.glow-emerald {
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+/* Storage Circular Gauge */
+.circular-chart {
+  display: block;
+  max-width: 100%;
+  max-height: 250px;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 3.2;
+}
+
+[data-theme="light"] .circle-bg {
+  stroke: rgba(0, 0, 0, 0.06);
+}
+
+.circle-progress {
+  fill: none;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pulse animation for cleaner action button */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.4), 0 0 30px rgba(16, 185, 129, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.7), 0 0 45px rgba(16, 185, 129, 0.4);
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s infinite ease-in-out;
+}
+
+/* Laser sweep animation for cleaning process */
+@keyframes laserSweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+
+.laser-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #10B981, #38BDF8, #10B981, transparent);
+  box-shadow: 0 0 15px #38BDF8, 0 0 30px #10B981;
+  animation: laserSweep 1.5s infinite linear;
+}
+
+/* Mobile Simulator Phone Frame */
+.mobile-simulator-wrapper {
+  transition: max-width 0.35s ease, padding 0.35s ease;
+}
+
+.phone-frame-active {
+  max-width: 440px !important;
+  margin: 20px auto;
+  border: 12px solid #1E293B;
+  border-radius: 46px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-main);
+  min-height: 840px;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 24px;
+  background-color: #1E293B;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.phone-camera-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.phone-speaker {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: #0f172a;
+}
+
+/* Tab active indicator */
+.nav-tab.active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(16, 185, 129, 0.15));
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #38BDF8;
+}
+
+/* Badge tags */
+.badge-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-cyan {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-rose {
+  background: rgba(244, 63, 94, 0.15);
+  color: #F43F5E;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* Image compressor slider */
+.image-comparison-container {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Toggle Switch Styles */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: #10B981;
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #10B981;
+}
+
+/* Confetti Burst */
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #38BDF8;
+  top: 0;
+  opacity: 0;
+}

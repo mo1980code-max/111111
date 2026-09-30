@@ -1,602 +1,1092 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quran Reader</title>
-  <!-- Google Fonts CDN: Amiri & Scheherazade New -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --quran-paper: #FBF9F0;
-      --quran-ink: #1A1A1A;
-      --quran-muted: #7A7A7A;
-      --quran-selected: #D0ECE4;
-      --quran-green: #2D7D46;
-      --quran-green-hover: #246438;
-      --quran-error: #C62828;
-      --quran-border: #E8E4D5;
-      --font-quran: 'Amiri', 'Scheherazade New', serif;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--quran-paper);
-      color: var(--quran-ink);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Top Navigation Bar */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background-color: var(--quran-paper);
-      border-bottom: 1px solid var(--quran-border);
-      padding: 12px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-
-    .nav-container {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .surah-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .surah-select {
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--quran-ink);
-      background-color: #FFFFFF;
-      border: 1px solid var(--quran-border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .surah-select:focus {
-      border-color: var(--quran-green);
-    }
-
-    .btn-nav {
-      background-color: #FFFFFF;
-      color: var(--quran-ink);
-      border: 1px solid var(--quran-border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-nav:hover:not(:disabled) {
-      background-color: var(--quran-selected);
-      border-color: var(--quran-green);
-    }
-
-    .btn-nav:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .header-badges {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-      color: var(--quran-muted);
-    }
-
-    .badge {
-      background-color: #FFFFFF;
-      border: 1px solid var(--quran-border);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-weight: 500;
-    }
-
-    .font-size-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .btn-icon {
-      background: #FFFFFF;
-      border: 1px solid var(--quran-border);
-      border-radius: 6px;
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--quran-ink);
-    }
-
-    .btn-icon:hover {
-      background: var(--quran-selected);
-    }
-
-    /* Main Content Area */
-    main {
-      flex: 1;
-      max-width: 900px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 24px 20px 48px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .surah-header {
-      text-align: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px dashed var(--quran-border);
-    }
-
-    .surah-title {
-      font-family: var(--font-quran);
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--quran-green);
-      margin-bottom: 4px;
-    }
-
-    .surah-subtitle {
-      font-size: 14px;
-      color: var(--quran-muted);
-    }
-
-    /* Verses Display */
-    .verses-container {
-      font-family: var(--font-quran);
-      font-size: 28px;
-      line-height: 2.3;
-      text-align: justify;
-      text-align-last: center;
-      direction: rtl;
-      word-spacing: 4px;
-      background-color: transparent;
-    }
-
-    .ayah-span {
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: background-color 0.2s ease;
-    }
-
-    .ayah-span:hover {
-      background-color: rgba(208, 236, 228, 0.5);
-    }
-
-    .ayah-span.selected {
-      background-color: var(--quran-selected);
-    }
-
-    .ayah-marker {
-      display: inline-block;
-      margin: 0 4px;
-      font-size: 0.85em;
-      color: var(--quran-green);
-      user-select: none;
-    }
-
-    /* Loading Spinner */
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 20px;
-      gap: 16px;
-    }
-
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid rgba(45, 125, 70, 0.15);
-      border-top-color: var(--quran-green);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      font-size: 16px;
-      color: var(--quran-muted);
-    }
-
-    /* Error View */
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 20px;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .error-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background-color: #FFEBEE;
-      color: var(--quran-error);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .error-message {
-      font-size: 16px;
-      color: var(--quran-muted);
-      max-width: 400px;
-    }
-
-    .btn-retry {
-      background-color: var(--quran-green);
-      color: #FFFFFF;
-      border: none;
-      border-radius: 24px;
-      padding: 10px 28px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .btn-retry:hover {
-      background-color: var(--quran-green-hover);
-    }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--quran-border);
-      padding: 16px 20px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--quran-muted);
-      background-color: var(--quran-paper);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 600px) {
-      .verses-container {
-        font-size: 24px;
-        line-height: 2.1;
-      }
-      .surah-title {
-        font-size: 26px;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>منظف التخزين الذكي - Smart Storage Cleaner AI</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#F0F9FF',
+              100: '#E0F2FE',
+              400: '#38BDF8',
+              500: '#0EA5E9',
+              600: '#0284C7',
+              700: '#0369A1',
+              900: '#0C4A6E',
+            },
+            cyber: {
+              emerald: '#10B981',
+              cyan: '#06B6D4',
+              purple: '#8B5CF6',
+              amber: '#F59E0B',
+              rose: '#F43F5E',
+              dark: '#0B0F19',
+              darker: '#070A10'
+            }
+          }
+        }
       }
     }
-  </style>
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="bg-[#0B0F19] text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
 
-  <!-- Top Header Navigation -->
-  <header>
-    <div class="nav-container">
-      <div class="surah-controls">
-        <button id="btnPrev" class="btn-nav" title="السورة السابقة">&rarr; السابقة</button>
-        <select id="surahSelect" class="surah-select"></select>
-        <button id="btnNext" class="btn-nav" title="السورة التالية">التالية &larr;</button>
+  <!-- Mobile Simulator Outer Wrap -->
+  <div id="appContainer" class="mobile-simulator-wrapper min-h-screen flex flex-col justify-between max-w-7xl mx-auto transition-all duration-300">
+    
+    <!-- Phone Top Bezel (Shown only when in Phone Simulator Mode) -->
+    <div id="phoneNotch" class="phone-notch hidden">
+      <div class="phone-speaker"></div>
+      <div class="phone-camera-dot"></div>
+    </div>
+
+    <!-- ======================================================================
+         TOP NAVIGATION HEADER
+         ====================================================================== -->
+    <header class="glass-panel sticky top-0 z-40 m-2 sm:m-4 px-4 py-3 border border-white/10 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+      <!-- Logo & App Title -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-11 h-11 rounded-2xl overflow-hidden p-[2px] shadow-lg shadow-sky-500/20">
+          <img src="assets/app_icon.png" alt="App Icon" class="w-full h-full object-cover rounded-xl">
+          <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-200 to-sky-400" data-i18n="appTitle">منظف التخزين الذكي</h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase" data-i18n="versionBadge">v3.5 Pro</span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium hidden sm:block" data-i18n="appSubtitle">تحسين الأداء وإدارة المساحة بالذكاء الاصطناعي وهندسة أندرويد الحديثة</p>
+        </div>
       </div>
 
-      <div class="header-badges">
-        <span id="badgeJuz" class="badge">الجزء ١</span>
-        <span id="badgePage" class="badge">صفحة ١</span>
-        <div class="font-size-controls">
-          <button id="btnFontPlus" class="btn-icon" title="تكبير الخط">A+</button>
-          <button id="btnFontMinus" class="btn-icon" title="تصغير الخط">A-</button>
+      <!-- Live Hardware Status Pills -->
+      <div class="hidden lg:flex items-center gap-2 bg-slate-900/80 border border-white/5 rounded-xl px-3 py-1.5 text-xs">
+        <div class="flex items-center gap-1.5 text-sky-400">
+          <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
+          <span class="text-slate-300"><span id="headerUsedStorage">104.2</span> / <span id="headerTotalStorage">128</span> GB</span>
+        </div>
+        <span class="text-slate-700">|</span>
+        <div class="flex items-center gap-1.5 text-emerald-400">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+          <span class="text-slate-300">RAM <span id="headerRamUsage">72</span>%</span>
+        </div>
+        <span class="text-slate-700">|</span>
+        <div class="flex items-center gap-1.5 text-amber-400">
+          <i data-lucide="thermometer" class="w-3.5 h-3.5"></i>
+          <span id="headerTemp">36.5</span>°C
+        </div>
+        <span class="text-slate-700">|</span>
+        <div class="flex items-center gap-1.5 text-emerald-400">
+          <i data-lucide="battery-charging" class="w-3.5 h-3.5"></i>
+          <span id="headerBattery">84%</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex items-center gap-2">
+        <button id="btnToggleSimulator" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-sky-400 border border-white/10 transition flex items-center gap-1.5 text-xs font-semibold" title="تبديل عرض محاكي الهاتف">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span class="hidden md:inline" data-i18n="viewMobile">محاكي الهاتف</span>
+        </button>
+
+        <button id="btnToggleSound" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-emerald-400 border border-white/10 transition" title="الصوت التفاعلي">
+          <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4"></i>
+        </button>
+
+        <button id="btnToggleTheme" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-amber-400 border border-white/10 transition" title="تغيير المظهر">
+          <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+        </button>
+
+        <button id="btnToggleLang" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-sky-300 border border-white/10 text-xs font-bold transition flex items-center gap-1">
+          <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+          <span id="langLabel">English</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         MAIN CONTENT AREA + NAVIGATION
+         ====================================================================== -->
+    <div class="flex-1 px-2 sm:px-4 pb-20 md:pb-6 flex flex-col md:flex-row gap-4">
+      
+      <!-- DESKTOP SIDEBAR NAVIGATION -->
+      <aside class="hidden md:flex flex-col w-64 shrink-0 gap-1 glass-panel p-3 border border-white/10 self-start sticky top-24">
+        <div class="text-[11px] font-bold uppercase text-slate-400 px-3 py-1" data-i18n="navDashboard">القوائم والأدوات</div>
+        
+        <button class="nav-tab active flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-sky-400"></i>
+          <span data-i18n="navDashboard">لوحة التحكم</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-emerald-400 hover:text-white hover:bg-white/5" data-tab="appGallery">
+          <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
+          <span data-i18n="navAppGallery">صور وموك آب التطبيق</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="emptyFolders">
+          <i data-lucide="folder-x" class="w-4 h-4 text-amber-400"></i>
+          <span data-i18n="navEmptyFolders">المجلدات الفارغة</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="aiPhotos">
+          <i data-lucide="images" class="w-4 h-4 text-purple-400"></i>
+          <span data-i18n="navAiPhotos">مكررات الصور (dHash)</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="deepScan">
+          <i data-lucide="radar" class="w-4 h-4 text-emerald-400"></i>
+          <span data-i18n="navDeepScan">الفحص الذكي الشامل</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="ramBooster">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <span data-i18n="navRamBooster">تسريع الذاكرة RAM</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="largeFiles">
+          <i data-lucide="file-video" class="w-4 h-4 text-blue-400"></i>
+          <span data-i18n="navLargeFiles">الملفات الكبيرة والوسائط</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="socialCleaner">
+          <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i>
+          <span data-i18n="navSocialCleaner">منظف واتساب والتواصل</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="realScanner">
+          <i data-lucide="folder-search" class="w-4 h-4 text-sky-400"></i>
+          <span data-i18n="navRealScanner">فاحص ملفاتك الحقيقي</span>
+        </button>
+
+        <div class="h-px bg-white/10 my-1"></div>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-amber-300 hover:text-white hover:bg-white/5" data-tab="codeStudio">
+          <i data-lucide="code-2" class="w-4 h-4 text-amber-400"></i>
+          <span data-i18n="navCodeStudio">دليل أكواد أندرويد 2026</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="recycleBin">
+          <i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i>
+          <span data-i18n="navRecycleBin">سلة المحذوفات</span>
+          <span id="recycleCountBadge" class="ms-auto text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">2</span>
+        </button>
+
+        <button class="nav-tab flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-transparent text-slate-300 hover:text-white hover:bg-white/5" data-tab="settings">
+          <i data-lucide="shield-check" class="w-4 h-4 text-slate-400"></i>
+          <span data-i18n="navSettings">الإعدادات والحماية</span>
+        </button>
+      </aside>
+
+      <!-- MAIN TAB CONTENT CONTAINER -->
+      <main class="flex-1 min-w-0">
+        
+        <!-- ==================================================================
+             TAB 1: DASHBOARD & QUICK CLEAN
+             ================================================================== -->
+        <section id="tab-dashboard" class="tab-pane block space-y-5">
+          
+          <!-- Top Storage Circular Gauge Card -->
+          <div class="glass-panel p-6 border border-white/10 relative overflow-hidden">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              
+              <!-- Circular Progress Gauge SVG -->
+              <div class="md:col-span-5 flex flex-col items-center justify-center relative">
+                <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" class="circular-chart w-full h-full -rotate-90">
+                    <path class="circle-bg"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path id="storageRingGauge" class="circle-progress stroke-sky-400"
+                      stroke-dasharray="81, 100"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span id="storagePercentText" class="text-4xl sm:text-5xl font-black tracking-tight text-white glow-cyan">81%</span>
+                    <span class="text-xs text-slate-400 font-semibold mt-1" data-i18n="storageUsed">مستخدمة</span>
+                    <div class="mt-1 flex items-center gap-1 text-[11px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+                      <span id="storageUsedGB">104.2</span> GB / <span id="storageTotalGB">128</span> GB
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Storage Health & 1-Click Clean CTA -->
+              <div class="md:col-span-7 flex flex-col justify-center space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-bold" data-i18n="healthScore">صحة التخزين</span>
+                    <h3 id="healthStatusText" class="text-xl font-black text-amber-400 flex items-center gap-2">
+                      <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                      <span data-i18n="healthStatusWarning">يحتاج إلى تنظيف فوري</span>
+                    </h3>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-3xl font-black text-white"><span id="healthScoreValue">68</span>/100</span>
+                  </div>
+                </div>
+
+                <!-- Storage Categorical Multi-Bar -->
+                <div class="space-y-1.5">
+                  <div class="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                    <div id="barSystem" style="width: 15%" class="bg-indigo-500 h-full" title="النظام (18 GB)"></div>
+                    <div id="barApps" style="width: 32%" class="bg-blue-500 h-full" title="التطبيقات (42 GB)"></div>
+                    <div id="barMedia" style="width: 24%" class="bg-purple-500 h-full" title="الصور والفيديو (30 GB)"></div>
+                    <div id="barCache" style="width: 10%" class="bg-amber-500 h-full animate-pulse" title="مخلفات قابلة للحذف (14.2 GB)"></div>
+                    <div id="barFree" style="width: 19%" class="bg-emerald-500/30 h-full" title="المساحة المتبقية"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2 pt-1 font-medium">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> النظام</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> التطبيقات</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> الوسائط</span>
+                    <span class="flex items-center gap-1 text-amber-400 font-bold"><span class="w-2 h-2 rounded-full bg-amber-500"></span> مخلفات قابلة للحذف</span>
+                    <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> المتبقي (<span id="freeStorageGB">23.8</span> GB)</span>
+                  </div>
+                </div>
+
+                <!-- 1-Click Smart Clean Primary Action -->
+                <div class="pt-2">
+                  <button id="btnQuickCleanPrimary" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-extrabold text-base sm:text-lg shadow-xl shadow-sky-500/25 flex items-center justify-center gap-3 transition transform active:scale-95 animate-pulse-glow">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                    <span data-i18n="btnQuickClean">تنظيف فوري الآن</span>
+                    <span class="bg-white/20 backdrop-blur px-2.5 py-0.5 rounded-lg text-sm font-mono tracking-wide" id="cleanableTotalBadge">14.2 GB</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- THE 4 CORE ACTION CARDS -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 px-1 flex items-center gap-2">
+              <i data-lucide="grid" class="w-4 h-4 text-sky-400"></i>
+              <span>الأدوات والخوارزميات الـ 4 الأساسية</span>
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Card 1: Empty Folders -->
+              <div class="glass-panel p-4 border border-white/10 flex flex-col justify-between hover:border-amber-500/40 transition cursor-pointer btn-goto-tab" data-tab="emptyFolders">
+                <div class="flex items-center justify-between">
+                  <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <i data-lucide="folder-x" class="w-5 h-5"></i>
+                  </div>
+                  <span class="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full" id="dashEmptyCountBadge">18 مجلد</span>
+                </div>
+                <div class="my-3">
+                  <h4 class="text-sm font-bold text-white" data-i18n="cardEmptyFoldersTitle">المجلدات الفارغة</h4>
+                  <p class="text-xs text-slate-400" data-i18n="cardEmptyFoldersDesc">18 مجلداً فارغاً مستهلكاً للفهرسة</p>
+                </div>
+                <button class="w-full py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>فحص وحذف المجلدات</span>
+                </button>
+              </div>
+
+              <!-- Card 2: Duplicate Photos (dHash) -->
+              <div class="glass-panel p-4 border border-white/10 flex flex-col justify-between hover:border-purple-500/40 transition cursor-pointer btn-goto-tab" data-tab="aiPhotos">
+                <div class="flex items-center justify-between">
+                  <div class="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <i data-lucide="images" class="w-5 h-5"></i>
+                  </div>
+                  <span class="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">3.1 GB مكررة</span>
+                </div>
+                <div class="my-3">
+                  <h4 class="text-sm font-bold text-white" data-i18n="cardPhotosTitle">مكررات الصور (dHash)</h4>
+                  <p class="text-xs text-slate-400" data-i18n="cardPhotosDesc">42 صورة (3.1 GB) ببصمة dHash</p>
+                </div>
+                <button class="w-full py-2 px-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                  <span>مقارنة وحذف الأقل دقة</span>
+                </button>
+              </div>
+
+              <!-- Card 3: Duplicate Videos -->
+              <div class="glass-panel p-4 border border-white/10 flex flex-col justify-between hover:border-cyan-500/40 transition cursor-pointer btn-goto-tab" data-tab="largeFiles">
+                <div class="flex items-center justify-between">
+                  <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <i data-lucide="video" class="w-5 h-5"></i>
+                  </div>
+                  <span class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">4.8 GB وسائط</span>
+                </div>
+                <div class="my-3">
+                  <h4 class="text-sm font-bold text-white" data-i18n="cardVideosTitle">الفيديوهات المكررة</h4>
+                  <p class="text-xs text-slate-400" data-i18n="cardVideosDesc">8 مقاطع فيديو ضخمة (4.8 GB)</p>
+                </div>
+                <button class="w-full py-2 px-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="film" class="w-3.5 h-3.5"></i>
+                  <span>معاينة وتصفية الفيديو</span>
+                </button>
+              </div>
+
+              <!-- Card 4: Duplicate Files (SHA-256) -->
+              <div class="glass-panel p-4 border border-white/10 flex flex-col justify-between hover:border-emerald-500/40 transition cursor-pointer btn-goto-tab" data-tab="largeFiles">
+                <div class="flex items-center justify-between">
+                  <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                  </div>
+                  <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">1.8 GB متطابقة</span>
+                </div>
+                <div class="my-3">
+                  <h4 class="text-sm font-bold text-white" data-i18n="cardFilesTitle">الملفات المتطابقة 100%</h4>
+                  <p class="text-xs text-slate-400" data-i18n="cardFilesDesc">24 ملفاً متطابقاً بهاش SHA-256</p>
+                </div>
+                <button class="w-full py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>حذف التكرار المضاعف</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Cleanable Categories List -->
+          <div class="glass-panel p-5 border border-white/10 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                  <i data-lucide="check-square" class="w-5 h-5 text-sky-400"></i>
+                  <span data-i18n="quickCleanTitle">عناصر الفحص السريع القابلة للتنظيف</span>
+                </h3>
+                <p class="text-xs text-slate-400" data-i18n="quickCleanSubtitle">حدد العناصر التي ترغب في إزالتها بأمان دون التأثير على بياناتك الشخصية</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btnSelectAllCategories" class="text-xs text-sky-400 hover:underline font-semibold" data-i18n="selectAll">تحديد الكل</button>
+              </div>
+            </div>
+
+            <div id="quickCategoriesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==================================================================
+             TAB: APP GALLERY & 3D STORE MOCKUPS
+             ================================================================== -->
+        <section id="tab-appGallery" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 space-y-6">
+            <div>
+              <h3 class="text-xl font-black text-white flex items-center gap-2" data-i18n="galleryTitle">
+                <i data-lucide="image" class="w-6 h-6 text-emerald-400"></i>
+                معرض صور وموك آب التطبيق لمتجر Google Play
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-400" data-i18n="gallerySubtitle">تصاميم وأيقونات ثلاثية الأبعاد احترافية وجاهزة للترويج والنشر على المتجر</p>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <!-- Image 1: Official App Icon -->
+              <div class="bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-sky-400">1. الأيقونة الرسمية للتطبيق (3D App Icon)</span>
+                  <a href="assets/app_icon.png" download="smart_clean_app_icon.png" class="text-xs px-3 py-1 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 font-bold transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>تحميل</span>
+                  </a>
+                </div>
+                <div class="h-64 rounded-xl overflow-hidden bg-black flex items-center justify-center p-2">
+                  <img src="assets/app_icon.png" alt="App Icon" class="max-h-full max-w-full object-contain rounded-2xl shadow-2xl">
+                </div>
+              </div>
+
+              <!-- Image 2: Dashboard Mockup -->
+              <div class="bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-emerald-400">2. موك آب الشاشة الرئيسية (Dashboard 3D)</span>
+                  <a href="assets/screenshot_dashboard.png" download="mockup_dashboard.png" class="text-xs px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-bold transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>تحميل</span>
+                  </a>
+                </div>
+                <div class="h-64 rounded-xl overflow-hidden bg-black flex items-center justify-center p-2">
+                  <img src="assets/screenshot_dashboard.png" alt="Dashboard Mockup" class="max-h-full max-w-full object-contain rounded-xl shadow-2xl">
+                </div>
+              </div>
+
+              <!-- Image 3: AI Photos dHash Mockup -->
+              <div class="bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-purple-400">3. موك آب فحص الصور بالذكاء الاصطناعي (dHash)</span>
+                  <a href="assets/screenshot_ai_photos.png" download="mockup_ai_photos.png" class="text-xs px-3 py-1 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 font-bold transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>تحميل</span>
+                  </a>
+                </div>
+                <div class="h-64 rounded-xl overflow-hidden bg-black flex items-center justify-center p-2">
+                  <img src="assets/screenshot_ai_photos.png" alt="AI Photos Mockup" class="max-h-full max-w-full object-contain rounded-xl shadow-2xl">
+                </div>
+              </div>
+
+              <!-- Image 4: RAM Booster Mockup -->
+              <div class="bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-amber-400">4. موك آب معزز الذاكرة RAM وتسريع الأداء</span>
+                  <a href="assets/screenshot_ram_boost.png" download="mockup_ram_boost.png" class="text-xs px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-bold transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>تحميل</span>
+                  </a>
+                </div>
+                <div class="h-64 rounded-xl overflow-hidden bg-black flex items-center justify-center p-2">
+                  <img src="assets/screenshot_ram_boost.png" alt="RAM Booster Mockup" class="max-h-full max-w-full object-contain rounded-xl shadow-2xl">
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB: EMPTY FOLDERS CLEANER
+             ================================================================== -->
+        <section id="tab-emptyFolders" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-black text-white flex items-center gap-2" data-i18n="emptyFoldersTitle">
+                  <i data-lucide="folder-x" class="w-5 h-5 text-amber-400"></i>
+                  منظف المجلدات الفارغة الآمن
+                </h3>
+                <p class="text-xs text-slate-400" data-i18n="emptyFoldersSubtitle">فحص تعاقبي ذكي للمجلدات الفارغة مع استثناء صارم لمجلدات النظام الحساسة</p>
+              </div>
+              <button id="btnDeleteEmptyFoldersAction" class="py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition active:scale-95">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span data-i18n="btnDeleteEmptyFolders">حذف المجلدات الفارغة</span>
+              </button>
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-3">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+              <p class="text-xs text-amber-200" data-i18n="protectedPathsNotice">المسارات المحمية (/Android/data, /system, .thumbnails) مستثناة بالكامل ومحصنة من الحذف.</p>
+            </div>
+
+            <div id="emptyFoldersListContainer" class="space-y-2">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB: ANDROID 2026 CODE STUDIO & PROMPTS
+             ================================================================== -->
+        <section id="tab-codeStudio" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-black text-white flex items-center gap-2" data-i18n="codeStudioTitle">
+                  <i data-lucide="code-2" class="w-5 h-5 text-amber-400"></i>
+                  استوديو ومستكشف أكواد أندرويد (Kotlin 2.0 & Compose)
+                </h3>
+                <p class="text-xs text-slate-400" data-i18n="codeStudioSubtitle">تصفح وانسخ الأكواد المصدرية الكاملة للخوارزميات والواجهات وخدمات الخلفية الجاهزة للإنتاج</p>
+              </div>
+              <button id="btnCopyActiveCode" class="py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-lg shadow-sky-500/20 flex items-center gap-2 transition active:scale-95">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                <span data-i18n="btnCopyCode">نسخ الكود الحالي</span>
+              </button>
+            </div>
+
+            <div id="codeSnippetsTabs" class="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+              <!-- Rendered via JS -->
+            </div>
+
+            <div class="relative bg-slate-950 rounded-2xl border border-white/10 p-4 font-mono text-xs overflow-x-auto max-h-[500px]">
+              <div class="text-[10px] text-slate-500 uppercase tracking-widest pb-2 border-b border-white/5 flex items-center justify-between">
+                <span id="codeFileNameDisplay">EmptyFolderScanner.kt</span>
+                <span class="text-sky-400 font-bold">Kotlin 2.0+ / Coroutines</span>
+              </div>
+              <pre id="codeSnippetPre" class="mt-3 text-slate-200 leading-relaxed"><code id="codeSnippetBody"></code></pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 2: DEEP SCAN RADAR & RESULTS
+             ================================================================== -->
+        <section id="tab-deepScan" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 text-center space-y-6">
+            <div class="max-w-md mx-auto space-y-2">
+              <h2 class="text-2xl font-black text-white" data-i18n="navDeepScan">الفحص الذكي الشامل للذاكرة</h2>
+              <p class="text-xs sm:text-sm text-slate-400">يقوم محرك الفحص المتطور بتحليل كل قطاع ومجلد بحثاً عن المخلفات المخبأة، الذاكرة العشوائية المستهلكة، والتطبيقات الخاملة.</p>
+            </div>
+
+            <div class="relative w-64 h-64 mx-auto flex items-center justify-center">
+              <canvas id="deepScanRadarCanvas" width="256" height="256" class="rounded-full shadow-2xl shadow-sky-500/20"></canvas>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span id="deepScanPercentText" class="text-3xl font-black text-white font-mono">0%</span>
+                <span id="deepScanStatusLabel" class="text-[11px] text-sky-400 font-semibold px-2">جاهز للفحص</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-4 max-w-lg mx-auto">
+              <div class="flex items-center gap-3">
+                <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400">
+                  <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+                </div>
+                <div class="text-right flex-1 min-w-0">
+                  <div class="text-xs text-slate-400 font-medium">العملية الجارية:</div>
+                  <div id="deepScanCurrentStage" class="text-sm font-bold text-white truncate">اضغط على الزر أدناه لبدء الفحص</div>
+                </div>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-3">
+                <div id="deepScanProgressBar" class="bg-gradient-to-r from-sky-500 to-emerald-400 h-full w-0 transition-all duration-150"></div>
+              </div>
+            </div>
+
+            <div>
+              <button id="btnStartDeepScan" class="py-3.5 px-8 rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-extrabold text-base shadow-xl shadow-sky-500/30 flex items-center gap-2 mx-auto transition transform active:scale-95">
+                <i data-lucide="play" class="w-5 h-5"></i>
+                <span data-i18n="btnDeepScanNow">بدء الفحص الشامل</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 3: RAM BOOSTER & APP MANAGER
+             ================================================================== -->
+        <section id="tab-ramBooster" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 relative overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div class="md:col-span-5 text-center flex flex-col items-center">
+                <div class="relative w-44 h-44 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" class="circular-chart w-full h-full -rotate-90">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path id="ramRingGauge" class="circle-progress stroke-amber-400" stroke-dasharray="74, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="ramMainPercent" class="text-3xl font-black text-amber-400 glow-amber">74%</span>
+                    <span class="text-xs text-slate-400 font-bold" data-i18n="ramUsage">الذاكرة النشطة</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="md:col-span-7 space-y-3 text-right">
+                <div class="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold">
+                  ⚡ تحسين سرعة المعالج وتقليل استهلاك البطارية
+                </div>
+                <h3 class="text-2xl font-black text-white" data-i18n="ramTitle">معزز الذاكرة العشوائية RAM</h3>
+                <p class="text-xs text-slate-400" data-i18n="ramSubtitle">إيقاف التطبيقات التي تعمل بصمت في الخلفية لتحرير حتى 2.8 جيجابايت من الذاكرة فوراً.</p>
+
+                <div class="pt-2">
+                  <button id="btnExecuteRamBoost" class="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-base shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 transition active:scale-95">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                    <span data-i18n="btnBoostRam">تسريع وتحرير الذاكرة فوراً</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-5 border border-white/10 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-base font-bold text-white" data-i18n="runningApps">العمليات والتطبيقات النشطة في الخلفية</h4>
+                <p class="text-xs text-slate-400"><span id="runningTasksCount">6</span> <span data-i18n="processCount">عمليات تستهلك الذاكرة والبطارية</span></p>
+              </div>
+            </div>
+            <div id="runningTasksList" class="space-y-2.5">
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 4: AI PHOTO CLEANER & COMPRESSOR
+             ================================================================== -->
+        <section id="tab-aiPhotos" class="tab-pane hidden space-y-5">
+          <div class="flex flex-wrap items-center gap-2 border-b border-white/10 pb-3">
+            <button class="photo-subtab active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 transition" data-subtab="duplicates">
+              <i data-lucide="copy" class="w-4 h-4 inline-block me-1"></i>
+              <span data-i18n="photoTabDuplicates">الصور المكررة (dHash)</span>
+            </button>
+            <button class="photo-subtab px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 text-slate-400 hover:text-white border border-transparent transition" data-subtab="blurry">
+              <i data-lucide="eye-off" class="w-4 h-4 inline-block me-1"></i>
+              <span data-i18n="photoTabBlurry">صور مشوشة وضعيفة</span>
+            </button>
+            <button class="photo-subtab px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 text-slate-400 hover:text-white border border-transparent transition" data-subtab="screenshots">
+              <i data-lucide="crop" class="w-4 h-4 inline-block me-1"></i>
+              <span data-i18n="photoTabScreenshots">لقطات الشاشة القديمة</span>
+            </button>
+            <button class="photo-subtab px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 text-slate-400 hover:text-white border border-transparent transition" data-subtab="compressor">
+              <i data-lucide="minimize-2" class="w-4 h-4 inline-block me-1"></i>
+              <span data-i18n="photoTabCompressor">ضاغط الصور الذكي</span>
+            </button>
+          </div>
+
+          <!-- SUB-PANE 1: DUPLICATES -->
+          <div id="subpane-duplicates" class="photo-pane block space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-bold text-white" data-i18n="photoTabDuplicates">الصور المتطابقة والمكررة المكتشفة ببصمة الاختلاف dHash</h3>
+                <p class="text-xs text-slate-400">حدد الذكاء الاصطناعي النسخ ذات الجودة الأقل لحذفها مع إبقاء الصورة الأصلية الأعلى جودة.</p>
+              </div>
+              <button id="btnDeleteDuplicatesAction" class="py-2 px-4 rounded-xl bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-purple-500/20">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btnKeepBest">حذف المكرر والاحتفاظ بالأفضل</span>
+              </button>
+            </div>
+
+            <div id="duplicateGroupsContainer" class="space-y-4">
+            </div>
+          </div>
+
+          <!-- SUB-PANE 2: BLURRY -->
+          <div id="subpane-blurry" class="photo-pane hidden space-y-4">
+            <div id="blurryPhotosContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            </div>
+          </div>
+
+          <!-- SUB-PANE 3: SCREENSHOTS -->
+          <div id="subpane-screenshots" class="photo-pane hidden space-y-4">
+            <div id="screenshotsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            </div>
+          </div>
+
+          <!-- SUB-PANE 4: REAL IN-BROWSER IMAGE COMPRESSOR -->
+          <div id="subpane-compressor" class="photo-pane hidden space-y-4">
+            <div class="glass-panel p-6 border border-white/10 space-y-5">
+              <div class="space-y-1">
+                <h3 class="text-lg font-black text-white flex items-center gap-2">
+                  <i data-lucide="minimize-2" class="w-5 h-5 text-sky-400"></i>
+                  <span data-i18n="photoTabCompressor">أداة ضغط الصور الحقيقية وتصغير الحجم</span>
+                </h3>
+                <p class="text-xs text-slate-400">قم بضغط أي صورة وتوفير حتى 85% من حجمها داخل المتصفح مباشرة دون رفعها لأي خادم وبدقة عالية.</p>
+              </div>
+
+              <div id="compressDropZone" class="border-2 border-dashed border-sky-500/40 hover:border-sky-400 bg-sky-500/5 hover:bg-sky-500/10 rounded-2xl p-8 text-center cursor-pointer transition">
+                <input type="file" id="compressFileInput" accept="image/*" class="hidden">
+                <i data-lucide="upload-cloud" class="w-12 h-12 text-sky-400 mx-auto mb-3"></i>
+                <h4 class="text-sm font-bold text-white mb-1" data-i18n="dropPhotoHere">اسحب صورة من جهازك هنا أو انقر للاختيار</h4>
+                <p class="text-xs text-slate-400">يدعم JPG, PNG, WEBP حتى 25 ميجابايت</p>
+                <div class="mt-3">
+                  <button type="button" id="btnLoadSampleImage" class="text-xs px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-sky-300 border border-white/10 font-semibold">أو جرب صورة عينة 4K فائقة الدقة</button>
+                </div>
+              </div>
+
+              <div id="compressResultSection" class="hidden space-y-5 pt-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span>جودة الضغط (Quality):</span>
+                      <span id="compressQualityLabel" class="text-sky-400 font-mono">65%</span>
+                    </div>
+                    <input type="range" id="compressQualityRange" min="10" max="95" value="65" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                  </div>
+
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span>أقصى عرض للصورة:</span>
+                      <span id="compressMaxWidthLabel" class="text-emerald-400 font-mono">1920 px (Full HD)</span>
+                    </div>
+                    <select id="compressMaxWidthSelect" class="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-sky-500">
+                      <option value="3840">3840 px (4K Ultra HD)</option>
+                      <option value="1920" selected>1920 px (Full HD 1080p - موصى به)</option>
+                      <option value="1280">1280 px (HD 720p)</option>
+                      <option value="800">800 px (مناسب للويب والشبكات)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div class="bg-slate-900/80 rounded-2xl p-4 border border-white/5 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-slate-400" data-i18n="compressOriginal">الصورة الأصلية</span>
+                      <span id="origImageSizeBadge" class="font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full">4.2 MB</span>
+                    </div>
+                    <div class="h-44 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center">
+                      <img id="origImagePreview" src="" alt="Original Preview" class="max-h-full max-w-full object-contain">
+                    </div>
+                  </div>
+
+                  <div class="bg-slate-900/80 rounded-2xl p-4 border border-emerald-500/30 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-emerald-400" data-i18n="compressNew">بعد الضغط الذكي</span>
+                      <span id="compressedImageSizeBadge" class="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">680 KB (-84%)</span>
+                    </div>
+                    <div class="h-44 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center">
+                      <img id="compressedImagePreview" src="" alt="Compressed Preview" class="max-h-full max-w-full object-contain">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                  <button id="btnDownloadCompressed" class="py-3 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>تحميل الصورة المضغوطة الآن</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 5: LARGE FILES & STORAGE BREAKDOWN
+             ================================================================== -->
+        <section id="tab-largeFiles" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-5 border border-white/10 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-base font-bold text-white" data-i18n="largeFilesTitle">محلل الملفات الكبيرة والوسائط</h3>
+                <p class="text-xs text-slate-400" data-i18n="largeFilesSubtitle">ابحث عن الفيديوهات والأرشيفات الثقيلة التي تستهلك سعة جهازك</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btnDeleteSelectedLargeFiles" class="py-2 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-500/20">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span data-i18n="btnDeleteSelected">حذف المحدد</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button class="largefile-filter active px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white transition" data-filter="all" data-i18n="filterAll">الكل</button>
+              <button class="largefile-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition" data-filter="video" data-i18n="filterVideos">فيديوهات (>100MB)</button>
+              <button class="largefile-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition" data-filter="archive" data-i18n="filterArchives">أرشيفات (ZIP/RAR)</button>
+              <button class="largefile-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition" data-filter="audio" data-i18n="filterAudio">صوتيات وموسيقى</button>
+              <button class="largefile-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition" data-filter="document" data-i18n="filterDocs">مستندات</button>
+              <button class="largefile-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition" data-filter="apk" data-i18n="filterApks">حزم APK</button>
+            </div>
+
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute start-3 top-3"></i>
+              <input type="text" id="largeFileSearchInput" placeholder="بحث بالاسم أو المسار..." class="w-full bg-slate-900 border border-white/10 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500">
+            </div>
+
+            <div id="largeFilesList" class="space-y-2">
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 6: SOCIAL MEDIA & WHATSAPP CLEANER
+             ================================================================== -->
+        <section id="tab-socialCleaner" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-5 border border-white/10 space-y-5">
+            <div>
+              <h3 class="text-lg font-black text-white" data-i18n="socialTitle">منظف تطبيقات المراسلة والتواصل</h3>
+              <p class="text-xs text-slate-400" data-i18n="socialSubtitle">تحليل وتصفية الرسائل الصوتية، الحالات، الفيديوهات والملصقات المخزنة</p>
+            </div>
+
+            <div class="bg-gradient-to-tr from-emerald-950/60 to-slate-900 rounded-2xl p-5 border border-emerald-500/30 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <i data-lucide="message-circle" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-base font-bold text-white">واتساب (WhatsApp Messenger)</h4>
+                    <span class="text-xs text-slate-400">إجمالي الوسائط والمخلفات: <strong class="text-emerald-400">9.45 GB</strong></span>
+                  </div>
+                </div>
+                <button id="btnCleanWhatsAppVoice" class="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                  <span data-i18n="cleanOldVoiceNotes">تنظيف الرسائل الصوتية القديمة</span>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5 space-y-1">
+                  <span class="text-xs text-slate-400" data-i18n="voiceNotes">الرسائل الصوتية</span>
+                  <div id="waVoiceNotesSize" class="text-sm font-bold text-emerald-400">2.45 GB (3,420 ملف)</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5 space-y-1">
+                  <span class="text-xs text-slate-400" data-i18n="sentVideos">مقاطع الفيديو المرسلة</span>
+                  <div class="text-sm font-bold text-sky-400">4.80 GB (185 ملف)</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5 space-y-1">
+                  <span class="text-xs text-slate-400" data-i18n="statuses">الحالات والقصص</span>
+                  <div class="text-sm font-bold text-amber-400">1.40 GB (890 ملف)</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5 space-y-1">
+                  <span class="text-xs text-slate-400" data-i18n="stickers">الملصقات وGIF</span>
+                  <div class="text-sm font-bold text-purple-400">800 MB (4,200 ملف)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 7: REAL LOCAL FILE / FOLDER SCANNER
+             ================================================================== -->
+        <section id="tab-realScanner" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 space-y-6">
+            <div class="space-y-1">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-bold">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span data-i18n="realScanNotice">فحص محلي 100% داخل المتصفح دون رفع أي بيانات</span>
+              </div>
+              <h3 class="text-xl font-black text-white" data-i18n="realScannerTitle">فاحص مجلداتك وملفاتك الحقيقي</h3>
+              <p class="text-xs sm:text-sm text-slate-400" data-i18n="realScannerSubtitle">اختر مجلداً أو ملفات حقيقية من جهاز الكمبيوتر أو هاتفك لتحليل حجمها واكتشاف الملفات المكررة والكبيرة فوراً.</p>
+            </div>
+
+            <div id="realScanDropZone" class="border-2 border-dashed border-sky-500/40 hover:border-sky-400 bg-sky-500/5 hover:bg-sky-500/10 rounded-3xl p-8 text-center transition cursor-pointer">
+              <input type="file" id="realFolderInput" webkitdirectory directory multiple class="hidden">
+              <input type="file" id="realFileInput" multiple class="hidden">
+
+              <i data-lucide="folder-search" class="w-14 h-14 text-sky-400 mx-auto mb-3"></i>
+              <h4 class="text-base font-bold text-white mb-1" data-i18n="dragDropText">اسحب وأفلت مجلداً أو ملفات حقيقية هنا مباشرة</h4>
+              <p class="text-xs text-slate-400 mb-4">يتم فحص وتحليل الحجم والامتدادات والتكرارات محلياً وبسرعة فائقة</p>
+
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button type="button" id="btnTriggerFolderSelect" class="py-2.5 px-5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-lg shadow-sky-500/20 flex items-center gap-2 transition">
+                  <i data-lucide="folder" class="w-4 h-4"></i>
+                  <span data-i18n="btnSelectFolder">اختر مجلداً من جهازك</span>
+                </button>
+                <button type="button" id="btnTriggerFileSelect" class="py-2.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 font-bold text-xs flex items-center gap-2 transition">
+                  <i data-lucide="files" class="w-4 h-4"></i>
+                  <span data-i18n="btnSelectFiles">اختر ملفات حقيقية</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="realScanResultsContainer" class="hidden space-y-5">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5">
+                  <span class="text-xs text-slate-400" data-i18n="realFilesFound">الملفات المفحوصة</span>
+                  <div id="realScanFilesCount" class="text-base font-bold text-white">0</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5">
+                  <span class="text-xs text-slate-400">إجمالي الحجم الفعلي</span>
+                  <div id="realScanTotalSize" class="text-base font-bold text-sky-400">0 MB</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5">
+                  <span class="text-xs text-slate-400" data-i18n="realDuplicatesDetected">ملفات مكررة</span>
+                  <div id="realScanDupCount" class="text-base font-bold text-amber-400">0</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-white/5">
+                  <span class="text-xs text-slate-400">مساحة التكرار المهدورة</span>
+                  <div id="realScanDupSize" class="text-base font-bold text-rose-400">0 MB</div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <h4 class="text-sm font-bold text-white">أكبر الملفات حجماً في المجلد:</h4>
+                <div id="realScanLargestFilesList" class="space-y-2 max-h-64 overflow-y-auto">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 8: RECYCLE BIN & RESTORE
+             ================================================================== -->
+        <section id="tab-recycleBin" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-5 border border-white/10 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                  <i data-lucide="trash-2" class="w-5 h-5 text-rose-400"></i>
+                  <span data-i18n="binTitle">سلة المحذوفات الذكية</span>
+                </h3>
+                <p class="text-xs text-slate-400" data-i18n="binSubtitle">تحتفظ بالملفات لمدة 30 يوماً قبل الحذف النهائي لتتمكن من استرجاع أي ملف حذفته بالخطأ.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btnEmptyBinAction" class="py-2 px-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition flex items-center gap-1.5">
+                  <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                  <span data-i18n="btnEmptyBin">إفراغ السلة نهائياً</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="recycleBinList" class="space-y-2.5">
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             TAB 9: SETTINGS & SECURITY
+             ================================================================== -->
+        <section id="tab-settings" class="tab-pane hidden space-y-5">
+          <div class="glass-panel p-6 border border-white/10 space-y-6">
+            <div>
+              <h3 class="text-lg font-black text-white" data-i18n="settingsTitle">إعدادات التطبيق والحماية المتقدمة</h3>
+              <p class="text-xs text-slate-400">تخصيص قواعد الحماية وقائمة الاستثناءات والجدولة التلقائية</p>
+            </div>
+
+            <div class="space-y-3 border-b border-white/10 pb-5">
+              <h4 class="text-sm font-bold text-sky-400" data-i18n="settingsAutoClean">الجدولة والتنظيف التلقائي</h4>
+              <div class="flex items-center justify-between bg-slate-900/60 p-3.5 rounded-xl border border-white/5">
+                <div>
+                  <div class="text-xs font-bold text-white" data-i18n="autoCleanDaily">فحص وتنبيه يومي ذكي</div>
+                  <div class="text-[11px] text-slate-400">تنبيهك في خلفية الجهاز عند تراكم أكثر من 2 جيجابايت من المخلفات</div>
+                </div>
+                <input type="checkbox" checked class="w-5 h-5 accent-sky-500 rounded cursor-pointer">
+              </div>
+
+              <div class="flex items-center justify-between bg-slate-900/60 p-3.5 rounded-xl border border-white/5">
+                <div>
+                  <div class="text-xs font-bold text-white" data-i18n="autoCleanThreshold">تنبيه عند تجاوز السعة 85%</div>
+                  <div class="text-[11px] text-slate-400">اقتراح تنظيف فوري عند امتلاء المساحة التخزينية</div>
+                </div>
+                <input type="checkbox" checked class="w-5 h-5 accent-sky-500 rounded cursor-pointer">
+              </div>
+            </div>
+
+            <div class="space-y-3 border-b border-white/10 pb-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-bold text-emerald-400" data-i18n="settingsWhitelist">قائمة الحماية والاستثناءات (WhiteList)</h4>
+                  <p class="text-[11px] text-slate-400" data-i18n="settingsWhitelistDesc">ملفات ومجلدات لن يتم مسحها أو فحصها أبداً للحفاظ على خصوصيتك</p>
+                </div>
+              </div>
+              <div id="whitelistItemsList" class="space-y-2">
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ======================================================================
+         BOTTOM NAVIGATION BAR (Mobile View Only)
+         ====================================================================== -->
+    <nav class="md:hidden glass-panel fixed bottom-0 inset-x-0 z-40 m-2 p-2 border border-white/10 flex items-center justify-around text-slate-400">
+      <button class="nav-tab active flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-bold transition text-sky-400" data-tab="dashboard">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span class="text-[10px]">الرئيسية</span>
+      </button>
+
+      <button class="nav-tab flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-bold transition" data-tab="appGallery">
+        <i data-lucide="image" class="w-5 h-5"></i>
+        <span class="text-[10px]">الصور</span>
+      </button>
+
+      <button class="nav-tab flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-bold transition" data-tab="emptyFolders">
+        <i data-lucide="folder-x" class="w-5 h-5"></i>
+        <span class="text-[10px]">فارغة</span>
+      </button>
+
+      <button class="nav-tab flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-bold transition" data-tab="deepScan">
+        <i data-lucide="radar" class="w-5 h-5"></i>
+        <span class="text-[10px]">الفحص</span>
+      </button>
+
+      <button class="nav-tab flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-bold transition" data-tab="codeStudio">
+        <i data-lucide="code-2" class="w-5 h-5"></i>
+        <span class="text-[10px]">الأكواد</span>
+      </button>
+    </nav>
+
+    <!-- ======================================================================
+         CLEANUP PROGRESS MODAL (Animated Laser + Celebration)
+         ====================================================================== -->
+    <div id="cleanProgressModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+      <div class="glass-panel p-6 sm:p-8 border border-sky-500/40 max-w-md w-full relative overflow-hidden text-center space-y-6 shadow-2xl">
+        <div class="laser-beam"></div>
+        <div class="relative w-20 h-20 mx-auto">
+          <div class="w-full h-full rounded-3xl bg-gradient-to-tr from-sky-500 to-emerald-400 p-[2px] animate-spin">
+            <div class="w-full h-full bg-slate-900 rounded-[22px]"></div>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-8 h-8 text-sky-400"></i>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <h3 class="text-xl font-black text-white" data-i18n="btnScanning">جارٍ التنظيف الذكي العميق...</h3>
+          <p id="cleanModalStageText" class="text-xs text-sky-300 font-mono">مسح الذاكرة المؤقتة للتطبيقات...</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+            <div id="cleanModalProgressBar" class="bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 h-full w-0 transition-all duration-100"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400 font-mono">
+            <span>التقدم: <strong id="cleanModalPercentText" class="text-white">0%</strong></span>
+            <span>السرعة: <strong>1.8 GB/s</strong></span>
+          </div>
         </div>
       </div>
     </div>
-  </header>
 
-  <!-- Main Reader Body -->
-  <main>
-    <!-- Loading State -->
-    <div id="loadingState" class="loading-container">
-      <div class="spinner"></div>
-      <div class="loading-text">جاري تحميل السورة…</div>
-    </div>
+    <!-- ======================================================================
+         CLEANUP SUCCESS CELEBRATION MODAL
+         ====================================================================== -->
+    <div id="cleanSuccessModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+      <div class="glass-panel p-6 sm:p-8 border border-emerald-500/40 max-w-md w-full relative overflow-hidden text-center space-y-5 shadow-2xl">
+        <div class="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mx-auto flex items-center justify-center">
+          <i data-lucide="check-circle" class="w-8 h-8"></i>
+        </div>
 
-    <!-- Error State with Retry -->
-    <div id="errorState" class="error-container hidden">
-      <div class="error-icon">!</div>
-      <div id="errorMessage" class="error-message">تعذر تحميل بيانات السورة. يرجى التحقق من اتصال الإنترنت والمحاولة مجددًا.</div>
-      <button id="btnRetry" class="btn-retry">إعادة المحاولة</button>
-    </div>
+        <div class="space-y-1">
+          <h3 class="text-2xl font-black text-white" data-i18n="cleanComplete">تم التنظيف بنجاح!</h3>
+          <p class="text-xs text-slate-400">أصبح جهازك الآن أسرع وبسعة تخزينية رحبة ونقية.</p>
+        </div>
 
-    <!-- Content State -->
-    <div id="contentState" class="hidden">
-      <div class="surah-header">
-        <h1 id="surahTitle" class="surah-title"></h1>
-        <div id="surahSubtitle" class="surah-subtitle"></div>
+        <div class="grid grid-cols-2 gap-3 bg-slate-900/90 p-4 rounded-2xl border border-white/5">
+          <div>
+            <span class="text-xs text-slate-400" data-i18n="spaceFreed">تم توفير</span>
+            <div id="successFreedGB" class="text-xl font-black text-emerald-400">14.2 GB</div>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400">صحة التخزين</span>
+            <div class="text-xl font-black text-sky-400">96 / 100</div>
+          </div>
+        </div>
+
+        <button id="btnCloseSuccessModal" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-extrabold text-sm shadow-xl shadow-emerald-500/20 transition active:scale-95" data-i18n="close">
+          العودة للوحة التحكم
+        </button>
       </div>
-      <div id="versesContainer" class="verses-container"></div>
     </div>
-  </main>
 
-  <footer>
-    <span id="footerText">القرآن الكريم — نص عثماني</span>
-  </footer>
+    <!-- ======================================================================
+         GENERIC MEDIA PREVIEW MODAL
+         ====================================================================== -->
+    <div id="mediaPreviewModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+      <div class="glass-panel p-4 border border-white/20 max-w-2xl w-full relative space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+          <h4 id="previewModalTitle" class="text-sm font-bold text-white truncate max-w-md">معاينة الملف</h4>
+          <button id="btnClosePreviewModal" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div id="previewModalBody" class="flex items-center justify-center min-h-[250px] max-h-[65vh] overflow-hidden rounded-xl bg-black">
+        </div>
+      </div>
+    </div>
 
-  <script>
-    (function () {
-      // Surah Names Array (1 to 114)
-      const SURAH_NAMES = [
-        "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس",
-        "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل", "الإسراء", "الكهف", "مريم", "طه",
-        "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم",
-        "لقمان", "السجدة", "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر",
-        "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
-        "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة",
-        "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم", "الملك", "القلم", "الحاقة", "المعارج",
-        "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس",
-        "التكوير", "الانفطار", "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد",
-        "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات",
-        "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر",
-        "المسد", "الإخلاص", "الفلق", "الناس"
-      ];
+    <!-- Global Toast Container -->
+    <div id="toastContainer" class="fixed bottom-16 sm:bottom-6 start-6 z-50 space-y-2 pointer-events-none"></div>
 
-      // Cache storage
-      const memoryCache = new Map();
-      const CACHE_PREFIX = "quran_surah_v1_";
-      const API_URL = "https://api.alquran.cloud/v1/surah/{number}/quran-uthmani";
+  </div>
 
-      // State
-      let currentSurah = 1;
-      let selectedAyah = 1;
-      let currentVersesData = [];
-      let fontSize = 28;
-
-      // DOM Elements
-      const surahSelect = document.getElementById("surahSelect");
-      const btnPrev = document.getElementById("btnPrev");
-      const btnNext = document.getElementById("btnNext");
-      const btnRetry = document.getElementById("btnRetry");
-      const btnFontPlus = document.getElementById("btnFontPlus");
-      const btnFontMinus = document.getElementById("btnFontMinus");
-      const badgeJuz = document.getElementById("badgeJuz");
-      const badgePage = document.getElementById("badgePage");
-      const loadingState = document.getElementById("loadingState");
-      const errorState = document.getElementById("errorState");
-      const contentState = document.getElementById("contentState");
-      const errorMessage = document.getElementById("errorMessage");
-      const surahTitle = document.getElementById("surahTitle");
-      const surahSubtitle = document.getElementById("surahSubtitle");
-      const versesContainer = document.getElementById("versesContainer");
-
-      // Convert western digits to Arabic-Indic digits
-      function toArabicDigits(num) {
-        return String(num).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
-      }
-
-      // Initialize Surah Dropdown
-      function initSelect() {
-        surahSelect.innerHTML = "";
-        SURAH_NAMES.forEach((name, idx) => {
-          const opt = document.createElement("option");
-          opt.value = idx + 1;
-          opt.textContent = `${idx + 1}. سورة ${name}`;
-          surahSelect.appendChild(opt);
-        });
-      }
-
-      // Fetch with Memory & LocalStorage Caching
-      async function fetchSurah(surahNum) {
-        // 1. Check in-memory cache
-        if (memoryCache.has(surahNum)) {
-          return memoryCache.get(surahNum);
-        }
-
-        // 2. Check localStorage cache
-        try {
-          const cached = localStorage.getItem(CACHE_PREFIX + surahNum);
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            memoryCache.set(surahNum, parsed);
-            return parsed;
-          }
-        } catch (e) {
-          console.warn("localStorage read error:", e);
-        }
-
-        // 3. Dynamic fetch from API
-        const endpoint = API_URL.replace("{number}", surahNum);
-        const res = await fetch(endpoint);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const json = await res.json();
-        if (json.code !== 200 || !json.data) {
-          throw new Error(json.status || "Failed to load Surah data");
-        }
-
-        const data = json.data;
-        // Save to memory cache
-        memoryCache.set(surahNum, data);
-        // Save to localStorage
-        try {
-          localStorage.setItem(CACHE_PREFIX + surahNum, JSON.stringify(data));
-        } catch (e) {
-          console.warn("localStorage write error:", e);
-        }
-
-        return data;
-      }
-
-      // UI View Transitions
-      function showLoading() {
-        loadingState.classList.remove("hidden");
-        errorState.classList.add("hidden");
-        contentState.classList.add("hidden");
-      }
-
-      function showError(msg) {
-        loadingState.classList.add("hidden");
-        errorState.classList.remove("hidden");
-        contentState.classList.add("hidden");
-        errorMessage.textContent = msg || "تعذر تحميل بيانات السورة. يرجى المحاولة مجددًا.";
-      }
-
-      function showContent() {
-        loadingState.classList.add("hidden");
-        errorState.classList.add("hidden");
-        contentState.classList.remove("hidden");
-      }
-
-      // Select and Highlight Ayah
-      function selectAyah(ayahNumber) {
-        selectedAyah = ayahNumber;
-        const spans = versesContainer.querySelectorAll(".ayah-span");
-        spans.forEach(span => {
-          if (parseInt(span.dataset.ayah, 10) === ayahNumber) {
-            span.classList.add("selected");
-          } else {
-            span.classList.remove("selected");
-          }
-        });
-
-        if (currentVersesData && currentVersesData[ayahNumber - 1]) {
-          const verse = currentVersesData[ayahNumber - 1];
-          badgeJuz.textContent = `الجزء ${toArabicDigits(verse.juz || 1)}`;
-          badgePage.textContent = `صفحة ${toArabicDigits(verse.page || 1)}`;
-        }
-      }
-
-      // Render Surah Content
-      function renderSurah(data) {
-        surahTitle.textContent = data.name || `سورة ${SURAH_NAMES[data.number - 1]}`;
-        surahSubtitle.textContent = `${data.englishName || ''} • ${data.revelationType === 'Meccan' ? 'مكية' : 'مدنية'} • عدد الآيات: ${toArabicDigits(data.numberOfAyahs || data.ayahs.length)}`;
-
-        currentVersesData = data.ayahs || [];
-        versesContainer.innerHTML = "";
-
-        const fragment = document.createDocumentFragment();
-        currentVersesData.forEach(ayah => {
-          const span = document.createElement("span");
-          span.className = "ayah-span";
-          span.dataset.ayah = ayah.numberInSurah;
-
-          const textNode = document.createTextNode(ayah.text + " ");
-          span.appendChild(textNode);
-
-          const marker = document.createElement("span");
-          marker.className = "ayah-marker";
-          marker.textContent = `\uFD3F ${toArabicDigits(ayah.numberInSurah)} \uFD3E`;
-          span.appendChild(marker);
-
-          span.addEventListener("click", () => {
-            selectAyah(ayah.numberInSurah);
-          });
-
-          fragment.appendChild(span);
-          fragment.appendChild(document.createTextNode(" "));
-        });
-
-        versesContainer.appendChild(fragment);
-        showContent();
-        selectAyah(1);
-
-        // Update Nav button states
-        btnPrev.disabled = currentSurah <= 1;
-        btnNext.disabled = currentSurah >= 114;
-        surahSelect.value = currentSurah;
-      }
-
-      // Load Surah
-      async function loadSurah(surahNum) {
-        currentSurah = surahNum;
-        showLoading();
-        try {
-          const data = await fetchSurah(surahNum);
-          renderSurah(data);
-        } catch (err) {
-          console.error("Failed to load Surah:", err);
-          showError("تعذر الاتصال بالخادم لتحميل السورة. يرجى التحقق من اتصال الإنترنت والضغط على إعادة المحاولة.");
-        }
-      }
-
-      // Event Listeners
-      surahSelect.addEventListener("change", (e) => {
-        loadSurah(parseInt(e.target.value, 10));
-      });
-
-      btnPrev.addEventListener("click", () => {
-        if (currentSurah > 1) {
-          loadSurah(currentSurah - 1);
-        }
-      });
-
-      btnNext.addEventListener("click", () => {
-        if (currentSurah < 114) {
-          loadSurah(currentSurah + 1);
-        }
-      });
-
-      btnRetry.addEventListener("click", () => {
-        loadSurah(currentSurah);
-      });
-
-      btnFontPlus.addEventListener("click", () => {
-        if (fontSize < 44) {
-          fontSize += 2;
-          versesContainer.style.fontSize = fontSize + "px";
-        }
-      });
-
-      btnFontMinus.addEventListener("click", () => {
-        if (fontSize > 18) {
-          fontSize -= 2;
-          versesContainer.style.fontSize = fontSize + "px";
-        }
-      });
-
-      // Initialization
-      initSelect();
-      loadSurah(1);
-    })();
-  </script>
+  <!-- Scripts -->
+  <script src="js/translations.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/compressor.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
