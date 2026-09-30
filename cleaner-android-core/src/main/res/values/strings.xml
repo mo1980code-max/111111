@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">منظف التخزين الذكي</string>
+    <string name="app_name_en">Smart Clean AI</string>
+    <string name="storage_used">المساحة المستخدمة</string>
+    <string name="storage_free">المساحة المتبقية</string>
+    <string name="storage_health">صحة التخزين</string>
+    <string name="quick_clean">تنظيف فوري شامل</string>
+    <string name="empty_folders">المجلدات الفارغة</string>
+    <string name="duplicate_photos">مكررات الصور (dHash)</string>
+    <string name="duplicate_videos">الفيديوهات المكررة</string>
+    <string name="duplicate_files">الملفات المتطابقة (SHA-256)</string>
+    <string name="permission_title">إذن الوصول الشامل للملفات</string>
+    <string name="permission_desc">يتطلب التطبيق إذن MANAGE_EXTERNAL_STORAGE لفحص الملفات المؤقتة والمجلدات الفارغة وحذف المخلفات بأمان.</string>
+</resources>
